@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Admin {
+  id        String   @id
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String     @id
+  name        String
+  slug        String     @unique
+  description String?
+  image       String?
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Distributor {
+  id        String        @id
+  name      String
+  contact   String?
+  website   String?
+  notes     String?
+  products  Product[]
+  batches   ImportBatch[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Product {
+  id            String      @id
+  name          String
+  slug          String      @unique
+  description   String?
+  specs         Json?
+  images        Json?
+  priceUSD      Float
+  priceARS      Float?
+  costUSD       Float?
+  stock         Int         @default(0)
+  minStock      Int         @default(5)
+  isAvailable   Boolean     @default(true)
+  isFeatured    Boolean     @default(false)
+  categoryId    String?
+  distributorId String?
+  category      Category?      @relation(fields: [categoryId], references: [id])
+  distributor   Distributor?   @relation(fields: [distributorId], references: [id])
+  orderItems    OrderItem[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Order {
+  id            String      @id
+  clientName    String
+  clientContact String
+  items         OrderItem[]
+  totalUSD      Float
+  totalARS      Float?
+  status        String      @default("pending")
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id
+  orderId   String
+  productId String
+  quantity  Int
+  priceUSD  Float
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Transaction {
+  id        String   @id
+  type      String
+  concept   String
+  amountUSD Float
+  amountARS Float?
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model ImportBatch {
+  id            String       @id
+  date          DateTime     @default(now())
+  distributorId String?
+  products      Json
+  totalCostUSD  Float
+  status        String       @default("pending")
+  notes         String?
+  distributor   Distributor? @relation(fields: [distributorId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Setting {
+  id    String @id
+  key   String @unique
+  value String
+}
