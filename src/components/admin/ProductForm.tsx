@@ -54,6 +54,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     defaultValues?.specs ? Object.entries(defaultValues.specs).map(([k, v]) => ({ key: k, value: v })) : []
   )
   const [images, setImages] = useState<string[]>(defaultValues?.images || [])
+  const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ProductFormData>({
@@ -115,21 +116,31 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     setSpecs(updated)
   }
 
+  const [uploading, setUploading] = useState(false)
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
-    const formData = new FormData()
-    formData.append("file", file)
+    setUploading(true)
+    const uploaded: string[] = []
 
-    try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData })
-      if (!res.ok) throw new Error("Error al subir imagen")
-      const data = await res.json()
-      setImages([...images, data.url])
-    } catch {
-      toast.error("Error al subir la imagen")
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append("file", file)
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: formData })
+        if (!res.ok) throw new Error("Error al subir imagen")
+        const data = await res.json()
+        uploaded.push(data.url)
+      } catch {
+        toast.error(`Error al subir: ${file.name}`)
+      }
     }
+
+    setImages([...images, ...uploaded])
+    setUploading(false)
+    e.target.value = ""
   }
 
   function removeImage(idx: number) {
@@ -390,8 +401,8 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
           ))}
           <label className="w-24 h-24 rounded-lg border-2 border-dashed border-zinc-700 flex flex-col items-center justify-center cursor-pointer hover:border-[#22C55E] transition-colors">
             <Upload className="w-5 h-5 text-zinc-500 mb-1" />
-            <span className="text-[10px] text-zinc-500">Subir</span>
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <span className="text-[10px] text-zinc-500">{uploading ? "Subiendo..." : "Subir"}</span>
+            <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" disabled={uploading} />
           </label>
         </div>
       </div>
