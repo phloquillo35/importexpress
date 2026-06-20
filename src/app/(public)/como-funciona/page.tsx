@@ -72,8 +72,8 @@ export default function ComoFuncionaPage() {
             </div>
             <h3 className="text-lg font-semibold text-white font-heading mb-3">Nos encargamos de todo</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              Una vez que confirmás tu pedido, gestionamos la compra internacional, 
-              trámites aduaneros, impuestos y logística desde Punta del Este hasta tu puerta.
+              Una vez que confirmás tu pedido, gestionamos la compra internacional desde Punta del Este, 
+              trámites aduaneros, impuestos y logística hasta tu puerta.
             </p>
           </div>
 

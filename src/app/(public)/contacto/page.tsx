@@ -80,10 +80,10 @@ export default function ContactoPage() {
           </div>
           <h3 className="text-lg font-semibold text-white font-heading mb-2">Ubicación</h3>
           <p className="text-zinc-400">
-            Punta del Este, Uruguay
+            Tucumán, Argentina
           </p>
           <p className="text-zinc-500 text-sm mt-2">
-            Operamos desde Punta del Este con envíos a todo el país
+            Importamos desde Punta del Este con envíos a todo el país
           </p>
         </div>
       </div>

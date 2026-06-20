@@ -72,7 +72,7 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
-              Traemos productos de alta calidad directo desde Punta del Este. 
+              Importamos productos de alta calidad desde Punta del Este directo a tu casa. 
               Electrónica, hogar, moda y más, con los mejores precios del mercado.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -211,7 +211,7 @@ export default function HomePage() {
             </div>
             <h3 className="text-lg font-semibold text-white font-heading mb-2">Nos encargamos de todo</h3>
             <p className="text-sm text-zinc-400">
-              Gestionamos la importación, trámites aduaneros y logística desde Punta del Este.
+              Gestionamos la importación desde Punta del Este, trámites aduaneros y logística hasta tu puerta.
             </p>
           </div>
 

@@ -3,10 +3,10 @@ import Link from "next/link"
 import { Package, ShoppingBag, MessageCircle } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "ImportExpress - Productos importados desde Punta del Este",
-  description: "Todo lo que necesitás, importado para vos. Electrónica, bicicletas, celulares y más.",
+  title: "ImportExpress - Importación directa desde Punta del Este",
+  description: "Importamos desde Punta del Este directo a tu casa. Electrónica, bicicletas, celulares y más.",
   openGraph: {
-    title: "ImportExpress - Productos importados desde Punta del Este",
+    title: "ImportExpress - Importación directa desde Punta del Este",
     description: "Todo lo que necesitás, importado para vos. Electrónica, bicicletas, celulares y más.",
   },
 }
@@ -88,7 +88,7 @@ function Footer() {
               <span className="font-heading font-semibold text-white">ImportExpress</span>
             </div>
             <p className="text-sm text-zinc-400">
-              Importamos directo desde Punta del Este. Todo lo que necesitás, al mejor precio.
+              Importamos desde Punta del Este directo a tu casa. Todo lo que necesitás, al mejor precio.
             </p>
           </div>
 
@@ -112,7 +112,7 @@ function Footer() {
             <div className="space-y-2 text-sm text-zinc-400">
               <p>WhatsApp: +54 9 11 2345-6789</p>
               <p>Instagram: @importexpress</p>
-              <p>Punta del Este, Uruguay</p>
+              <p>Tucumán, Argentina</p>
             </div>
           </div>
         </div>
