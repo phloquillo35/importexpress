@@ -296,7 +296,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="categoryId" className="text-zinc-300">Categoría</Label>
-            <Select onValueChange={(v) => setValue("categoryId", v || "")} defaultValue={defaultValues?.categoryId || ""}>
+            <Select onValueChange={(v) => setValue("categoryId", v === "none" ? "" : v)} defaultValue={defaultValues?.categoryId || ""}>
               <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
@@ -310,7 +310,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="distributorId" className="text-zinc-300">Distribuidor</Label>
-            <Select onValueChange={(v) => setValue("distributorId", v || "")} defaultValue={defaultValues?.distributorId || ""}>
+            <Select onValueChange={(v) => setValue("distributorId", v === "none" ? "" : v)} defaultValue={defaultValues?.distributorId || ""}>
               <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                 <SelectValue placeholder="Seleccionar distribuidor" />
               </SelectTrigger>
