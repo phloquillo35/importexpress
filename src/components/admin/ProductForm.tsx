@@ -116,8 +116,6 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     setSpecs(updated)
   }
 
-  const [uploading, setUploading] = useState(false)
-
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files
     if (!files || files.length === 0) return
