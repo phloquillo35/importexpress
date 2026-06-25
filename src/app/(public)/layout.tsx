@@ -41,7 +41,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
 function Footer() {
   return (
-    <footer className="bg-[#f5f5f7] border-t border-[#d2d2d7]/50 rounded-t-2xl">
+    <footer className="bg-[#f5f5f7] border-t border-[#d2d2d7]/50 rounded-t-2xl overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
