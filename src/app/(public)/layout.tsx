@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Navbar } from "@/components/public/Navbar"
+import { CartProvider } from "@/context/CartContext"
 
 export const metadata: Metadata = {
   title: "Lo Pedís, Lo Tenes - Importación directa desde Punta del Este",
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
+    <CartProvider>
     <div className="min-h-screen flex flex-col">
       <div className="fixed inset-0 -z-10">
         <div className="relative w-full h-full">
@@ -33,6 +35,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main className="flex-1">{children}</main>
       <Footer />
     </div>
+    </CartProvider>
   )
 }
 

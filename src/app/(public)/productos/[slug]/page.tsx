@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle } from "lucide-react"
+import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus } from "lucide-react"
 import Link from "next/link"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useCart } from "@/context/CartContext"
 
 interface Product {
   id: string
@@ -112,6 +113,7 @@ export default function ProductDetailPage() {
     )
   }
 
+  const { addItem } = useCart()
   const specs = product.specs as Record<string, string> | null
   const arsPrice = exchangeRate ? product.priceUSD * exchangeRate : product.priceARS
 
@@ -171,15 +173,24 @@ export default function ProductDetailPage() {
             </span>
           </div>
 
-          <a
-            href={`https://wa.me/5491123456789?text=${encodeURIComponent(`Hola! Me interesa el producto: ${product.name} (${arsPrice ? "$" + Math.round(arsPrice).toLocaleString("es-AR") + " ARS" : "consultar precio"})`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            Consultar por WhatsApp
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => addItem({ slug: product.slug, name: product.name, price: Math.round(arsPrice ?? 0), image: product.images?.[0] ?? null })}
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
+            >
+              <Plus className="w-5 h-5" />
+              Agregar al carrito
+            </button>
+            <a
+              href={`https://wa.me/5491123456789?text=${encodeURIComponent(`Hola! Me interesa el producto: ${product.name} (${arsPrice ? "$" + Math.round(arsPrice).toLocaleString("es-AR") + " ARS" : "consultar precio"})`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              Consultar por WhatsApp
+            </a>
+          </div>
 
           {product.costUSD && (
             <p className="text-xs text-white/70 mt-4">
