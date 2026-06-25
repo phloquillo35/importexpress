@@ -62,7 +62,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 bg-white">
         <div className="space-y-6">
           <Skeleton className="h-6 w-32 bg-[#f5f5f7]" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -81,7 +81,7 @@ export default function ProductDetailPage() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center bg-white">
         <AlertCircle className="w-16 h-16 text-[#ff3b30] mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading mb-2">Error al cargar el producto</h1>
         <p className="text-[#6e6e73] mb-6">No pudimos cargar la información. Intentá de nuevo más tarde.</p>
@@ -98,7 +98,7 @@ export default function ProductDetailPage() {
 
   if (notFound || !product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center bg-white">
         <Package className="w-16 h-16 text-[#6e6e73] mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading mb-2">Producto no encontrado</h1>
         <p className="text-[#6e6e73] mb-6">El producto que buscás no existe o fue eliminado</p>
@@ -119,7 +119,7 @@ export default function ProductDetailPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
       <Link
         href="/productos"
-        className="inline-flex items-center gap-2 text-sm text-[#6e6e73] hover:text-[#0071e3] mb-8 transition-colors font-medium"
+        className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-[#0071e3] mb-8 transition-colors font-medium"
       >
         <ArrowLeft className="w-4 h-4" />
         Volver al catálogo
@@ -144,19 +144,19 @@ export default function ProductDetailPage() {
             </Link>
           )}
 
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#1d1d1f] font-heading mb-4">{product.name}</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white font-heading mb-4">{product.name}</h1>
 
           <div className="space-y-1 mb-6">
-            <p className="text-3xl font-bold text-[#1d1d1f]">{formatUSD(product.priceUSD)}</p>
+            <p className="text-3xl font-bold text-white">{formatUSD(product.priceUSD)}</p>
             {(exchangeRate || product.priceARS) && (
-              <p className="text-base text-[#6e6e73]">
+              <p className="text-base text-white/70">
                 ~ ${Math.round(exchangeRate ? product.priceUSD * exchangeRate : product.priceARS!).toLocaleString("es-AR")} ARS
               </p>
             )}
           </div>
 
           {product.description && (
-            <p className="text-[#6e6e73] leading-relaxed mb-8">{product.description}</p>
+            <p className="text-white/80 leading-relaxed mb-8">{product.description}</p>
           )}
 
           <div className="flex flex-wrap gap-3 mb-8">
@@ -187,7 +187,7 @@ export default function ProductDetailPage() {
           </a>
 
           {product.costUSD && (
-            <p className="text-xs text-[#6e6e73] mt-4">
+            <p className="text-xs text-white/70 mt-4">
               Precio de referencia USD. El precio final puede variar según el tipo de cambio del día.
             </p>
           )}
@@ -196,7 +196,7 @@ export default function ProductDetailPage() {
 
       {specs && Object.keys(specs).length > 0 && (
         <div className="mt-12 lg:mt-16">
-          <h2 className="text-xl font-bold text-[#1d1d1f] font-heading mb-6">Especificaciones Técnicas</h2>
+          <h2 className="text-xl font-bold text-white font-heading mb-6">Especificaciones Técnicas</h2>
           <div className="bg-[#f5f5f7] rounded-2xl overflow-hidden max-w-2xl border border-[#d2d2d7]/60">
             <table className="w-full text-sm">
               <tbody>
@@ -214,7 +214,7 @@ export default function ProductDetailPage() {
 
       {related.length > 0 && (
         <div className="mt-12 lg:mt-16">
-          <h2 className="text-xl font-bold text-[#1d1d1f] font-heading mb-6">Productos Relacionados</h2>
+          <h2 className="text-xl font-bold text-white font-heading mb-6">Productos Relacionados</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} />
