@@ -23,7 +23,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="auto"
             className="absolute inset-0 w-full h-full object-cover object-center"
           >
             <source src="/videos/hero.mp4" type="video/mp4" />
