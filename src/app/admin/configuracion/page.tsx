@@ -76,7 +76,7 @@ export default function ConfiguracionPage() {
               value={form.business_name}
               onChange={(e) => setForm({ ...form, business_name: e.target.value })}
               className="bg-zinc-800 border-zinc-700 text-white"
-              placeholder="ImportExpress"
+              placeholder="Lo Pedís, Lo Tenes"
             />
           </div>
 

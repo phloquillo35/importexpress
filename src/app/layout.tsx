@@ -14,8 +14,8 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "ImportExpress",
-  description: "Gestión de importaciones",
+  title: "Lo Pedís, Lo Tenes",
+  description: "Importación directa desde Punta del Este",
 };
 
 export default function RootLayout({

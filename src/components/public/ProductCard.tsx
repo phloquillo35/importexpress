@@ -30,45 +30,45 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/productos/${product.slug}`}
-      className="group block bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] transition-all duration-300"
+      className="group block bg-white rounded-2xl border border-[#d2d2d7]/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300"
     >
-      <div className="aspect-[4/3] bg-zinc-800/50 flex items-center justify-center">
+      <div className="aspect-[4/3] bg-[#f5f5f7] flex items-center justify-center p-8">
         {product.images?.[0] ? (
           <img
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <Package className="w-16 h-16 text-zinc-600" />
+          <Package className="w-16 h-16 text-[#6e6e73]" />
         )}
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="p-5 space-y-3">
         {product.category && (
-          <span className="inline-block text-[10px] font-medium uppercase tracking-wider text-[#F59E0B] bg-[#F59E0B]/10 px-2 py-0.5 rounded-full">
+          <span className="inline-block text-[11px] font-medium uppercase tracking-wider text-[#0071e3]">
             {product.category.name}
           </span>
         )}
 
-        <h3 className="font-heading font-semibold text-white text-sm leading-tight group-hover:text-[#F59E0B] transition-colors line-clamp-2">
+        <h3 className="font-heading font-semibold text-[#1d1d1f] text-sm leading-tight line-clamp-2">
           {product.name}
         </h3>
 
         <div className="space-y-0.5">
-          <p className="text-lg font-bold text-white">{formatUSD(product.priceUSD)}</p>
+          <p className="text-lg font-bold text-[#1d1d1f]">{formatUSD(product.priceUSD)}</p>
           {priceARS && (
-            <p className="text-xs text-zinc-400">~ ${Math.round(priceARS).toLocaleString("es-AR")} ARS</p>
+            <p className="text-xs text-[#6e6e73]">~ ${Math.round(priceARS).toLocaleString("es-AR")} ARS</p>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div>
           {product.stock > 0 ? (
-            <span className="text-[10px] font-medium text-[#22C55E] bg-[#22C55E]/10 px-2 py-0.5 rounded-full">
+            <span className="text-[11px] font-medium text-[#34c759]">
               En stock
             </span>
           ) : (
-            <span className="text-[10px] font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
+            <span className="text-[11px] font-medium text-[#ff3b30]">
               Sin stock
             </span>
           )}

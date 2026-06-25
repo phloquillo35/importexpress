@@ -52,7 +52,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <Package className="w-4 h-4 text-white" />
         </div>
         {!collapsed && (
-          <span className="font-heading font-semibold text-white text-sm">ImportExpress</span>
+          <span className="font-heading font-semibold text-white text-sm">Lo Pedís, Lo Tenes</span>
         )}
       </div>
 

@@ -36,74 +36,74 @@ export default function ComoFuncionaPage() {
 
   return (
     <div>
-      <div className="bg-gradient-to-r from-[#F59E0B]/10 via-transparent to-[#8B5CF6]/10 border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-20 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-heading mb-4">
+      <div className="bg-white border-b border-[#d2d2d7]/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 lg:py-20 text-center">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1d1d1f] font-heading mb-4">
             ¿Cómo funciona?
           </h1>
-          <p className="text-zinc-400 max-w-xl mx-auto">
+          <p className="text-[#6e6e73] max-w-xl mx-auto">
             Te explicamos paso a paso cómo hacer tu primera importación con nosotros
           </p>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-          <div className="relative text-center p-8 bg-white/5 border border-white/10 rounded-2xl">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#F59E0B] text-white text-sm font-bold flex items-center justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
+            <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
+              <Search className="w-7 h-7 text-[#0071e3]" />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
               1
             </div>
-            <div className="w-14 h-14 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center mx-auto mb-5 mt-2">
-              <Search className="w-7 h-7 text-[#F59E0B]" />
-            </div>
-            <h3 className="text-lg font-semibold text-white font-heading mb-3">Elegí tus productos</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-3">Elegí tus productos</h3>
+            <p className="text-sm text-[#6e6e73] leading-relaxed">
               Navegá por nuestro catálogo online y seleccioná los productos que querés importar. 
               Si no encontrás algo, consultanos igual — podemos conseguirlo.
             </p>
           </div>
 
-          <div className="relative text-center p-8 bg-white/5 border border-white/10 rounded-2xl">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#8B5CF6] text-white text-sm font-bold flex items-center justify-center">
+          <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
+            <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
+              <Ship className="w-7 h-7 text-[#0071e3]" />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
               2
             </div>
-            <div className="w-14 h-14 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center mx-auto mb-5 mt-2">
-              <Ship className="w-7 h-7 text-[#8B5CF6]" />
-            </div>
-            <h3 className="text-lg font-semibold text-white font-heading mb-3">Nos encargamos de todo</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-3">Nos encargamos de todo</h3>
+            <p className="text-sm text-[#6e6e73] leading-relaxed">
               Una vez que confirmás tu pedido, gestionamos la compra internacional desde Punta del Este, 
               trámites aduaneros, impuestos y logística hasta tu puerta.
             </p>
           </div>
 
-          <div className="relative text-center p-8 bg-white/5 border border-white/10 rounded-2xl">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#22C55E] text-white text-sm font-bold flex items-center justify-center">
+          <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
+            <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
+              <CreditCard className="w-7 h-7 text-[#0071e3]" />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
               3
             </div>
-            <div className="w-14 h-14 rounded-xl bg-[#22C55E]/10 flex items-center justify-center mx-auto mb-5 mt-2">
-              <CreditCard className="w-7 h-7 text-[#22C55E]" />
-            </div>
-            <h3 className="text-lg font-semibold text-white font-heading mb-3">Recibí en tu casa</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-3">Recibí en tu casa</h3>
+            <p className="text-sm text-[#6e6e73] leading-relaxed">
               Te mantenemos informado en cada etapa. Recibís tus productos directamente en tu domicilio, 
               con total seguridad y transparencia.
             </p>
           </div>
         </div>
 
-        <div className="text-center mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading mb-3">
+        <div className="text-center mb-16 bg-[#f5f5f7] rounded-3xl py-12 px-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#1d1d1f] font-heading mb-3">
             ¿Listo para empezar?
           </h2>
-          <p className="text-zinc-400 mb-8 max-w-lg mx-auto">
+          <p className="text-[#6e6e73] mb-8 max-w-lg mx-auto">
             Contactanos por WhatsApp y te asesoramos sin compromiso
           </p>
           <Link
             href="https://wa.me/5491123456789"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full transition-colors"
           >
             <MessageCircle className="w-5 h-5" />
             Escribinos por WhatsApp
@@ -111,28 +111,28 @@ export default function ComoFuncionaPage() {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#1d1d1f] font-heading text-center mb-10">
             Preguntas Frecuentes
           </h2>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+                className="bg-white rounded-2xl border border-[#d2d2d7]/60 overflow-hidden"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-4 text-left text-white font-medium transition-colors hover:bg-white/5"
+                  className="w-full flex items-center justify-between p-5 text-left text-[#1d1d1f] font-medium transition-colors hover:bg-[#f5f5f7]"
                 >
                   <span>{faq.q}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-zinc-400 transition-transform duration-200 ${
+                    className={`w-5 h-5 text-[#6e6e73] transition-transform duration-200 ${
                       openFaq === i ? "rotate-180" : ""
                     }`}
                   />
                 </button>
                 {openFaq === i && (
-                  <div className="px-4 pb-4 text-sm text-zinc-400 leading-relaxed">
+                  <div className="px-5 pb-5 text-sm text-[#6e6e73] leading-relaxed">
                     {faq.a}
                   </div>
                 )}

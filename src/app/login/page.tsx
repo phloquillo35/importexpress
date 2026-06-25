@@ -38,10 +38,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#F59E0B] mb-4">
-            <Package className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#F59E0B] mb-4 overflow-hidden">
+            <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold text-white font-heading">ImportExpress</h1>
+          <h1 className="text-2xl font-bold text-white font-heading">Lo Pedís, Lo Tenes</h1>
           <p className="text-zinc-400 mt-1">Panel de administración</p>
         </div>
 
