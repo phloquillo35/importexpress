@@ -57,19 +57,19 @@ export default function HomePage() {
 
   return (
     <div>
-      <section className="bg-white py-16 lg:py-24">
+      <section className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f5f5f7] border border-[#d2d2d7]/50 text-[#0071e3] text-xs font-medium mb-6">
             <Star className="w-3 h-3" />
             Importación directa sin intermediarios
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#1d1d1f] font-heading leading-tight mb-4">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white font-heading leading-tight mb-4">
             Todo lo que necesitás,{" "}
             <span className="text-[#0071e3]">
               importado para vos
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-[#6e6e73] mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
             Importamos productos de alta calidad desde Punta del Este directo a tu casa. 
             Electrónica, hogar, moda y más, con los mejores precios del mercado.
           </p>
@@ -91,12 +91,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-16 lg:py-20">
+      <section className="py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1d1d1f] font-heading">Productos Destacados</h2>
-              <p className="text-[#6e6e73] mt-1.5">Lo más elegido por nuestros clientes</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white font-heading">Productos Destacados</h2>
+              <p className="text-white/70 mt-1.5">Lo más elegido por nuestros clientes</p>
             </div>
             <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium">
               Ver todos
@@ -118,7 +118,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-[#6e6e73]">
+            <div className="flex flex-col items-center justify-center py-12 text-white/70">
               <AlertCircle className="w-12 h-12 mb-3 text-[#ff3b30]" />
               <p className="text-sm">Error al cargar productos</p>
             </div>
@@ -129,7 +129,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-[#6e6e73] py-12">No hay productos destacados aún</p>
+            <p className="text-center text-white/70 py-12">No hay productos destacados aún</p>
           )}
 
           <div className="sm:hidden mt-6 text-center">
@@ -141,12 +141,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f5f5f7] py-16 lg:py-20">
+      <section className="py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1d1d1f] font-heading">Categorías</h2>
-              <p className="text-[#6e6e73] mt-1.5">Explorá por categoría</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white font-heading">Categorías</h2>
+              <p className="text-white/70 mt-1.5">Explorá por categoría</p>
             </div>
             <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium">
               Ver todo
@@ -161,7 +161,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-[#6e6e73]">
+            <div className="flex flex-col items-center justify-center py-12 text-white/70">
               <AlertCircle className="w-12 h-12 mb-3 text-[#ff3b30]" />
               <p className="text-sm">Error al cargar categorías</p>
             </div>
@@ -184,7 +184,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-[#6e6e73] py-12">No hay categorías disponibles</p>
+            <p className="text-center text-white/70 py-12">No hay categorías disponibles</p>
           )}
 
           <div className="sm:hidden mt-6 text-center">
@@ -196,11 +196,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f5f5f7] py-16 lg:py-20">
+      <section className="py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1d1d1f] font-heading mb-3">¿Cómo funciona?</h2>
-            <p className="text-[#6e6e73] max-w-xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white font-heading mb-3">¿Cómo funciona?</h2>
+            <p className="text-white/70 max-w-xl mx-auto">
               Tres pasos simples para recibir tus productos importados
             </p>
           </div>

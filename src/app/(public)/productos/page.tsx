@@ -93,10 +93,10 @@ function ProductosContent() {
 
   return (
     <div>
-      <div className="bg-white border-b border-[#d2d2d7]/50">
+      <div className="border-b border-[#d2d2d7]/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1d1d1f] font-heading mb-2">Catálogo</h1>
-          <p className="text-[#6e6e73]">{total} productos disponibles</p>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-heading mb-2">Catálogo</h1>
+          <p className="text-white/70">{total} productos disponibles</p>
         </div>
       </div>
 

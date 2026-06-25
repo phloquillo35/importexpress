@@ -13,7 +13,22 @@ export const metadata: Metadata = {
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen flex flex-col">
+      <div className="fixed inset-0 -z-10">
+        <div className="relative w-full h-full">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          >
+            <source src="/videos/hero.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/60" />
+        </div>
+      </div>
       <Navbar />
       <main className="flex-1">{children}</main>
       <FloatingWhatsApp />
@@ -75,7 +90,7 @@ function Navbar() {
 
 function Footer() {
   return (
-    <footer className="bg-[#f5f5f7] border-t border-[#d2d2d7]/50">
+    <footer className="bg-[#f5f5f7] border-t border-[#d2d2d7]/50 rounded-t-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
