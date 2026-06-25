@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Package, MessageCircle } from "lucide-react"
+import { Navbar } from "@/components/public/Navbar"
 
 export const metadata: Metadata = {
   title: "Lo Pedís, Lo Tenes - Importación directa desde Punta del Este",
@@ -31,60 +31,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </div>
       <Navbar />
       <main className="flex-1">{children}</main>
-      <FloatingWhatsApp />
       <Footer />
     </div>
-  )
-}
-
-function FloatingWhatsApp() {
-  return (
-    <a
-      href="https://wa.me/5491123456789"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 bg-[#34c759] hover:bg-[#28a745] text-white rounded-full shadow-lg shadow-[#34c759]/30 hover:shadow-[#34c759]/50 transition-all duration-300 hover:scale-110"
-      aria-label="WhatsApp"
-    >
-      <MessageCircle className="w-7 h-7" />
-    </a>
-  )
-}
-
-function Navbar() {
-  return (
-    <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-[#d2d2d7]/50 rounded-b-2xl">
-      <div className="px-4 sm:px-6">
-        <div className="flex items-center justify-between h-12 lg:h-14">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-7 h-7 rounded-lg object-cover" />
-            <span className="font-heading font-semibold text-[#1d1d1f] text-sm">Lo Pedís, Lo Tenes</span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/productos" className="text-sm text-[#6e6e73] hover:text-[#1d1d1f] transition-colors font-medium">
-              Productos
-            </Link>
-            <Link href="/como-funciona" className="text-sm text-[#6e6e73] hover:text-[#1d1d1f] transition-colors font-medium">
-              Cómo funciona
-            </Link>
-            <Link href="/contacto" className="text-sm text-[#6e6e73] hover:text-[#1d1d1f] transition-colors font-medium">
-              Contacto
-            </Link>
-          </div>
-
-          <a
-            href="https://wa.me/5491123456789"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] text-white text-sm font-medium rounded-full transition-colors"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>WhatsApp</span>
-          </a>
-        </div>
-      </div>
-    </nav>
   )
 }
 
