@@ -130,7 +130,7 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
         <div className="aspect-square bg-[#f5f5f7] rounded-2xl flex items-center justify-center overflow-hidden">
           {product.images?.[0] ? (
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain p-8" />
+            <img src={product.images[0]} alt={product.name} loading="lazy" className="w-full h-full object-contain p-8" />
           ) : (
             <Package className="w-24 h-24 text-[#6e6e73]" />
           )}

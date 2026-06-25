@@ -17,14 +17,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <CartProvider>
     <div className="min-h-screen flex flex-col">
       <div className="fixed inset-0 -z-10">
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full bg-[#1d1d1f]">
           <video
             autoPlay
             muted
             loop
             playsInline
-            preload="metadata"
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            preload="none"
+            className="absolute inset-0 w-full h-full object-cover object-center hidden md:block"
           >
             <source src="/videos/hero.mp4" type="video/mp4" />
           </video>
