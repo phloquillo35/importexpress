@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Package } from "lucide-react"
-import { formatUSD } from "@/lib/utils"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 
 interface ProductCardProps {
@@ -25,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
     fetchExchangeRate().then(setExchangeRate)
   }, [])
 
-  const priceARS = exchangeRate ? product.priceUSD * exchangeRate : product.priceARS
+  const arsPrice = exchangeRate ? product.priceUSD * exchangeRate : product.priceARS
 
   return (
     <Link
@@ -55,12 +54,9 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.name}
         </h3>
 
-        <div className="space-y-0.5">
-          <p className="text-lg font-bold text-[#1d1d1f]">{formatUSD(product.priceUSD)}</p>
-          {priceARS && (
-            <p className="text-xs text-[#6e6e73]">~ ${Math.round(priceARS).toLocaleString("es-AR")} ARS</p>
-          )}
-        </div>
+        {arsPrice && (
+          <p className="text-lg font-bold text-[#1d1d1f]">${Math.round(arsPrice).toLocaleString("es-AR")} ARS</p>
+        )}
 
         <div>
           {product.stock > 0 ? (

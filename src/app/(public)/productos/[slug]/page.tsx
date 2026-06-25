@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { formatUSD } from "@/lib/utils"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -114,6 +113,7 @@ export default function ProductDetailPage() {
   }
 
   const specs = product.specs as Record<string, string> | null
+  const arsPrice = exchangeRate ? product.priceUSD * exchangeRate : product.priceARS
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
@@ -146,14 +146,9 @@ export default function ProductDetailPage() {
 
           <h1 className="text-2xl lg:text-3xl font-bold text-white font-heading mb-4">{product.name}</h1>
 
-          <div className="space-y-1 mb-6">
-            <p className="text-3xl font-bold text-white">{formatUSD(product.priceUSD)}</p>
-            {(exchangeRate || product.priceARS) && (
-              <p className="text-base text-white/70">
-                ~ ${Math.round(exchangeRate ? product.priceUSD * exchangeRate : product.priceARS!).toLocaleString("es-AR")} ARS
-              </p>
-            )}
-          </div>
+          {arsPrice && (
+            <p className="text-3xl font-bold text-white mb-6">${Math.round(arsPrice).toLocaleString("es-AR")} ARS</p>
+          )}
 
           {product.description && (
             <p className="text-white/80 leading-relaxed mb-8">{product.description}</p>
@@ -177,7 +172,7 @@ export default function ProductDetailPage() {
           </div>
 
           <a
-            href={`https://wa.me/5491123456789?text=${encodeURIComponent(`Hola! Me interesa el producto: ${product.name} (${formatUSD(product.priceUSD)})`)}`}
+            href={`https://wa.me/5491123456789?text=${encodeURIComponent(`Hola! Me interesa el producto: ${product.name} (${arsPrice ? "$" + Math.round(arsPrice).toLocaleString("es-AR") + " ARS" : "consultar precio"})`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
@@ -188,7 +183,7 @@ export default function ProductDetailPage() {
 
           {product.costUSD && (
             <p className="text-xs text-white/70 mt-4">
-              Precio de referencia USD. El precio final puede variar según el tipo de cambio del día.
+              El precio final puede variar según el tipo de cambio del día.
             </p>
           )}
         </div>
