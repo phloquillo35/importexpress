@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma"
+import { hashSync } from "bcryptjs"
+import { randomUUID } from "crypto"
 
 const DEFAULT_KEYS = ["exchange_rate", "business_name", "whatsapp", "instagram"] as const
 const DEFAULTS: Record<string, string> = {
@@ -10,6 +12,18 @@ const DEFAULTS: Record<string, string> = {
 
 export async function GET() {
   try {
+    const adminExists = await prisma.admin.findUnique({ where: { email: "admin@importexpress.com" } })
+    if (!adminExists) {
+      await prisma.admin.create({
+        data: {
+          id: randomUUID(),
+          email: "admin@importexpress.com",
+          name: "Admin",
+          password: hashSync("admin123", 10),
+        },
+      })
+    }
+
     for (const key of DEFAULT_KEYS) {
       const exists = await prisma.setting.findUnique({ where: { key } })
       if (!exists && DEFAULTS[key]) {
