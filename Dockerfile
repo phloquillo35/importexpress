@@ -40,6 +40,6 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT=3000
-ENV DATABASE_URL="file:/data/dev.db"
+ENV DATABASE_URL="file:./prisma/dev.db"
 
 CMD ["node", "server.js"]
