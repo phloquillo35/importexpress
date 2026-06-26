@@ -1,9 +1,26 @@
 import { prisma } from "@/lib/prisma"
 
 const DEFAULT_KEYS = ["exchange_rate", "business_name", "whatsapp", "instagram"] as const
+const DEFAULTS: Record<string, string> = {
+  exchange_rate: "1350",
+  business_name: "Lo Pedís, Lo Tenes",
+  whatsapp: "5491123456789",
+  instagram: "@lopedis_lotenes.01",
+}
 
 export async function GET() {
   try {
+    for (const key of DEFAULT_KEYS) {
+      const exists = await prisma.setting.findUnique({ where: { key } })
+      if (!exists && DEFAULTS[key]) {
+        await prisma.setting.upsert({
+          where: { key },
+          update: { value: DEFAULTS[key] },
+          create: { id: key, key, value: DEFAULTS[key] },
+        })
+      }
+    }
+
     const settings = await prisma.setting.findMany({
       where: { key: { in: DEFAULT_KEYS as unknown as string[] } },
     })
@@ -11,7 +28,7 @@ export async function GET() {
     const result: Record<string, string> = {}
     for (const key of DEFAULT_KEYS) {
       const found = settings.find((s) => s.key === key)
-      result[key] = found?.value || ""
+      result[key] = found?.value || DEFAULTS[key] || ""
     }
 
     return Response.json(result)

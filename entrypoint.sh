@@ -1,4 +1,5 @@
 #!/bin/sh
 set -e
 
-exec node scripts/startup.mjs
+echo "→ Starting application..."
+exec node server.js
