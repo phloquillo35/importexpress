@@ -1,13 +1,8 @@
-import { PrismaClient } from "@/generated/client"
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
+import { PrismaClient } from "../src/generated/client"
 import { randomUUID } from "crypto"
 import { hashSync } from "bcryptjs"
 
-const databaseUrl = process.env.DATABASE_URL ?? "file:./prisma/dev.db"
-
-const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({ url: databaseUrl }),
-})
+const prisma = new PrismaClient()
 
 async function main() {
   const admin = await prisma.admin.findUnique({ where: { email: "admin@importexpress.com" } })
