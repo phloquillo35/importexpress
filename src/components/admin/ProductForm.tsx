@@ -315,14 +315,10 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
             <span className="text-zinc-500">Costo base USDT:</span>
             <span className="text-right text-zinc-300">${(parseFloat(costUSDT) || 0).toFixed(2)} USDT</span>
-            <span className="text-zinc-500">→ Tipo cambio USDT:</span>
-            <span className="text-right text-zinc-300">${usdtRate.toLocaleString("es-AR")} ARS/USDT</span>
-            <span className="text-zinc-500">Costo base en ARS:</span>
-            <span className="text-right text-zinc-300">${((parseFloat(costUSDT) || 0) * usdtRate).toLocaleString("es-AR")} ARS</span>
             {yoniEnabled && (
               <>
                 <span className="text-zinc-500">+ Comisión Yoni (25%):</span>
-                <span className="text-right text-zinc-300">${((parseFloat(costUSDT) || 0) * 0.25 * usdtRate).toLocaleString("es-AR")} ARS</span>
+                <span className="text-right text-zinc-300">${((parseFloat(costUSDT) || 0) * 0.25).toFixed(2)} USDT</span>
               </>
             )}
             <span className="text-zinc-500 border-t border-zinc-700 pt-1">+ Costo envío:</span>
@@ -338,7 +334,6 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             <span className="text-zinc-300 font-medium">Total USD (ref):</span>
             <span className="text-right text-[#F59E0B] font-bold">${pricing.finalPriceUSD.toFixed(2)} USD</span>
           </div>
-          <p className="text-[10px] text-zinc-600 mt-2">Tipo de cambio ARS/USD: ${exchangeRate.toLocaleString("es-AR")} | USDT: ${usdtRate.toLocaleString("es-AR")} ARS/USDT</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
