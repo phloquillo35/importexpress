@@ -107,6 +107,8 @@ export async function PUT(
 
     data.finalPriceUSD = pricing.finalPriceUSD
     data.finalPriceARS = pricing.finalPriceARS
+    data.priceUSD = pricing.finalPriceUSD
+    data.priceARS = pricing.finalPriceARS
 
     const updated = await prisma.product.update({
       where: { slug },

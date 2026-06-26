@@ -60,8 +60,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, priceUSD, costUSDT, yoniEnabled, shippingCost, profitType, profitValue, exchangeRate } = body
 
-    if (!name || !priceUSD) {
-      return Response.json({ error: "name y priceUSD son requeridos" }, { status: 400 })
+    if (!name) {
+      return Response.json({ error: "name es requerido" }, { status: 400 })
     }
 
     let productSlug = body.slug || slugify(name)
@@ -71,13 +71,20 @@ export async function POST(request: Request) {
       return Response.json({ error: "Ya existe un producto con ese slug" }, { status: 409 })
     }
 
+    const usdt = parseFloat(costUSDT || priceUSD) || 0
+    const yoni = yoniEnabled ?? false
+    const ship = parseFloat(shippingCost) || 0
+    const pType = profitType || "percentage"
+    const pValue = parseFloat(profitValue) || 0
+    const rate = parseFloat(exchangeRate) || 1
+
     const pricing = calculateFinalPrice({
-      costUSDT: parseFloat(costUSDT || priceUSD) || 0,
-      yoniEnabled: yoniEnabled ?? false,
-      shippingCost: parseFloat(shippingCost) || 0,
-      profitType: profitType || "percentage",
-      profitValue: parseFloat(profitValue) || 0,
-      exchangeRate: parseFloat(exchangeRate) || 1,
+      costUSDT: usdt,
+      yoniEnabled: yoni,
+      shippingCost: ship,
+      profitType: pType as "percentage" | "fixed_usdt",
+      profitValue: pValue,
+      exchangeRate: rate,
     })
 
     const product = await prisma.product.create({
@@ -88,14 +95,14 @@ export async function POST(request: Request) {
         description: body.description || null,
         specs: body.specs || null,
         images: body.images || null,
-        priceUSD: parseFloat(priceUSD),
-        priceARS: body.priceARS ? parseFloat(body.priceARS) : null,
+        priceUSD: pricing.finalPriceUSD,
+        priceARS: pricing.finalPriceARS,
         costUSD: body.costUSD ? parseFloat(body.costUSD) : null,
-        costUSDT: parseFloat(costUSDT) || null,
-        yoniEnabled: yoniEnabled ?? false,
-        shippingCost: parseFloat(shippingCost) || 0,
-        profitType: profitType || "percentage",
-        profitValue: parseFloat(profitValue) || 0,
+        costUSDT: usdt || null,
+        yoniEnabled: yoni,
+        shippingCost: ship,
+        profitType: pType,
+        profitValue: pValue,
         finalPriceUSD: pricing.finalPriceUSD,
         finalPriceARS: pricing.finalPriceARS,
         stock: parseInt(body.stock) || 0,
