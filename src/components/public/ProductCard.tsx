@@ -12,6 +12,7 @@ interface ProductCardProps {
     name: string
     priceUSD: number
     priceARS: number | null
+    finalPriceARS: number
     images: string[]
     stock: number
     category: { name: string; slug: string } | null
@@ -26,7 +27,8 @@ export function ProductCard({ product }: ProductCardProps) {
     fetchExchangeRate().then(setExchangeRate)
   }, [])
 
-  const arsPrice = exchangeRate ? product.priceUSD * exchangeRate : product.priceARS
+  const displayPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
+  const price = Math.round(displayPrice)
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault()
@@ -34,7 +36,7 @@ export function ProductCard({ product }: ProductCardProps) {
     addItem({
       slug: product.slug,
       name: product.name,
-      price: Math.round(arsPrice ?? 0),
+      price,
       image: product.images?.[0] ?? null,
     })
   }
@@ -66,8 +68,8 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </h3>
 
-          {arsPrice && (
-            <p className="text-lg font-bold text-[#1d1d1f]">${Math.round(arsPrice).toLocaleString("es-AR")} ARS</p>
+          {price > 0 && (
+            <p className="text-lg font-bold text-[#1d1d1f]">${price.toLocaleString("es-AR")} ARS</p>
           )}
 
           <div>

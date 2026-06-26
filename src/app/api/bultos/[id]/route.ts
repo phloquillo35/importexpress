@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
+import { calculateFinalPrice } from "@/lib/pricing"
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +10,15 @@ export async function GET(
     const { id } = await params
     const bulk = await prisma.bulk.findUnique({
       where: { id },
-      include: { distributor: { select: { id: true, name: true } } },
+      include: {
+        distributor: { select: { id: true, name: true } },
+        orderItems: {
+          include: {
+            order: { select: { id: true, clientName: true, clientSurname: true, clientEmail: true } },
+            product: { select: { id: true, name: true, slug: true } },
+          },
+        },
+      },
     })
     if (!bulk) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
     return Response.json({
@@ -37,21 +46,42 @@ export async function PUT(
 
     if (body.status) data.status = body.status
     if (body.notes !== undefined) data.notes = body.notes
+    if (body.trackingCode !== undefined) data.trackingCode = body.trackingCode
     if (body.totalCostUSD !== undefined) data.totalCostUSD = parseFloat(body.totalCostUSD)
+    if (body.totalCostARS !== undefined) data.totalCostARS = body.totalCostARS ? parseFloat(body.totalCostARS) : null
     if (body.products) data.products = body.products
+    if (body.type) data.type = body.type
+    if (body.courier) data.courier = body.courier
 
-    if (body.status === "received" || body.status === "arrived") {
-      const currentProducts = typeof existing.products === "string"
-        ? JSON.parse(existing.products)
-        : existing.products
-      if (Array.isArray(currentProducts)) {
-        for (const item of currentProducts) {
-          if (item.productId && item.quantity) {
-            await prisma.product.update({
-              where: { id: item.productId },
-              data: { stock: { increment: item.quantity } },
-            })
-          }
+    if (body.status === "en_camino" && body.trackingCode) {
+      await prisma.orderItem.updateMany({
+        where: { bulkId: id },
+        data: { trackingCode: body.trackingCode, shippingStatus: "en_camino" },
+      })
+    }
+
+    if (body.status) {
+      await prisma.orderItem.updateMany({
+        where: { bulkId: id },
+        data: { shippingStatus: body.status },
+      })
+    }
+
+    if (body.totalCostARS && existing.type) {
+      const itemCount = await prisma.orderItem.count({ where: { bulkId: id } })
+      if (itemCount > 0) {
+        const shippingPerItem = parseFloat(body.totalCostARS) / itemCount
+        const items = await prisma.orderItem.findMany({
+          where: { bulkId: id },
+          include: { product: true },
+        })
+
+        for (const item of items) {
+          const currentShipping = item.product.shippingCost || 0
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { shippingCost: currentShipping + shippingPerItem },
+          })
         }
       }
     }
@@ -59,8 +89,30 @@ export async function PUT(
     const updated = await prisma.bulk.update({
       where: { id },
       data,
-      include: { distributor: { select: { id: true, name: true } } },
+      include: {
+        distributor: { select: { id: true, name: true } },
+        orderItems: {
+          include: {
+            order: { select: { id: true, clientName: true, clientSurname: true, clientEmail: true } },
+            product: { select: { id: true, name: true } },
+          },
+        },
+      },
     })
+
+    if (body.status === "en_camino" && body.trackingCode) {
+      const orderItems = await prisma.orderItem.findMany({
+        where: { bulkId: id },
+        include: { order: true },
+      })
+
+      const emailed = new Set<string>()
+      for (const item of orderItems) {
+        if (item.order.clientEmail && !emailed.has(item.order.clientEmail)) {
+          emailed.add(item.order.clientEmail)
+        }
+      }
+    }
 
     return Response.json({
       ...updated,

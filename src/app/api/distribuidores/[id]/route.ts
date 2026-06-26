@@ -34,12 +34,12 @@ export async function DELETE(
     const { id } = await params
     const existing = await prisma.distributor.findUnique({
       where: { id },
-      include: { _count: { select: { products: true, batches: true } } },
+      include: { _count: { select: { products: true, bulks: true } } },
     })
     if (!existing) return Response.json({ error: "Distribuidor no encontrado" }, { status: 404 })
-    if (existing._count.products > 0 || existing._count.batches > 0) {
+    if (existing._count.products > 0 || existing._count.bulks > 0) {
       return Response.json({
-        error: `No se puede eliminar: tiene ${existing._count.products} producto(s) y ${existing._count.batches} lote(s) asociados`,
+        error: `No se puede eliminar: tiene ${existing._count.products} producto(s) y ${existing._count.bulks} bulto(s) asociados`,
       }, { status: 409 })
     }
     await prisma.distributor.delete({ where: { id } })

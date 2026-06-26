@@ -22,6 +22,8 @@ interface Product {
   slug: string
   name: string
   priceUSD: number
+  costUSDT: number | null
+  finalPriceARS: number
   stock: number
   minStock: number
   isAvailable: boolean
@@ -117,22 +119,23 @@ export default function AdminProductosPage() {
             <TableRow className="border-zinc-800 hover:bg-transparent">
               <TableHead className="text-zinc-400">Producto</TableHead>
               <TableHead className="text-zinc-400 hidden md:table-cell">Categoría</TableHead>
-              <TableHead className="text-zinc-400 text-right">Precio USD</TableHead>
+              <TableHead className="text-zinc-400 text-right">Costo USDT</TableHead>
+              <TableHead className="text-zinc-400 text-right">Precio final ARS</TableHead>
               <TableHead className="text-zinc-400 text-center">Stock</TableHead>
-              <TableHead className="text-zinc-400 text-center hidden sm:table-cell">Disponible</TableHead>
+              <TableHead className="text-zinc-400 text-center hidden sm:table-cell">Disp.</TableHead>
               <TableHead className="text-zinc-400 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-zinc-500 py-12">
+                <TableCell colSpan={7} className="text-center text-zinc-500 py-12">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-zinc-500 py-12">
+                <TableCell colSpan={7} className="text-center text-zinc-500 py-12">
                   <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No hay productos</p>
                 </TableCell>
@@ -144,7 +147,8 @@ export default function AdminProductosPage() {
                   <TableCell className="text-zinc-400 hidden md:table-cell">
                     {product.category?.name || "—"}
                   </TableCell>
-                  <TableCell className="text-right text-zinc-200">{formatUSD(product.priceUSD)}</TableCell>
+                  <TableCell className="text-right text-zinc-200">${(product.costUSDT || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-[#F59E0B] font-medium">${(product.finalPriceARS || 0).toLocaleString("es-AR")}</TableCell>
                   <TableCell className="text-center">
                     <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-zinc-300"}>
                       {product.stock}

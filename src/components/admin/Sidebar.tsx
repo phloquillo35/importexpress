@@ -28,7 +28,7 @@ const links = [
   { href: "/admin/finanzas", label: "Finanzas", icon: DollarSign },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/distribuidores", label: "Distribuidores", icon: Truck },
-  { href: "/admin/importacion", label: "Importación", icon: Ship },
+  { href: "/admin/bultos", label: "Bultos", icon: Ship },
   { href: "/admin/configuracion", label: "Configuración", icon: Settings },
 ]
 

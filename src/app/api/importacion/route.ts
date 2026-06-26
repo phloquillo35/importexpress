@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
-import { genId } from "@/lib/utils"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,21 +9,21 @@ export async function GET(request: NextRequest) {
     const where: Record<string, unknown> = {}
     if (status) where.status = status
 
-    const batches = await prisma.importBatch.findMany({
+    const bulks = await prisma.bulk.findMany({
       where,
       include: { distributor: { select: { id: true, name: true } } },
       orderBy: { date: "desc" },
     })
 
-    const parsed = batches.map((b) => ({
+    const parsed = bulks.map((b) => ({
       ...b,
       products: typeof b.products === "string" ? JSON.parse(b.products) : b.products,
     }))
 
     return Response.json(parsed)
   } catch (error) {
-    console.error("Error fetching import batches:", error)
-    return Response.json({ error: "Error al cargar lotes" }, { status: 500 })
+    console.error("Error fetching bulks:", error)
+    return Response.json({ error: "Error al cargar bultos" }, { status: 500 })
   }
 }
 
@@ -37,9 +36,9 @@ export async function POST(request: Request) {
       return Response.json({ error: "products es requerido" }, { status: 400 })
     }
 
-    const batch = await prisma.importBatch.create({
+    const bulk = await prisma.bulk.create({
       data: {
-        id: genId(),
+        id: (await import("@/lib/utils")).genId(),
         date: date ? new Date(date) : new Date(),
         distributorId: distributorId || null,
         products: products,
@@ -51,11 +50,11 @@ export async function POST(request: Request) {
     })
 
     return Response.json({
-      ...batch,
-      products: typeof batch.products === "string" ? JSON.parse(batch.products) : batch.products,
+      ...bulk,
+      products: typeof bulk.products === "string" ? JSON.parse(bulk.products) : bulk.products,
     }, { status: 201 })
   } catch (error) {
-    console.error("Error creating import batch:", error)
-    return Response.json({ error: "Error al crear lote" }, { status: 500 })
+    console.error("Error creating bulk:", error)
+    return Response.json({ error: "Error al crear bulto" }, { status: 500 })
   }
 }

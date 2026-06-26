@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { Package, Plus, Search } from "lucide-react"
 import { toast } from "sonner"
-import { formatUSD, formatDate } from "@/lib/utils"
+import { formatUSD, formatDate, formatARS } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -32,22 +32,38 @@ import { Badge } from "@/components/ui/badge"
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400" },
-  ordered: { label: "Pedido", className: "bg-blue-500/10 text-blue-400" },
-  arrived: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]" },
-  delivered: { label: "Entregado", className: "bg-zinc-500/10 text-zinc-400" },
-  cancelled: { label: "Cancelado", className: "bg-red-500/10 text-red-400" },
+  en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400" },
+  demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400" },
+  llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]" },
+  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-zinc-400" },
+  cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400" },
+}
+
+interface OrderItem {
+  id: string
+  quantity: number
+  priceUSD: number
+  trackingCode: string | null
+  shippingStatus: string
+  bulkType: string | null
+  product: { name: string; slug: string }
+  bulk: { courier: string; trackingCode: string | null; type: string } | null
 }
 
 interface Order {
   id: string
   clientName: string
+  clientSurname: string
+  clientPhone: string
+  clientEmail: string
+  storeName: string
   clientContact: string
   totalUSD: number
   totalARS: number | null
   status: string
   notes: string | null
   createdAt: string
-  items: { id: string; product: { name: string; slug: string }; quantity: number; priceUSD: number }[]
+  items: OrderItem[]
 }
 
 interface Product {
@@ -66,7 +82,7 @@ export default function PedidosPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [searchProd, setSearchProd] = useState("")
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number }[]>([])
-  const [form, setForm] = useState({ clientName: "", clientContact: "" })
+  const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeName: "", clientContact: "" })
   const [saving, setSaving] = useState(false)
 
   const fetchOrders = useCallback(async () => {
@@ -135,6 +151,10 @@ export default function PedidosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clientName: form.clientName,
+          clientSurname: form.clientSurname,
+          clientPhone: form.clientPhone,
+          clientEmail: form.clientEmail,
+          storeName: form.storeName,
           clientContact: form.clientContact,
           items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
           totalUSD,
@@ -144,11 +164,16 @@ export default function PedidosPage() {
       toast.success("Pedido creado")
       setDialogOpen(false)
       setCart([])
-      setForm({ clientName: "", clientContact: "" })
+      setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeName: "", clientContact: "" })
       fetchOrders()
     } catch {
       toast.error("Error al crear pedido")
     } finally { setSaving(false) }
+  }
+
+  function getItemStatusBadge(status: string) {
+    const cfg = statusConfig[status] || statusConfig.pending
+    return <Badge className={`${cfg.className} border-0 text-[10px]`}>{cfg.label}</Badge>
   }
 
   return (
@@ -183,6 +208,7 @@ export default function PedidosPage() {
             <TableRow className="border-zinc-800 hover:bg-transparent">
               <TableHead className="text-zinc-400">Cliente</TableHead>
               <TableHead className="text-zinc-400 hidden sm:table-cell">Contacto</TableHead>
+              <TableHead className="text-zinc-400 hidden md:table-cell">Tienda</TableHead>
               <TableHead className="text-zinc-400 text-right">Total</TableHead>
               <TableHead className="text-zinc-400 text-center">Estado</TableHead>
               <TableHead className="text-zinc-400 text-right hidden md:table-cell">Fecha</TableHead>
@@ -191,16 +217,17 @@ export default function PedidosPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-zinc-500 py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-zinc-500 py-12">Cargando...</TableCell></TableRow>
             ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-zinc-500 py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-zinc-500 py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
                 const cfg = statusConfig[o.status] || statusConfig.pending
                 return (
                   <TableRow key={o.id} className="border-zinc-800/50 hover:bg-white/5 cursor-pointer" onClick={() => setDetailOrder(o)}>
-                    <TableCell className="font-medium text-white">{o.clientName}</TableCell>
-                    <TableCell className="text-zinc-400 text-sm hidden sm:table-cell">{o.clientContact}</TableCell>
+                    <TableCell className="font-medium text-white">{o.clientName} {o.clientSurname}</TableCell>
+                    <TableCell className="text-zinc-400 text-sm hidden sm:table-cell">{o.clientPhone || o.clientContact}</TableCell>
+                    <TableCell className="text-zinc-400 text-sm hidden md:table-cell">{o.storeName || "—"}</TableCell>
                     <TableCell className="text-right text-zinc-200">{formatUSD(o.totalUSD)}</TableCell>
                     <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
                     <TableCell className="text-right text-zinc-500 text-sm hidden md:table-cell">{formatDate(o.createdAt)}</TableCell>
@@ -230,15 +257,28 @@ export default function PedidosPage() {
           {detailOrder && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><p className="text-zinc-500">Cliente</p><p className="text-white">{detailOrder.clientName}</p></div>
-                <div><p className="text-zinc-500">Contacto</p><p className="text-white">{detailOrder.clientContact}</p></div>
+                <div><p className="text-zinc-500">Nombre</p><p className="text-white">{detailOrder.clientName} {detailOrder.clientSurname}</p></div>
+                <div><p className="text-zinc-500">Teléfono</p><p className="text-white">{detailOrder.clientPhone || "—"}</p></div>
+                <div><p className="text-zinc-500">Email</p><p className="text-white">{detailOrder.clientEmail || "—"}</p></div>
+                <div><p className="text-zinc-500">Tienda</p><p className="text-white">{detailOrder.storeName || "—"}</p></div>
               </div>
               <div>
                 <p className="text-sm text-zinc-500 mb-2">Productos</p>
                 {detailOrder.items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm py-1">
-                    <span className="text-zinc-300">{item.product.name} × {item.quantity}</span>
-                    <span className="text-zinc-200">{formatUSD(item.priceUSD * item.quantity)}</span>
+                  <div key={item.id} className="border border-zinc-800 rounded-lg p-3 mb-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-300">{item.product.name} × {item.quantity}</span>
+                      <span className="text-zinc-200">{formatUSD(item.priceUSD * item.quantity)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5 text-xs">
+                      <span className="text-zinc-600">
+                        {item.bulkType === "grande" ? "📦 Buspack" : item.bulkType === "chico" ? "📬 Correo Arg." : "—"}
+                      </span>
+                      {item.trackingCode && (
+                        <span className="text-blue-400">📍 {item.trackingCode}</span>
+                      )}
+                      {getItemStatusBadge(item.shippingStatus)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -247,7 +287,7 @@ export default function PedidosPage() {
                 <span className="font-bold text-[#F59E0B]">{formatUSD(detailOrder.totalUSD)}</span>
               </div>
               <div>
-                <p className="text-sm text-zinc-500 mb-1">Estado</p>
+                <p className="text-sm text-zinc-500 mb-1">Estado del pedido</p>
                 <Select value={detailOrder.status} onValueChange={(v: any) => updateStatus(detailOrder.id, v)}>
                   <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                     <SelectValue />
@@ -271,13 +311,29 @@ export default function PedidosPage() {
         <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nuevo pedido</DialogTitle></DialogHeader>
           <form onSubmit={handleCreateOrder} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Cliente</Label>
-              <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nombre</Label>
+                <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+              </div>
+              <div className="space-y-2">
+                <Label>Apellido</Label>
+                <Input value={form.clientSurname} onChange={(e) => setForm({ ...form, clientSurname: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Teléfono</Label>
+                <Input value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" value={form.clientEmail} onChange={(e) => setForm({ ...form, clientEmail: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Contacto</Label>
-              <Input value={form.clientContact} onChange={(e) => setForm({ ...form, clientContact: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" placeholder="Teléfono o email" />
+              <Label>Tienda</Label>
+              <Input value={form.storeName} onChange={(e) => setForm({ ...form, storeName: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" placeholder="Nombre de la tienda" />
             </div>
             <div className="space-y-2">
               <Label>Productos</Label>

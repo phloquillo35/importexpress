@@ -28,15 +28,15 @@ model Category {
 }
 
 model Distributor {
-  id        String        @id
-  name      String
-  contact   String?
-  website   String?
-  notes     String?
-  products  Product[]
-  batches   ImportBatch[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id       String    @id
+  name     String
+  contact  String?
+  website  String?
+  notes    String?
+  products Product[]
+  bulks    Bulk[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Product {
@@ -49,6 +49,13 @@ model Product {
   priceUSD      Float
   priceARS      Float?
   costUSD       Float?
+  costUSDT      Float?
+  yoniEnabled   Boolean     @default(false)
+  shippingCost  Float       @default(0)
+  profitType    String      @default("percentage")
+  profitValue   Float       @default(0)
+  finalPriceUSD Float       @default(0)
+  finalPriceARS Float       @default(0)
   stock         Int         @default(0)
   minStock      Int         @default(5)
   isAvailable   Boolean     @default(true)
@@ -65,6 +72,10 @@ model Product {
 model Order {
   id            String      @id
   clientName    String
+  clientSurname String      @default("")
+  clientPhone   String      @default("")
+  clientEmail   String      @default("")
+  storeName     String      @default("")
   clientContact String
   items         OrderItem[]
   totalUSD      Float
@@ -76,13 +87,36 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id
-  orderId   String
-  productId String
-  quantity  Int
-  priceUSD  Float
-  order     Order   @relation(fields: [orderId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
+  id             String  @id
+  orderId        String
+  productId      String
+  quantity       Int
+  priceUSD       Float
+  bulkId         String?
+  trackingCode   String?
+  shippingStatus String  @default("pending")
+  bulkType       String?
+  order          Order   @relation(fields: [orderId], references: [id])
+  product        Product @relation(fields: [productId], references: [id])
+  bulk           Bulk?   @relation(fields: [bulkId], references: [id])
+}
+
+model Bulk {
+  id            String      @id
+  type          String      @default("grande")
+  courier       String      @default("buspack")
+  trackingCode  String?
+  totalCostUSD  Float       @default(0)
+  totalCostARS  Float?
+  date          DateTime    @default(now())
+  status        String      @default("pending")
+  notes         String?
+  products      Json
+  orderItems    OrderItem[]
+  distributorId String?
+  distributor   Distributor? @relation(fields: [distributorId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Transaction {
@@ -94,19 +128,6 @@ model Transaction {
   date      DateTime @default(now())
   notes     String?
   createdAt DateTime @default(now())
-}
-
-model ImportBatch {
-  id            String       @id
-  date          DateTime     @default(now())
-  distributorId String?
-  products      Json
-  totalCostUSD  Float
-  status        String       @default("pending")
-  notes         String?
-  distributor   Distributor? @relation(fields: [distributorId], references: [id])
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
 }
 
 model Setting {

@@ -12,6 +12,7 @@ interface Product {
   name: string
   priceUSD: number
   priceARS: number | null
+  finalPriceARS: number
   images: string[]
   stock: number
   category: { name: string; slug: string } | null

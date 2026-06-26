@@ -1,60 +1,54 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { genId, slugify } from "@/lib/utils"
+import { calculateFinalPrice } from "@/lib/pricing"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const search = searchParams.get("search")
-    const categoryId = searchParams.get("categoriaId")
-    const categorySlug = searchParams.get("categoria")
-    const featured = searchParams.get("destacados")
-    const disponible = searchParams.get("disponible")
+    const search = searchParams.get("search") || ""
+    const categoriaId = searchParams.get("categoriaId") || ""
+    const categoria = searchParams.get("categoria") || ""
+    const destacados = searchParams.get("destacados") || ""
+    const disponible = searchParams.get("disponible") || ""
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"))
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")))
-    const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {}
-
-    if (disponible === "true") {
-      where.isAvailable = true
-    }
 
     if (search) {
       where.name = { contains: search }
     }
 
-    if (categorySlug) {
-      const category = await prisma.category.findUnique({ where: { slug: categorySlug } })
-      if (category) where.categoryId = category.id
-    } else if (categoryId) {
-      where.categoryId = categoryId
+    if (categoriaId) {
+      where.categoryId = categoriaId
     }
 
-    if (featured === "true") {
+    if (categoria) {
+      const cat = await prisma.category.findUnique({ where: { slug: categoria } })
+      if (cat) where.categoryId = cat.id
+    }
+
+    if (destacados === "true") {
       where.isFeatured = true
+    }
+
+    if (disponible === "true") {
+      where.isAvailable = true
     }
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: {
-          category: { select: { id: true, name: true, slug: true } },
-          distributor: { select: { id: true, name: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        skip,
+        include: { category: { select: { name: true, slug: true } } },
+        skip: (page - 1) * limit,
         take: limit,
+        orderBy: { createdAt: "desc" },
       }),
       prisma.product.count({ where }),
     ])
 
-    const parsed = products.map((p) => ({
-      ...p,
-      images: (p.images as string[]) || [],
-    }))
-
-    return Response.json({ products: parsed, total, page, totalPages: Math.ceil(total / limit) })
+    return Response.json({ products, total, page, totalPages: Math.ceil(total / limit) })
   } catch (error) {
     console.error("Error fetching products:", error)
     return Response.json({ error: "Error al cargar productos" }, { status: 500 })
@@ -64,59 +58,59 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const {
-      name,
-      slug: providedSlug,
-      description,
-      specs,
-      images,
-      priceUSD,
-      costUSD,
-      stock,
-      minStock,
-      isAvailable,
-      isFeatured,
-      categoryId,
-      distributorId,
-    } = body
+    const { name, priceUSD, costUSDT, yoniEnabled, shippingCost, profitType, profitValue, exchangeRate } = body
 
-    if (!name || priceUSD === undefined) {
+    if (!name || !priceUSD) {
       return Response.json({ error: "name y priceUSD son requeridos" }, { status: 400 })
     }
 
-    const slug = providedSlug || slugify(name)
+    let productSlug = body.slug || slugify(name)
 
-    const existing = await prisma.product.findUnique({ where: { slug } })
+    const existing = await prisma.product.findUnique({ where: { slug: productSlug } })
     if (existing) {
       return Response.json({ error: "Ya existe un producto con ese slug" }, { status: 409 })
     }
+
+    const pricing = calculateFinalPrice({
+      costUSDT: parseFloat(costUSDT || priceUSD) || 0,
+      yoniEnabled: yoniEnabled ?? false,
+      shippingCost: parseFloat(shippingCost) || 0,
+      profitType: profitType || "percentage",
+      profitValue: parseFloat(profitValue) || 0,
+      exchangeRate: parseFloat(exchangeRate) || 1,
+    })
 
     const product = await prisma.product.create({
       data: {
         id: genId(),
         name,
-        slug,
-        description: description || null,
-        specs: specs || undefined,
-        images: images || [],
+        slug: productSlug,
+        description: body.description || null,
+        specs: body.specs || null,
+        images: body.images || null,
         priceUSD: parseFloat(priceUSD),
-        costUSD: costUSD ? parseFloat(costUSD) : null,
-        stock: stock !== undefined ? parseInt(stock) : 0,
-        minStock: minStock !== undefined ? parseInt(minStock) : 5,
-        isAvailable: isAvailable !== undefined ? isAvailable : true,
-        isFeatured: isFeatured || false,
-        categoryId: categoryId || null,
-        distributorId: distributorId || null,
+        priceARS: body.priceARS ? parseFloat(body.priceARS) : null,
+        costUSD: body.costUSD ? parseFloat(body.costUSD) : null,
+        costUSDT: parseFloat(costUSDT) || null,
+        yoniEnabled: yoniEnabled ?? false,
+        shippingCost: parseFloat(shippingCost) || 0,
+        profitType: profitType || "percentage",
+        profitValue: parseFloat(profitValue) || 0,
+        finalPriceUSD: pricing.finalPriceUSD,
+        finalPriceARS: pricing.finalPriceARS,
+        stock: parseInt(body.stock) || 0,
+        minStock: parseInt(body.minStock) || 5,
+        isAvailable: body.isAvailable ?? true,
+        isFeatured: body.isFeatured ?? false,
+        categoryId: body.categoryId || null,
+        distributorId: body.distributorId || null,
       },
-      include: {
-        category: { select: { id: true, name: true, slug: true } },
-        distributor: { select: { id: true, name: true } },
-      },
+      include: { category: { select: { name: true, slug: true } }, distributor: { select: { name: true } } },
     })
 
     return Response.json(product, { status: 201 })
   } catch (error) {
     console.error("Error creating product:", error)
-    return Response.json({ error: "Error al crear el producto" }, { status: 500 })
+    return Response.json({ error: "Error al crear producto" }, { status: 500 })
   }
 }

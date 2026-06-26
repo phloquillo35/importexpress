@@ -11,7 +11,7 @@ export async function GET(
       where: { id },
       include: {
         items: {
-          include: { product: { select: { name: true, slug: true, images: true } } },
+          include: { product: { select: { name: true, slug: true, images: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
         },
       },
     })
@@ -37,13 +37,19 @@ export async function PUT(
     const data: Record<string, unknown> = {}
     if (body.status) data.status = body.status
     if (body.notes !== undefined) data.notes = body.notes
+    if (body.clientName) data.clientName = body.clientName
+    if (body.clientSurname !== undefined) data.clientSurname = body.clientSurname
+    if (body.clientPhone !== undefined) data.clientPhone = body.clientPhone
+    if (body.clientEmail !== undefined) data.clientEmail = body.clientEmail
+    if (body.storeName !== undefined) data.storeName = body.storeName
+    if (body.clientContact !== undefined) data.clientContact = body.clientContact
 
     const updated = await prisma.order.update({
       where: { id },
       data,
       include: {
         items: {
-          include: { product: { select: { name: true } } },
+          include: { product: { select: { name: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
         },
       },
     })
