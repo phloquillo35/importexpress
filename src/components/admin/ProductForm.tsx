@@ -24,6 +24,7 @@ interface ProductFormData {
   description: string
   costUSDT: string
   yoniEnabled: boolean
+  hasFinancing: boolean
   shippingCost: string
   profitType: string
   profitValue: string
@@ -55,6 +56,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [distributors, setDistributors] = useState<Distributor[]>([])
   const [exchangeRate, setExchangeRate] = useState(1)
+  const [usdtRate, setUsdtRate] = useState(1)
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(
     defaultValues?.specs ? Object.entries(defaultValues.specs).map(([k, v]) => ({ key: k, value: v })) : []
   )
@@ -69,6 +71,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       description: "",
       costUSDT: "",
       yoniEnabled: false,
+      hasFinancing: false,
       shippingCost: "0",
       profitType: "percentage",
       profitValue: "0",
@@ -102,7 +105,10 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
 
     fetch("/api/configuracion")
       .then((r) => r.json())
-      .then((data) => setExchangeRate(Number(data.exchange_rate) || 1))
+      .then((data) => {
+        setExchangeRate(Number(data.exchange_rate) || 1)
+        setUsdtRate(Number(data.usdt_rate) || Number(data.exchange_rate) || 1)
+      })
       .catch(() => {})
   }, [])
 
@@ -125,11 +131,12 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       costUSDT: parseFloat(costUSDT) || 0,
       yoniEnabled: Boolean(yoniEnabled),
       shippingCost: parseFloat(shippingCost) || 0,
-      profitType: (profitType as "percentage" | "fixed_usdt") || "percentage",
+      profitType: (profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
       profitValue: parseFloat(profitValue) || 0,
       exchangeRate,
+      usdtRate,
     })
-  }, [costUSDT, yoniEnabled, shippingCost, profitType, profitValue, exchangeRate])
+  }, [costUSDT, yoniEnabled, shippingCost, profitType, profitValue, exchangeRate, usdtRate])
 
   function addSpec() {
     setSpecs([...specs, { key: "", value: "" }])
@@ -195,6 +202,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       costUSDT: parseFloat(data.costUSDT),
       shippingCost: parseFloat(data.shippingCost) || 0,
       profitValue: parseFloat(data.profitValue) || 0,
+      hasFinancing: data.hasFinancing ?? false,
       stock: parseInt(data.stock) || 0,
       minStock: parseInt(data.minStock) || 5,
       isAvailable: data.isAvailable ?? true,
@@ -275,6 +283,10 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             <input type="checkbox" {...register("yoniEnabled")} defaultChecked={defaultValues?.yoniEnabled ?? false} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#22C55E] focus:ring-[#22C55E]" />
             <span className="text-sm text-zinc-300">Comisión Yoni (25%)</span>
           </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" {...register("hasFinancing")} defaultChecked={defaultValues?.hasFinancing ?? false} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#0071e3] focus:ring-[#0071e3]" />
+            <span className="text-sm text-zinc-300">Financiación (3 o 6 cuotas)</span>
+          </label>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -286,13 +298,13 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
                 <SelectItem value="percentage">Porcentaje (%)</SelectItem>
-                <SelectItem value="fixed_usdt">Valor fijo (USDT)</SelectItem>
+                <SelectItem value="fixed_ars">Valor fijo (ARS)</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="profitValue" className="text-zinc-300">
-              {profitType === "percentage" ? "Ganancia (%)" : "Ganancia (USDT)"}
+              {profitType === "percentage" ? "Ganancia (%)" : "Ganancia fija (ARS)"}
             </Label>
             <Input id="profitValue" type="number" step="0.01" {...register("profitValue")} className="bg-zinc-800 border-zinc-700 text-white" placeholder="0" />
           </div>
@@ -300,29 +312,33 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
 
         <div className="bg-zinc-800/50 rounded-lg p-4 space-y-2">
           <p className="text-sm font-medium text-zinc-400 mb-2">Resumen de precios</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
             <span className="text-zinc-500">Costo base USDT:</span>
-            <span className="text-right text-zinc-300">${(parseFloat(costUSDT) || 0).toFixed(2)}</span>
+            <span className="text-right text-zinc-300">${(parseFloat(costUSDT) || 0).toFixed(2)} USDT</span>
+            <span className="text-zinc-500">→ Tipo cambio USDT:</span>
+            <span className="text-right text-zinc-300">${usdtRate.toLocaleString("es-AR")} ARS/USDT</span>
+            <span className="text-zinc-500">Costo base en ARS:</span>
+            <span className="text-right text-zinc-300">${((parseFloat(costUSDT) || 0) * usdtRate).toLocaleString("es-AR")} ARS</span>
             {yoniEnabled && (
               <>
                 <span className="text-zinc-500">+ Comisión Yoni (25%):</span>
-                <span className="text-right text-zinc-300">${((parseFloat(costUSDT) || 0) * 0.25).toFixed(2)}</span>
+                <span className="text-right text-zinc-300">${((parseFloat(costUSDT) || 0) * 0.25 * usdtRate).toLocaleString("es-AR")} ARS</span>
               </>
             )}
-            <span className="text-zinc-500">+ Costo envío:</span>
-            <span className="text-right text-zinc-300">${(parseFloat(shippingCost) || 0).toFixed(2)}</span>
+            <span className="text-zinc-500 border-t border-zinc-700 pt-1">+ Costo envío:</span>
+            <span className="text-right text-zinc-300 border-t border-zinc-700 pt-1">${(parseFloat(shippingCost) || 0).toLocaleString("es-AR")} ARS</span>
             <span className="text-zinc-500">+ Ganancia:</span>
             <span className="text-right text-zinc-300">
               {profitType === "percentage"
                 ? `${profitValue || 0}%`
-                : `$${parseFloat(profitValue || "0").toFixed(2)}`}
+                : `$${parseFloat(profitValue || "0").toLocaleString("es-AR")} ARS`}
             </span>
-            <span className="text-zinc-300 font-medium border-t border-zinc-700 pt-1">Total USD:</span>
-            <span className="text-right text-[#22C55E] font-bold border-t border-zinc-700 pt-1">${pricing.finalPriceUSD.toFixed(2)}</span>
-            <span className="text-zinc-300 font-medium">Total ARS:</span>
-            <span className="text-right text-[#F59E0B] font-bold">${pricing.finalPriceARS.toLocaleString("es-AR")}</span>
+            <span className="text-zinc-300 font-medium border-t border-zinc-700 pt-1">Total ARS:</span>
+            <span className="text-right text-[#22C55E] font-bold border-t border-zinc-700 pt-1">${pricing.finalPriceARS.toLocaleString("es-AR")} ARS</span>
+            <span className="text-zinc-300 font-medium">Total USD (ref):</span>
+            <span className="text-right text-[#F59E0B] font-bold">${pricing.finalPriceUSD.toFixed(2)} USD</span>
           </div>
-          <p className="text-[10px] text-zinc-600 mt-2">Tipo de cambio: ${exchangeRate} ARS/USD</p>
+          <p className="text-[10px] text-zinc-600 mt-2">Tipo de cambio ARS/USD: ${exchangeRate.toLocaleString("es-AR")} | USDT: ${usdtRate.toLocaleString("es-AR")} ARS/USDT</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

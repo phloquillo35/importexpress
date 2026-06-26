@@ -22,6 +22,7 @@ interface Product {
   costUSD: number | null
   stock: number
   isAvailable: boolean
+  hasFinancing: boolean
   category: { name: string; slug: string } | null
 }
 
@@ -172,6 +173,11 @@ export default function ProductDetailPage() {
               <Truck className="w-4 h-4" />
               Importado desde Punta del Este
             </span>
+            {product.hasFinancing && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-[#0071e3] bg-[#e8f0fe] px-3 py-1.5 rounded-full">
+                3 o 6 cuotas sin interés
+              </span>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-3">

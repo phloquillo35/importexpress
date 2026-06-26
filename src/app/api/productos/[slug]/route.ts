@@ -35,6 +35,7 @@ export async function GET(
         finalPriceARS: true,
         images: true,
         stock: true,
+        hasFinancing: true,
         category: { select: { name: true, slug: true } },
       },
     })
@@ -84,6 +85,7 @@ export async function PUT(
     if (body.minStock !== undefined) data.minStock = parseInt(body.minStock)
     if (body.isAvailable !== undefined) data.isAvailable = body.isAvailable
     if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
+    if (body.hasFinancing !== undefined) data.hasFinancing = body.hasFinancing
     if (body.categoryId !== undefined) data.categoryId = body.categoryId || null
     if (body.distributorId !== undefined) data.distributorId = body.distributorId || null
 
@@ -93,16 +95,21 @@ export async function PUT(
     const profitType = body.profitType ?? existing.profitType
     const profitValue = body.profitValue ?? existing.profitValue
 
-    const settings = await prisma.setting.findUnique({ where: { key: "exchange_rate" } })
-    const exchangeRate = parseFloat(settings?.value || "1")
+    const [exchangeRateSetting, usdtRateSetting] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: "exchange_rate" } }),
+      prisma.setting.findUnique({ where: { key: "usdt_rate" } }),
+    ])
+    const exchangeRate = parseFloat(exchangeRateSetting?.value || "1")
+    const usdtRate = parseFloat(usdtRateSetting?.value || exchangeRateSetting?.value || "1")
 
     const pricing = calculateFinalPrice({
       costUSDT: Number(costUSDT) || 0,
       yoniEnabled: Boolean(yoniEnabled),
       shippingCost: Number(shippingCost) || 0,
-      profitType: (profitType as "percentage" | "fixed_usdt") || "percentage",
+      profitType: (profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
       profitValue: Number(profitValue) || 0,
       exchangeRate,
+      usdtRate,
     })
 
     data.finalPriceUSD = pricing.finalPriceUSD

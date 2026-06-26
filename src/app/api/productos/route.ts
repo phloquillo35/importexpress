@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, costUSDT, yoniEnabled, shippingCost, profitType, profitValue } = body
+    const { name, costUSDT, yoniEnabled, hasFinancing, shippingCost, profitType, profitValue } = body
 
     if (!name) {
       return Response.json({ error: "name es requerido" }, { status: 400 })
@@ -71,8 +71,12 @@ export async function POST(request: Request) {
       return Response.json({ error: "Ya existe un producto con ese slug" }, { status: 409 })
     }
 
-    const settings = await prisma.setting.findUnique({ where: { key: "exchange_rate" } })
-    const exchangeRate = parseFloat(settings?.value || "1")
+    const [exchangeRateSetting, usdtRateSetting] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: "exchange_rate" } }),
+      prisma.setting.findUnique({ where: { key: "usdt_rate" } }),
+    ])
+    const exchangeRate = parseFloat(exchangeRateSetting?.value || "1")
+    const usdtRate = parseFloat(usdtRateSetting?.value || exchangeRateSetting?.value || "1")
 
     const usdt = parseFloat(costUSDT) || 0
     const yoni = yoniEnabled ?? false
@@ -84,9 +88,10 @@ export async function POST(request: Request) {
       costUSDT: usdt,
       yoniEnabled: yoni,
       shippingCost: ship,
-      profitType: pType as "percentage" | "fixed_usdt",
+      profitType: pType as "percentage" | "fixed_usdt" | "fixed_ars",
       profitValue: pValue,
       exchangeRate,
+      usdtRate,
     })
 
     const product = await prisma.product.create({
@@ -102,6 +107,7 @@ export async function POST(request: Request) {
         costUSD: body.costUSD ? parseFloat(body.costUSD) : null,
         costUSDT: usdt || null,
         yoniEnabled: yoni,
+        hasFinancing: hasFinancing ?? false,
         shippingCost: ship,
         profitType: pType,
         profitValue: pValue,

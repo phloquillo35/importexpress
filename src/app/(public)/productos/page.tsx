@@ -15,6 +15,7 @@ interface Product {
   finalPriceARS: number
   images: string[]
   stock: number
+  hasFinancing: boolean
   category: { name: string; slug: string } | null
 }
 

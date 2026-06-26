@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 export default function ConfiguracionPage() {
   const [form, setForm] = useState({
     exchange_rate: "",
+    usdt_rate: "",
     business_name: "",
     whatsapp: "",
     instagram: "",
@@ -23,6 +24,7 @@ export default function ConfiguracionPage() {
       .then(data => {
         setForm({
           exchange_rate: data.exchange_rate || "",
+          usdt_rate: data.usdt_rate || "",
           business_name: data.business_name || "",
           whatsapp: data.whatsapp || "",
           instagram: data.instagram || "",
@@ -90,7 +92,20 @@ export default function ConfiguracionPage() {
               className="bg-zinc-800 border-zinc-700 text-white"
               placeholder="1200"
             />
-            <p className="text-xs text-zinc-500">Usado para calcular precios en ARS automáticamente</p>
+            <p className="text-xs text-zinc-500">Usado para calcular precios de referencia en ARS</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="usdt_rate" className="text-zinc-300">Tipo de cambio USDT → ARS</Label>
+            <Input
+              id="usdt_rate"
+              type="number"
+              value={form.usdt_rate}
+              onChange={(e) => setForm({ ...form, usdt_rate: e.target.value })}
+              className="bg-zinc-800 border-zinc-700 text-white"
+              placeholder="1400"
+            />
+            <p className="text-xs text-zinc-500">Usado para convertir costos USDT a ARS en productos</p>
           </div>
         </div>
 

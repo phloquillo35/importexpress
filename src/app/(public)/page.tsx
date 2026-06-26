@@ -24,6 +24,7 @@ interface Product {
   images: string[]
   stock: number
   isFeatured: boolean
+  hasFinancing: boolean
   category: { name: string; slug: string } | null
 }
 

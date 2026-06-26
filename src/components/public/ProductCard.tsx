@@ -15,6 +15,7 @@ interface ProductCardProps {
     finalPriceARS: number
     images: string[]
     stock: number
+    hasFinancing: boolean
     category: { name: string; slug: string } | null
   }
 }
@@ -70,6 +71,12 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {price > 0 && (
             <p className="text-lg font-bold text-[#1d1d1f]">${price.toLocaleString("es-AR")} ARS</p>
+          )}
+
+          {product.hasFinancing && (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-[#0071e3] bg-[#e8f0fe] px-2.5 py-1 rounded-full">
+              3 o 6 cuotas sin interés
+            </span>
           )}
 
           <div>
