@@ -145,13 +145,16 @@ export default function BultosPage() {
           notes: form.notes || null,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al crear bulto")
+      }
       toast.success("Bulto creado")
       setDialogOpen(false)
       setSelectedItemIds([])
       setForm({ type: "grande", courier: "buspack", notes: "" })
       fetchBulks()
-    } catch { toast.error("Error al crear bulto") }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al crear bulto") }
     finally { setSaving(false) }
   }
 
@@ -175,16 +178,19 @@ export default function BultosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           trackingCode: editForm.trackingCode || null,
-          totalCostARS: editForm.totalCostARS ? parseFloat(editForm.totalCostARS) : null,
+          totalCostARS: editForm.totalCostARS !== "" && editForm.totalCostARS !== undefined ? parseFloat(editForm.totalCostARS) : null,
           status: editForm.status,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al actualizar bulto")
+      }
       toast.success("Bulto actualizado")
       setEditDialogOpen(false)
       setSelectedBulk(null)
       fetchBulks()
-    } catch { toast.error("Error al actualizar") }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al actualizar bulto") }
     finally { setSaving(false) }
   }
 

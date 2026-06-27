@@ -121,13 +121,16 @@ export default function FinanzasPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al crear transacción")
+      }
       toast.success("Transacción creada")
       setDialogOpen(false)
       setForm({ type: "income", concept: "", amountUSD: "", amountARS: "", date: "", notes: "" })
       fetchTransactions()
-    } catch {
-      toast.error("Error al crear transacción")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al crear transacción")
     } finally {
       setSaving(false)
     }

@@ -144,8 +144,8 @@ export default function AdminCategoriasPage() {
                   id="name"
                   value={form.name}
                   onChange={(e) => {
-                    setForm({ ...form, name: e.target.value })
-                    if (!editing) setForm((prev) => ({ ...prev, slug: e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "") }))
+                    const val = e.target.value
+                    setForm((prev) => ({ ...prev, name: val, slug: !editing ? val.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "") : prev.slug }))
                   }}
                   className="bg-zinc-800 border-zinc-700 text-white"
                   placeholder="Nombre de la categoría"

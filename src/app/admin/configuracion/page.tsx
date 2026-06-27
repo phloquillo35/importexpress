@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Settings, Save } from "lucide-react"
+import { Settings, Save, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,11 @@ export default function ConfiguracionPage() {
     business_name: "",
     whatsapp: "",
     instagram: "",
+    smtp_host: "",
+    smtp_port: "587",
+    smtp_user: "",
+    smtp_pass: "",
+    smtp_from: "",
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -28,6 +33,11 @@ export default function ConfiguracionPage() {
           business_name: data.business_name || "",
           whatsapp: data.whatsapp || "",
           instagram: data.instagram || "",
+          smtp_host: data.smtp_host || "",
+          smtp_port: data.smtp_port || "587",
+          smtp_user: data.smtp_user || "",
+          smtp_pass: data.smtp_pass || "",
+          smtp_from: data.smtp_from || "",
         })
       })
       .catch(() => toast.error("Error al cargar configuración"))
@@ -132,6 +142,73 @@ export default function ConfiguracionPage() {
               onChange={(e) => setForm({ ...form, instagram: e.target.value })}
               className="bg-zinc-800 border-zinc-700 text-white"
               placeholder="@importexpress"
+            />
+          </div>
+        </div>
+
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+          <div className="flex items-center gap-3 mb-2">
+            <Mail className="w-5 h-5 text-zinc-400" />
+            <h2 className="text-lg font-semibold text-white font-heading">Email (SMTP) — Reportes</h2>
+          </div>
+          <p className="text-sm text-zinc-500 -mt-2">Configuración necesaria para enviar reportes por email desde Admin → Reportes</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="smtp_host" className="text-zinc-300">Servidor SMTP</Label>
+              <Input
+                id="smtp_host"
+                value={form.smtp_host}
+                onChange={(e) => setForm({ ...form, smtp_host: e.target.value })}
+                className="bg-zinc-800 border-zinc-700 text-white"
+                placeholder="smtp.gmail.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp_port" className="text-zinc-300">Puerto</Label>
+              <Input
+                id="smtp_port"
+                type="number"
+                value={form.smtp_port}
+                onChange={(e) => setForm({ ...form, smtp_port: e.target.value })}
+                className="bg-zinc-800 border-zinc-700 text-white"
+                placeholder="587"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="smtp_user" className="text-zinc-300">Usuario</Label>
+              <Input
+                id="smtp_user"
+                value={form.smtp_user}
+                onChange={(e) => setForm({ ...form, smtp_user: e.target.value })}
+                className="bg-zinc-800 border-zinc-700 text-white"
+                placeholder="tu-email@gmail.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp_pass" className="text-zinc-300">Contraseña</Label>
+              <Input
+                id="smtp_pass"
+                type="password"
+                value={form.smtp_pass}
+                onChange={(e) => setForm({ ...form, smtp_pass: e.target.value })}
+                className="bg-zinc-800 border-zinc-700 text-white"
+                placeholder="Contraseña de aplicación"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="smtp_from" className="text-zinc-300">Email remitente</Label>
+            <Input
+              id="smtp_from"
+              value={form.smtp_from}
+              onChange={(e) => setForm({ ...form, smtp_from: e.target.value })}
+              className="bg-zinc-800 border-zinc-700 text-white"
+              placeholder="tu-email@gmail.com (si no se completa, usa el usuario)"
             />
           </div>
         </div>

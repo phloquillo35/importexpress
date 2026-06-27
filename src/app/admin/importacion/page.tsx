@@ -82,8 +82,8 @@ export default function ImportacionPage() {
 
   useEffect(() => { fetchBatches() }, [fetchBatches])
   useEffect(() => {
-    fetch("/api/productos?limit=200").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => {})
-    fetch("/api/distribuidores").then(r => r.json()).then(d => setDistributors(Array.isArray(d) ? d : [])).catch(() => {})
+    fetch("/api/productos?limit=200").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
+    fetch("/api/distribuidores").then(r => r.json()).then(d => setDistributors(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar distribuidores"))
   }, [])
 
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchProd.toLowerCase()))
@@ -94,7 +94,7 @@ export default function ImportacionPage() {
     else setCart([...cart, { productId: product.id, name: product.name, quantity: 1 }])
   }
 
-  const totalCost = cart.reduce((sum, item) => sum + (parseFloat(form.totalCostUSD) || 0) * item.quantity / Math.max(cart.length, 1), 0)
+  const totalCost = parseFloat(form.totalCostUSD) || 0
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -111,13 +111,16 @@ export default function ImportacionPage() {
           notes: form.notes || null,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al crear lote")
+      }
       toast.success("Lote creado")
       setDialogOpen(false)
       setCart([])
       setForm({ distributorId: "", totalCostUSD: "", notes: "" })
       fetchBatches()
-    } catch { toast.error("Error al crear lote") }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al crear lote") }
     finally { setSaving(false) }
   }
 
@@ -128,10 +131,13 @@ export default function ImportacionPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al actualizar")
+      }
       toast.success(newStatus === "received" ? "Stock actualizado automáticamente" : "Estado actualizado")
       fetchBatches()
-    } catch { toast.error("Error al actualizar") }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al actualizar") }
   }
 
   return (

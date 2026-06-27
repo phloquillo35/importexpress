@@ -93,16 +93,19 @@ export default function AdminStockPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: adjustProduct.id,
-          quantity: parseInt(adjustQty) * (adjustOp === "add" ? 1 : 1),
+          quantity: parseInt(adjustQty),
           operation: adjustOp,
         }),
       })
-      if (!res.ok) throw new Error("Error al ajustar")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al ajustar stock")
+      }
       toast.success("Stock ajustado")
       setAdjustProduct(null)
       loadStock()
-    } catch {
-      toast.error("Error al ajustar stock")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al ajustar stock")
     } finally {
       setSaving(false)
     }

@@ -2,13 +2,18 @@ import { prisma } from "@/lib/prisma"
 import { hashSync } from "bcryptjs"
 import { randomUUID } from "crypto"
 
-const DEFAULT_KEYS = ["exchange_rate", "usdt_rate", "business_name", "whatsapp", "instagram"] as const
+const DEFAULT_KEYS = ["exchange_rate", "usdt_rate", "business_name", "whatsapp", "instagram", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"] as const
 const DEFAULTS: Record<string, string> = {
   exchange_rate: "1350",
   usdt_rate: "1400",
   business_name: "Lo Pedís, Lo Tenes",
   whatsapp: "5491123456789",
   instagram: "@lopedis_lotenes.01",
+  smtp_host: "",
+  smtp_port: "587",
+  smtp_user: "",
+  smtp_pass: "",
+  smtp_from: "",
 }
 
 export async function GET() {

@@ -13,6 +13,7 @@ import {
   Truck,
   Ship,
   Settings,
+  FileText,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -29,6 +30,7 @@ const links = [
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/distribuidores", label: "Distribuidores", icon: Truck },
   { href: "/admin/bultos", label: "Bultos", icon: Ship },
+  { href: "/admin/reportes", label: "Reportes", icon: FileText },
   { href: "/admin/configuracion", label: "Configuración", icon: Settings },
 ]
 

@@ -48,7 +48,7 @@ export async function PUT(
     if (body.notes !== undefined) data.notes = body.notes
     if (body.trackingCode !== undefined) data.trackingCode = body.trackingCode
     if (body.totalCostUSD !== undefined) data.totalCostUSD = parseFloat(body.totalCostUSD)
-    if (body.totalCostARS !== undefined) data.totalCostARS = body.totalCostARS ? parseFloat(body.totalCostARS) : null
+    if (body.totalCostARS !== undefined && body.totalCostARS !== null) data.totalCostARS = parseFloat(body.totalCostARS)
     if (body.products) data.products = body.products
     if (body.type) data.type = body.type
     if (body.courier) data.courier = body.courier

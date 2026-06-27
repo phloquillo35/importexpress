@@ -100,7 +100,7 @@ export default function PedidosPage() {
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
   useEffect(() => {
-    fetch("/api/productos?limit=100").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => {})
+    fetch("/api/productos?limit=100").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
   }, [])
 
   async function updateStatus(orderId: string, newStatus: string) {
@@ -110,12 +110,15 @@ export default function PedidosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al actualizar estado")
+      }
       toast.success("Estado actualizado")
       fetchOrders()
       if (detailOrder?.id === orderId) setDetailOrder({ ...detailOrder, status: newStatus })
-    } catch {
-      toast.error("Error al actualizar estado")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al actualizar estado")
     }
   }
 
@@ -160,14 +163,17 @@ export default function PedidosPage() {
           totalUSD,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al crear pedido")
+      }
       toast.success("Pedido creado")
       setDialogOpen(false)
       setCart([])
       setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeName: "", clientContact: "" })
       fetchOrders()
-    } catch {
-      toast.error("Error al crear pedido")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al crear pedido")
     } finally { setSaving(false) }
   }
 
