@@ -10,6 +10,7 @@ export async function GET(
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
+        distributor: { select: { id: true, name: true } },
         items: {
           include: { product: { select: { name: true, slug: true, images: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
         },
@@ -41,13 +42,14 @@ export async function PUT(
     if (body.clientSurname !== undefined) data.clientSurname = body.clientSurname
     if (body.clientPhone !== undefined) data.clientPhone = body.clientPhone
     if (body.clientEmail !== undefined) data.clientEmail = body.clientEmail
-    if (body.storeName !== undefined) data.storeName = body.storeName
+    if (body.distributorId !== undefined) data.distributorId = body.distributorId
     if (body.clientContact !== undefined) data.clientContact = body.clientContact
 
     const updated = await prisma.order.update({
       where: { id },
       data,
       include: {
+        distributor: { select: { id: true, name: true } },
         items: {
           include: { product: { select: { name: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
         },

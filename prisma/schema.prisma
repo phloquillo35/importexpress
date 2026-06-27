@@ -35,6 +35,7 @@ model Distributor {
   notes    String?
   products Product[]
   bulks    Bulk[]
+  orders   Order[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -76,8 +77,9 @@ model Order {
   clientSurname String      @default("")
   clientPhone   String      @default("")
   clientEmail   String      @default("")
-  storeName     String      @default("")
   clientContact String
+  distributorId String?
+  distributor   Distributor? @relation(fields: [distributorId], references: [id])
   items         OrderItem[]
   totalUSD      Float
   totalARS      Float?

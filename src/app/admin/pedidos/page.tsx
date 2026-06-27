@@ -50,13 +50,18 @@ interface OrderItem {
   bulk: { courier: string; trackingCode: string | null; type: string } | null
 }
 
+interface Distributor {
+  id: string
+  name: string
+}
+
 interface Order {
   id: string
   clientName: string
   clientSurname: string
   clientPhone: string
   clientEmail: string
-  storeName: string
+  distributor: Distributor | null
   clientContact: string
   totalUSD: number
   totalARS: number | null
@@ -82,7 +87,8 @@ export default function PedidosPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [searchProd, setSearchProd] = useState("")
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number }[]>([])
-  const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeName: "", clientContact: "" })
+  const [distributors, setDistributors] = useState<Distributor[]>([])
+  const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", distributorId: "", clientContact: "" })
   const [saving, setSaving] = useState(false)
 
   const fetchOrders = useCallback(async () => {
@@ -101,6 +107,7 @@ export default function PedidosPage() {
 
   useEffect(() => {
     fetch("/api/productos?limit=100").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
+    fetch("/api/distribuidores").then(r => r.json()).then(d => setDistributors(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar distribuidores"))
   }, [])
 
   async function updateStatus(orderId: string, newStatus: string) {
@@ -157,7 +164,7 @@ export default function PedidosPage() {
           clientSurname: form.clientSurname,
           clientPhone: form.clientPhone,
           clientEmail: form.clientEmail,
-          storeName: form.storeName,
+          distributorId: form.distributorId || null,
           clientContact: form.clientContact,
           items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
           totalUSD,
@@ -170,7 +177,7 @@ export default function PedidosPage() {
       toast.success("Pedido creado")
       setDialogOpen(false)
       setCart([])
-      setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeName: "", clientContact: "" })
+      setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", distributorId: "", clientContact: "" })
       fetchOrders()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear pedido")
@@ -214,7 +221,7 @@ export default function PedidosPage() {
             <TableRow className="border-zinc-800 hover:bg-transparent">
               <TableHead className="text-zinc-400">Cliente</TableHead>
               <TableHead className="text-zinc-400 hidden sm:table-cell">Contacto</TableHead>
-              <TableHead className="text-zinc-400 hidden md:table-cell">Tienda</TableHead>
+              <TableHead className="text-zinc-400 hidden md:table-cell">Distribuidor</TableHead>
               <TableHead className="text-zinc-400 text-right">Total</TableHead>
               <TableHead className="text-zinc-400 text-center">Estado</TableHead>
               <TableHead className="text-zinc-400 text-right hidden md:table-cell">Fecha</TableHead>
@@ -233,7 +240,7 @@ export default function PedidosPage() {
                   <TableRow key={o.id} className="border-zinc-800/50 hover:bg-white/5 cursor-pointer" onClick={() => setDetailOrder(o)}>
                     <TableCell className="font-medium text-white">{o.clientName} {o.clientSurname}</TableCell>
                     <TableCell className="text-zinc-400 text-sm hidden sm:table-cell">{o.clientPhone || o.clientContact}</TableCell>
-                    <TableCell className="text-zinc-400 text-sm hidden md:table-cell">{o.storeName || "—"}</TableCell>
+                    <TableCell className="text-zinc-400 text-sm hidden md:table-cell">{o.distributor?.name || "—"}</TableCell>
                     <TableCell className="text-right text-zinc-200">{formatUSD(o.totalUSD)}</TableCell>
                     <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
                     <TableCell className="text-right text-zinc-500 text-sm hidden md:table-cell">{formatDate(o.createdAt)}</TableCell>
@@ -266,7 +273,7 @@ export default function PedidosPage() {
                 <div><p className="text-zinc-500">Nombre</p><p className="text-white">{detailOrder.clientName} {detailOrder.clientSurname}</p></div>
                 <div><p className="text-zinc-500">Teléfono</p><p className="text-white">{detailOrder.clientPhone || "—"}</p></div>
                 <div><p className="text-zinc-500">Email</p><p className="text-white">{detailOrder.clientEmail || "—"}</p></div>
-                <div><p className="text-zinc-500">Tienda</p><p className="text-white">{detailOrder.storeName || "—"}</p></div>
+                <div><p className="text-zinc-500">Distribuidor</p><p className="text-white">{detailOrder.distributor?.name || "—"}</p></div>
               </div>
               <div>
                 <p className="text-sm text-zinc-500 mb-2">Productos</p>
@@ -338,8 +345,18 @@ export default function PedidosPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Tienda</Label>
-              <Input value={form.storeName} onChange={(e) => setForm({ ...form, storeName: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" placeholder="Nombre de la tienda" />
+              <Label>Distribuidor</Label>
+              <Select value={form.distributorId} onValueChange={(v) => setForm({ ...form, distributorId: v === "__none" ? "" : v || "" })}>
+                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                  <SelectValue placeholder="Seleccionar distribuidor" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
+                  <SelectItem value="__none">Sin distribuidor</SelectItem>
+                  {distributors.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Productos</Label>

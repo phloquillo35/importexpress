@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const orders = await prisma.order.findMany({
       where,
       include: {
+        distributor: { select: { id: true, name: true } },
         items: {
           include: { product: { select: { name: true, slug: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
         },
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { clientName, clientSurname, clientPhone, clientEmail, storeName, clientContact, items, totalUSD, totalARS, notes } = body
+    const { clientName, clientSurname, clientPhone, clientEmail, distributorId, clientContact, items, totalUSD, totalARS, notes } = body
 
     if (!clientName || !items || !items.length) {
       return Response.json({ error: "clientName y items son requeridos" }, { status: 400 })
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
         clientSurname: clientSurname || "",
         clientPhone: clientPhone || "",
         clientEmail: clientEmail || "",
-        storeName: storeName || "",
+        distributorId: distributorId || null,
         clientContact: clientContact || "",
         totalUSD: parseFloat(totalUSD) || 0,
         totalARS: totalARS ? parseFloat(totalARS) : null,
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
         },
       },
       include: {
+        distributor: { select: { id: true, name: true } },
         items: {
           include: { product: { select: { name: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
         },
