@@ -32,6 +32,7 @@ echo "→ Aplicando migraciones pendientes..."
 ./node_modules/.bin/prisma migrate deploy 2>&1 || echo "⚠️ Error en migrate deploy, continuando..."
 
 echo "→ Migrando datos de SQLite a PostgreSQL si corresponde..."
+rm -f /data/prisma/.migrated-to-pg
 node /app/scripts/migrate-to-pg.mjs 2>&1 || true
 
 echo "→ Starting application..."
