@@ -171,7 +171,7 @@ export default function ProductDetailPage() {
             )}
             <span className="inline-flex items-center gap-1.5 text-sm text-[#6e6e73] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
               <Truck className="w-4 h-4" />
-              Importado desde Punta del Este
+              Importado desde Ciudad del Este, Paraguay
             </span>
             {product.hasFinancing && (
               <span className="inline-flex items-center gap-1.5 text-sm text-[#0071e3] bg-[#e8f0fe] px-3 py-1.5 rounded-full">

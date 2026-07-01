@@ -72,7 +72,7 @@ export default function ComoFuncionaPage() {
             </div>
             <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-3">Nos encargamos de todo</h3>
             <p className="text-sm text-[#6e6e73] leading-relaxed">
-              Una vez que confirmás tu pedido, gestionamos la compra internacional desde Punta del Este, 
+              Una vez que confirmás tu pedido, gestionamos la compra internacional desde Ciudad del Este, Paraguay, 
               trámites aduaneros, impuestos y logística hasta tu puerta.
             </p>
           </div>

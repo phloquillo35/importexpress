@@ -1,6 +1,6 @@
 # PROYECTO: Lo Pedís, Lo Tenes (ImportExpress)
 
-Ecommerce de importación desde Punta del Este (Uruguay) a Argentina.
+Ecommerce de importación desde Ciudad del Este, Paraguay (Uruguay) a Argentina.
 Venta por catálogo + WhatsApp. Sin pasarela de pago.
 
 ## Stack

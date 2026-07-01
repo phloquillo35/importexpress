@@ -4,10 +4,10 @@ import { Navbar } from "@/components/public/Navbar"
 import { CartProvider } from "@/context/CartContext"
 
 export const metadata: Metadata = {
-  title: "Lo Pedís, Lo Tenes - Importación directa desde Punta del Este",
-  description: "Importamos desde Punta del Este directo a tu casa. Electrónica, bicicletas, celulares y más.",
+  title: "Lo Pedís, Lo Tenes - Importación directa desde Ciudad del Este, Paraguay",
+  description: "Importamos desde Ciudad del Este, Paraguay directo a tu casa. Electrónica, bicicletas, celulares y más.",
   openGraph: {
-    title: "Lo Pedís, Lo Tenes - Importación directa desde Punta del Este",
+    title: "Lo Pedís, Lo Tenes - Importación directa desde Ciudad del Este, Paraguay",
     description: "Todo lo que necesitás, importado para vos. Electrónica, bicicletas, celulares y más.",
   },
 }
@@ -50,7 +50,7 @@ function Footer() {
               <span className="font-heading font-semibold text-[#1d1d1f] text-sm">Lo Pedís, Lo Tenes</span>
             </div>
             <p className="text-xs text-[#6e6e73] leading-relaxed">
-              Importamos desde Punta del Este directo a tu casa. Todo lo que necesitás, al mejor precio.
+              Importamos desde Ciudad del Este, Paraguay directo a tu casa. Todo lo que necesitás, al mejor precio.
             </p>
           </div>
 

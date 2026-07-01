@@ -86,7 +86,7 @@ export default function ContactoPage() {
             Tucumán, Argentina
           </p>
           <p className="text-white/70 text-sm mt-2">
-            Importamos desde Punta del Este con envíos a todo el país
+            Importamos desde Ciudad del Este, Paraguay con envíos a todo el país
           </p>
         </div>
       </div>

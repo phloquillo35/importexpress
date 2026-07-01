@@ -15,7 +15,7 @@ const nunitoSans = Nunito_Sans({
 
 export const metadata: Metadata = {
   title: "Lo Pedís, Lo Tenes",
-  description: "Importación directa desde Punta del Este",
+  description: "Importación directa desde Ciudad del Este, Paraguay",
 };
 
 export default function RootLayout({

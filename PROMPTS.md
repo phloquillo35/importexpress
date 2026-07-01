@@ -272,7 +272,7 @@ Pulido final y detalles.
 
 2. SEO:
    - Agregar metadata en (public)/layout.tsx
-   - title: "ImportExpress - Productos importados desde Punta del Este"
+   - title: "ImportExpress - Productos importados desde Ciudad del Este, Paraguay"
    - description: "Todo lo que necesitás, importado para vos. Electrónica, bicicletas, celulares y más."
 
 3. Tipo de cambio dinámico:
