@@ -152,62 +152,62 @@ export default function AdminStockPage() {
   function getStockBg(product: StockProduct) {
     if (product.stock <= product.minStock) return "bg-red-500/10"
     if (product.stock <= product.minStock * 2) return "bg-yellow-500/10"
-    return "bg-[#22C55E]/10"
+    return "bg-[#0071e3]/10"
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white font-heading">Stock</h1>
-        <p className="text-zinc-400 text-sm mt-1">Gestioná el inventario de productos</p>
+        <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Stock</h1>
+        <p className="text-[#6e6e73] text-sm mt-1">Gestioná el inventario de productos</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6e6e73]" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar producto..."
-              className="pl-9 bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500"
+              className="pl-9 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f] placeholder-[#6e6e73]"
             />
           </div>
 
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-400">Producto</TableHead>
-                  <TableHead className="text-zinc-400 hidden sm:table-cell">Categoría</TableHead>
-                  <TableHead className="text-zinc-400 text-right">Precio</TableHead>
-                  <TableHead className="text-zinc-400 text-center">Stock</TableHead>
-                  <TableHead className="text-zinc-400 text-center">Mínimo</TableHead>
-                  <TableHead className="text-zinc-400 text-right">Acción</TableHead>
+                <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
+                  <TableHead className="text-[#6e6e73]">Producto</TableHead>
+                  <TableHead className="text-[#6e6e73] hidden sm:table-cell">Categoría</TableHead>
+                  <TableHead className="text-[#6e6e73] text-right">Precio</TableHead>
+                  <TableHead className="text-[#6e6e73] text-center">Stock</TableHead>
+                  <TableHead className="text-[#6e6e73] text-center">Mínimo</TableHead>
+                  <TableHead className="text-[#6e6e73] text-right">Acción</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-zinc-500 py-12">
+                    <TableCell colSpan={6} className="text-center text-[#6e6e73] py-12">
                       Cargando...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-zinc-500 py-12">
+                    <TableCell colSpan={6} className="text-center text-[#6e6e73] py-12">
                       <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p>{search ? "Sin resultados" : "No hay productos"}</p>
                     </TableCell>
                   </TableRow>
                 ) : (
                   filtered.map((product) => (
-                    <TableRow key={product.id} className="border-zinc-800/50 hover:bg-white/5">
-                      <TableCell className="font-medium text-white">{product.name}</TableCell>
-                      <TableCell className="text-zinc-400 text-sm hidden sm:table-cell">
+                    <TableRow key={product.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
+                      <TableCell className="font-medium text-[#1d1d1f]">{product.name}</TableCell>
+                      <TableCell className="text-[#6e6e73] text-sm hidden sm:table-cell">
                         {product.category?.name || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-zinc-200">{formatUSD(product.priceUSD)}</TableCell>
+                      <TableCell className="text-right text-[#1d1d1f]">{formatUSD(product.priceUSD)}</TableCell>
                       <TableCell className="text-center">
                         <span className={cn(
                           "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium",
@@ -217,13 +217,13 @@ export default function AdminStockPage() {
                           {product.stock}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center text-zinc-500">{product.minStock}</TableCell>
+                      <TableCell className="text-center text-[#6e6e73]">{product.minStock}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => openAdjust(product)}
-                          className="text-zinc-400 hover:text-[#22C55E] text-xs"
+                          className="text-[#6e6e73] hover:text-[#22C55E] text-xs"
                         >
                           Ajustar
                         </Button>
@@ -245,8 +245,8 @@ export default function AdminStockPage() {
             className={cn(
               "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
               dragging
-                ? "border-[#22C55E] bg-[#22C55E]/5"
-                : "border-zinc-700 hover:border-zinc-500 bg-zinc-900/50"
+                ? "border-[#22C55E] bg-[#0071e3]/5"
+                : "border-[#d2d2d7]/60 hover:border-zinc-500 bg-white"
             )}
           >
             <input
@@ -260,18 +260,18 @@ export default function AdminStockPage() {
                 e.target.value = ""
               }}
             />
-            <Upload className="w-8 h-8 text-zinc-500 mx-auto mb-3" />
-            <p className="text-sm text-zinc-300 font-medium mb-1">Importar Excel</p>
-            <p className="text-xs text-zinc-500 mb-3">Arrastrá o hacé clic para subir</p>
-            <div className="inline-flex items-center gap-1.5 text-xs text-zinc-500 bg-zinc-800 px-3 py-1.5 rounded-full">
+            <Upload className="w-8 h-8 text-[#6e6e73] mx-auto mb-3" />
+            <p className="text-sm text-[#6e6e73] font-medium mb-1">Importar Excel</p>
+            <p className="text-xs text-[#6e6e73] mb-3">Arrastrá o hacé clic para subir</p>
+            <div className="inline-flex items-center gap-1.5 text-xs text-[#6e6e73] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
               <FileSpreadsheet className="w-3.5 h-3.5" />
               .xlsx / .xls
             </div>
           </div>
 
           {importResult && (
-            <div className="mt-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-2">
-              <h3 className="text-sm font-medium text-white">Resultado</h3>
+            <div className="mt-4 bg-white border border-[#d2d2d7]/60 rounded-xl p-4 space-y-2">
+              <h3 className="text-sm font-medium text-[#1d1d1f]">Resultado</h3>
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-[#22C55E]">{importResult.created} creados</span>
                 <span className="text-zinc-600">·</span>
@@ -287,7 +287,7 @@ export default function AdminStockPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setImportResult(null)}
-                className="text-xs text-zinc-500 hover:text-zinc-300"
+                className="text-xs text-[#6e6e73] hover:text-[#6e6e73]"
               >
                 Cerrar
               </Button>
@@ -297,14 +297,14 @@ export default function AdminStockPage() {
       </div>
 
       <Dialog open={!!adjustProduct} onOpenChange={(o) => { if (!o) setAdjustProduct(null) }}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white">
+        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
           <DialogHeader>
             <DialogTitle>Ajustar stock: {adjustProduct?.name}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAdjust} className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-zinc-400">Stock actual:</span>
-              <span className="text-lg font-bold text-white">{adjustProduct?.stock}</span>
+              <span className="text-sm text-[#6e6e73]">Stock actual:</span>
+              <span className="text-lg font-bold text-[#1d1d1f]">{adjustProduct?.stock}</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -314,8 +314,8 @@ export default function AdminStockPage() {
                 size="sm"
                 onClick={() => setAdjustOp("set")}
                 className={cn(
-                  "border-zinc-700",
-                  adjustOp === "set" ? "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]" : "text-zinc-400"
+                  "border-[#d2d2d7]/60",
+                  adjustOp === "set" ? "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]" : "text-[#6e6e73]"
                 )}
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
@@ -327,8 +327,8 @@ export default function AdminStockPage() {
                 size="sm"
                 onClick={() => setAdjustOp("add")}
                 className={cn(
-                  "border-zinc-700",
-                  adjustOp === "add" ? "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]" : "text-zinc-400"
+                  "border-[#d2d2d7]/60",
+                  adjustOp === "add" ? "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]" : "text-[#6e6e73]"
                 )}
               >
                 <Minus className="w-3.5 h-3.5 mr-1" />
@@ -344,7 +344,7 @@ export default function AdminStockPage() {
                 type="number"
                 value={adjustQty}
                 onChange={(e) => setAdjustQty(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white"
+                className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]"
               />
             </div>
 
@@ -353,14 +353,14 @@ export default function AdminStockPage() {
                 type="button"
                 variant="ghost"
                 onClick={() => setAdjustProduct(null)}
-                className="text-zinc-400"
+                className="text-[#6e6e73]"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                className="bg-[#0071e3] hover:bg-[#0077ed] text-white"
               >
                 {saving ? "Guardando..." : "Guardar"}
               </Button>

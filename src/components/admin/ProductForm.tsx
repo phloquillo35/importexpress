@@ -245,120 +245,120 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-3xl">
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-white font-heading">Información básica</h2>
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Información básica</h2>
 
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-zinc-300">Nombre</Label>
-          <Input id="name" {...register("name", { required: true })} className="bg-zinc-800 border-zinc-700 text-white" placeholder="Nombre del producto" />
+          <Label htmlFor="name" className="text-[#6e6e73]">Nombre</Label>
+          <Input id="name" {...register("name", { required: true })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="Nombre del producto" />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="slug" className="text-zinc-300">Slug</Label>
-          <Input id="slug" {...register("slug")} className="bg-zinc-800 border-zinc-700 text-white" placeholder="se-genera-automaticamente" />
+          <Label htmlFor="slug" className="text-[#6e6e73]">Slug</Label>
+          <Input id="slug" {...register("slug")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="se-genera-automaticamente" />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description" className="text-zinc-300">Descripción</Label>
-          <Textarea id="description" {...register("description")} className="bg-zinc-800 border-zinc-700 text-white" placeholder="Descripción del producto" rows={4} />
+          <Label htmlFor="description" className="text-[#6e6e73]">Descripción</Label>
+          <Textarea id="description" {...register("description")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="Descripción del producto" rows={4} />
         </div>
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-white font-heading">Precios y costos (solo admin)</h2>
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Precios y costos (solo admin)</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="costUSDT" className="text-zinc-300">Costo real USDT *</Label>
-            <Input id="costUSDT" type="number" step="0.01" {...register("costUSDT", { required: true })} className="bg-zinc-800 border-zinc-700 text-white" placeholder="0.00" />
+            <Label htmlFor="costUSDT" className="text-[#6e6e73]">Costo real USDT *</Label>
+            <Input id="costUSDT" type="number" step="0.01" {...register("costUSDT", { required: true })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="0.00" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="shippingCost" className="text-zinc-300">Costo de envío</Label>
-            <Input id="shippingCost" type="number" step="0.01" {...register("shippingCost")} className="bg-zinc-800 border-zinc-700 text-white/70" placeholder="Se asigna desde importación" />
+            <Label htmlFor="shippingCost" className="text-[#6e6e73]">Costo de envío</Label>
+            <Input id="shippingCost" type="number" step="0.01" {...register("shippingCost")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]/70" placeholder="Se asigna desde importación" />
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" {...register("yoniEnabled")} defaultChecked={defaultValues?.yoniEnabled ?? false} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#22C55E] focus:ring-[#22C55E]" />
-            <span className="text-sm text-zinc-300">Comisión Yoni (25%)</span>
+            <input type="checkbox" {...register("yoniEnabled")} defaultChecked={defaultValues?.yoniEnabled ?? false} className="w-4 h-4 rounded border-zinc-600 bg-[#f5f5f7] text-[#22C55E] focus:ring-[#22C55E]" />
+            <span className="text-sm text-[#6e6e73]">Comisión Yoni (25%)</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" {...register("hasFinancing")} defaultChecked={defaultValues?.hasFinancing ?? false} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#0071e3] focus:ring-[#0071e3]" />
-            <span className="text-sm text-zinc-300">Financiación (3 o 6 cuotas)</span>
+            <input type="checkbox" {...register("hasFinancing")} defaultChecked={defaultValues?.hasFinancing ?? false} className="w-4 h-4 rounded border-zinc-600 bg-[#f5f5f7] text-[#0071e3] focus:ring-[#0071e3]" />
+            <span className="text-sm text-[#6e6e73]">Financiación (3 o 6 cuotas)</span>
           </label>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-zinc-300">Tipo de ganancia</Label>
+            <Label className="text-[#6e6e73]">Tipo de ganancia</Label>
             <Select onValueChange={(v) => { if (v) setValue("profitType", v) }} defaultValue={defaultValues?.profitType || "percentage"}>
-              <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectValue placeholder="Seleccionar" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
+              <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectItem value="percentage">Porcentaje (%)</SelectItem>
                 <SelectItem value="fixed_ars">Valor fijo (ARS)</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="profitValue" className="text-zinc-300">
+            <Label htmlFor="profitValue" className="text-[#6e6e73]">
               {profitType === "percentage" ? "Ganancia (%)" : "Ganancia fija (ARS)"}
             </Label>
-            <Input id="profitValue" type="number" step="0.01" {...register("profitValue")} className="bg-zinc-800 border-zinc-700 text-white" placeholder="0" />
+            <Input id="profitValue" type="number" step="0.01" {...register("profitValue")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="0" />
           </div>
         </div>
 
-        <div className="bg-zinc-800/50 rounded-lg p-4 space-y-2">
-          <p className="text-sm font-medium text-zinc-400 mb-2">Resumen de precios</p>
+        <div className="bg-[#f5f5f7]/50 rounded-lg p-4 space-y-2">
+          <p className="text-sm font-medium text-[#6e6e73] mb-2">Resumen de precios</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-            <span className="text-zinc-500">Costo base USDT:</span>
-            <span className="text-right text-zinc-300">${(parseFloat(costUSDT) || 0).toFixed(2)} USDT</span>
+            <span className="text-[#6e6e73]">Costo base USDT:</span>
+            <span className="text-right text-[#6e6e73]">${(parseFloat(costUSDT) || 0).toFixed(2)} USDT</span>
             {yoniEnabled && (
               <>
-                <span className="text-zinc-500">+ Comisión Yoni (25%):</span>
-                <span className="text-right text-zinc-300">${((parseFloat(costUSDT) || 0) * 0.25).toFixed(2)} USDT</span>
+                <span className="text-[#6e6e73]">+ Comisión Yoni (25%):</span>
+                <span className="text-right text-[#6e6e73]">${((parseFloat(costUSDT) || 0) * 0.25).toFixed(2)} USDT</span>
               </>
             )}
-            <span className="text-zinc-500 border-t border-zinc-700 pt-1">+ Costo envío:</span>
-            <span className="text-right text-zinc-300 border-t border-zinc-700 pt-1">${(parseFloat(shippingCost) || 0).toLocaleString("es-AR")} ARS</span>
-            <span className="text-zinc-500">+ Ganancia:</span>
-            <span className="text-right text-zinc-300">
+            <span className="text-[#6e6e73] border-t border-[#d2d2d7]/60 pt-1">+ Costo envío:</span>
+            <span className="text-right text-[#6e6e73] border-t border-[#d2d2d7]/60 pt-1">${(parseFloat(shippingCost) || 0).toLocaleString("es-AR")} ARS</span>
+            <span className="text-[#6e6e73]">+ Ganancia:</span>
+            <span className="text-right text-[#6e6e73]">
               {profitType === "percentage"
                 ? `${profitValue || 0}%`
                 : `$${parseFloat(profitValue || "0").toLocaleString("es-AR")} ARS`}
             </span>
-            <span className="text-zinc-300 font-medium border-t border-zinc-700 pt-1">Total ARS:</span>
-            <span className="text-right text-[#22C55E] font-bold border-t border-zinc-700 pt-1">${pricing.finalPriceARS.toLocaleString("es-AR")} ARS</span>
-            <span className="text-zinc-300 font-medium">Total USD (ref):</span>
+            <span className="text-[#6e6e73] font-medium border-t border-[#d2d2d7]/60 pt-1">Total ARS:</span>
+            <span className="text-right text-[#22C55E] font-bold border-t border-[#d2d2d7]/60 pt-1">${pricing.finalPriceARS.toLocaleString("es-AR")} ARS</span>
+            <span className="text-[#6e6e73] font-medium">Total USD (ref):</span>
             <span className="text-right text-[#F59E0B] font-bold">${pricing.finalPriceUSD.toFixed(2)} USD</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="stock" className="text-zinc-300">Stock</Label>
-            <Input id="stock" type="number" {...register("stock")} className="bg-zinc-800 border-zinc-700 text-white" />
+            <Label htmlFor="stock" className="text-[#6e6e73]">Stock</Label>
+            <Input id="stock" type="number" {...register("stock")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="minStock" className="text-zinc-300">Stock mínimo</Label>
-            <Input id="minStock" type="number" {...register("minStock")} className="bg-zinc-800 border-zinc-700 text-white" />
+            <Label htmlFor="minStock" className="text-[#6e6e73]">Stock mínimo</Label>
+            <Input id="minStock" type="number" {...register("minStock")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
           </div>
         </div>
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-white font-heading">Categoría y distribuidor</h2>
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Categoría y distribuidor</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-zinc-300">Categoría</Label>
+            <Label className="text-[#6e6e73]">Categoría</Label>
             <Select onValueChange={(v) => { if (v) setValue("categoryId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.categoryId || "none"}>
-              <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
+              <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectItem value="__none">Sin categoría</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
@@ -367,12 +367,12 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-zinc-300">Distribuidor</Label>
+            <Label className="text-[#6e6e73]">Distribuidor</Label>
             <Select onValueChange={(v) => { if (v) setValue("distributorId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.distributorId || "none"}>
-              <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectValue placeholder="Seleccionar distribuidor" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
+              <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectItem value="__none">Sin distribuidor</SelectItem>
                 {distributors.map((d) => (
                   <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
@@ -384,31 +384,31 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
 
         <div className="flex items-center gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" {...register("isAvailable")} defaultChecked={defaultValues?.isAvailable ?? true} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#22C55E] focus:ring-[#22C55E]" />
-            <span className="text-sm text-zinc-300">Disponible</span>
+            <input type="checkbox" {...register("isAvailable")} defaultChecked={defaultValues?.isAvailable ?? true} className="w-4 h-4 rounded border-zinc-600 bg-[#f5f5f7] text-[#22C55E] focus:ring-[#22C55E]" />
+            <span className="text-sm text-[#6e6e73]">Disponible</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" {...register("isFeatured")} defaultChecked={defaultValues?.isFeatured ?? false} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-[#F59E0B] focus:ring-[#F59E0B]" />
-            <span className="text-sm text-zinc-300">Destacado</span>
+            <input type="checkbox" {...register("isFeatured")} defaultChecked={defaultValues?.isFeatured ?? false} className="w-4 h-4 rounded border-zinc-600 bg-[#f5f5f7] text-[#F59E0B] focus:ring-[#F59E0B]" />
+            <span className="text-sm text-[#6e6e73]">Destacado</span>
           </label>
         </div>
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-6 space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white font-heading">Especificaciones</h2>
-          <Button type="button" variant="outline" size="sm" onClick={addSpec} className="border-zinc-700 text-zinc-300">
+          <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Especificaciones</h2>
+          <Button type="button" variant="outline" size="sm" onClick={addSpec} className="border-[#d2d2d7]/60 text-[#6e6e73]">
             <Plus className="w-4 h-4 mr-1" /> Agregar
           </Button>
         </div>
         {specs.length === 0 ? (
-          <p className="text-sm text-zinc-500">Sin especificaciones</p>
+          <p className="text-sm text-[#6e6e73]">Sin especificaciones</p>
         ) : (
           <div className="space-y-3">
             {specs.map((spec, i) => (
               <div key={i} className="flex items-center gap-2">
-                <Input value={spec.key} onChange={(e) => updateSpec(i, "key", e.target.value)} placeholder="Clave" className="bg-zinc-800 border-zinc-700 text-white flex-1" />
-                <Input value={spec.value} onChange={(e) => updateSpec(i, "value", e.target.value)} placeholder="Valor" className="bg-zinc-800 border-zinc-700 text-white flex-1" />
+                <Input value={spec.key} onChange={(e) => updateSpec(i, "key", e.target.value)} placeholder="Clave" className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f] flex-1" />
+                <Input value={spec.value} onChange={(e) => updateSpec(i, "value", e.target.value)} placeholder="Valor" className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f] flex-1" />
                 <Button type="button" variant="ghost" size="icon" onClick={() => removeSpec(i)} className="text-red-400 flex-shrink-0">
                   <X className="w-4 h-4" />
                 </Button>
@@ -418,28 +418,28 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         )}
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-white font-heading">Imágenes</h2>
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Imágenes</h2>
         <div className="flex flex-wrap gap-3">
           {images.map((url, i) => (
-            <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-zinc-700 group">
+            <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#d2d2d7]/60 group">
               <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
               <button type="button" onClick={() => removeImage(i)} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 text-[#1d1d1f]" />
               </button>
             </div>
           ))}
-          <label className="w-24 h-24 rounded-lg border-2 border-dashed border-zinc-700 flex flex-col items-center justify-center cursor-pointer hover:border-[#22C55E] transition-colors">
-            <Upload className="w-5 h-5 text-zinc-500 mb-1" />
-            <span className="text-[10px] text-zinc-500">{uploading ? "Subiendo..." : "Subir"}</span>
+          <label className="w-24 h-24 rounded-lg border-2 border-dashed border-[#d2d2d7]/60 flex flex-col items-center justify-center cursor-pointer hover:border-[#22C55E] transition-colors">
+            <Upload className="w-5 h-5 text-[#6e6e73] mb-1" />
+            <span className="text-[10px] text-[#6e6e73]">{uploading ? "Subiendo..." : "Subir"}</span>
             <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" disabled={uploading} />
           </label>
         </div>
       </div>
 
       <div className="flex items-center justify-end gap-3 pb-8">
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/productos")} className="border-zinc-700 text-zinc-400">Cancelar</Button>
-        <Button type="submit" disabled={saving} className="bg-[#22C55E] hover:bg-[#16A34A] text-white min-w-[140px]">
+        <Button type="button" variant="outline" onClick={() => router.push("/admin/productos")} className="border-[#d2d2d7]/60 text-[#6e6e73]">Cancelar</Button>
+        <Button type="submit" disabled={saving} className="bg-[#0071e3] hover:bg-[#0077ed] text-white min-w-[140px]">
           {saving ? "Guardando..." : productSlug ? "Actualizar producto" : "Crear producto"}
         </Button>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Trash2, Search, Package } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import {
   Table,
@@ -45,6 +45,7 @@ export default function AdminProductosPage() {
     try {
       const params = new URLSearchParams()
       if (search) params.set("search", search)
+      params.set("admin", "1")
       params.set("page", String(page))
       params.set("limit", String(limit))
 
@@ -82,16 +83,31 @@ export default function AdminProductosPage() {
     }
   }
 
+  async function handleToggleAvailability(product: Product) {
+    try {
+      const res = await fetch(`/api/productos/${product.slug}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isAvailable: !product.isAvailable }),
+      })
+      if (!res.ok) throw new Error("Error al actualizar")
+      toast.success(product.isAvailable ? "Producto ocultado" : "Producto visible")
+      fetchProducts()
+    } catch {
+      toast.error("Error al cambiar disponibilidad")
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white font-heading">Productos</h1>
-          <p className="text-zinc-400 text-sm mt-1">{total} productos registrados</p>
+          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Productos</h1>
+          <p className="text-[#6e6e73] text-sm mt-1">{total} productos registrados</p>
         </div>
         <Button
           onClick={() => router.push("/admin/productos/nuevo")}
-          className="bg-[#22C55E] hover:bg-[#16A34A] text-white"
+          className="bg-[#0071e3] hover:bg-[#0077ed] text-white"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nuevo producto
@@ -100,57 +116,57 @@ export default function AdminProductosPage() {
 
       <form onSubmit={handleSearch} className="flex gap-2 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6e6e73]" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar productos..."
-            className="pl-9 bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500"
+            className="pl-9 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f] placeholder-[#6e6e73]"
           />
         </div>
-        <Button type="submit" variant="secondary" className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
+        <Button type="submit" variant="secondary" className="bg-[#f5f5f7] text-[#6e6e73] hover:bg-zinc-700">
           Buscar
         </Button>
       </form>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-transparent">
-              <TableHead className="text-zinc-400">Producto</TableHead>
-              <TableHead className="text-zinc-400 hidden md:table-cell">Categoría</TableHead>
-              <TableHead className="text-zinc-400 text-right">Costo USDT</TableHead>
-              <TableHead className="text-zinc-400 text-right">Precio final ARS</TableHead>
-              <TableHead className="text-zinc-400 text-center">Stock</TableHead>
-              <TableHead className="text-zinc-400 text-center hidden sm:table-cell">Disp.</TableHead>
-              <TableHead className="text-zinc-400 text-right">Acciones</TableHead>
+            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
+              <TableHead className="text-[#6e6e73]">Producto</TableHead>
+              <TableHead className="text-[#6e6e73] hidden md:table-cell">Categoría</TableHead>
+              <TableHead className="text-[#6e6e73] text-right">Costo USDT</TableHead>
+              <TableHead className="text-[#6e6e73] text-right">Precio final ARS</TableHead>
+              <TableHead className="text-[#6e6e73] text-center">Stock</TableHead>
+              <TableHead className="text-[#6e6e73] text-center hidden sm:table-cell">Disp.</TableHead>
+              <TableHead className="text-[#6e6e73] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-zinc-500 py-12">
+                <TableCell colSpan={7} className="text-center text-[#6e6e73] py-12">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-zinc-500 py-12">
+                <TableCell colSpan={7} className="text-center text-[#6e6e73] py-12">
                   <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No hay productos</p>
                 </TableCell>
               </TableRow>
             ) : (
               products.map((product) => (
-                <TableRow key={product.id} className="border-zinc-800/50 hover:bg-white/5">
-                  <TableCell className="font-medium text-white">{product.name}</TableCell>
-                  <TableCell className="text-zinc-400 hidden md:table-cell">
+                <TableRow key={product.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
+                  <TableCell className="font-medium text-[#1d1d1f]">{product.name}</TableCell>
+                  <TableCell className="text-[#6e6e73] hidden md:table-cell">
                     {product.category?.name || "—"}
                   </TableCell>
-                  <TableCell className="text-right text-zinc-200">${(product.costUSDT || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-[#1d1d1f]">${(product.costUSDT || 0).toFixed(2)}</TableCell>
                   <TableCell className="text-right text-[#F59E0B] font-medium">${(product.finalPriceARS || 0).toLocaleString("es-AR")}</TableCell>
                   <TableCell className="text-center">
-                    <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-zinc-300"}>
+                    <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-[#6e6e73]"}>
                       {product.stock}
                     </span>
                   </TableCell>
@@ -167,15 +183,24 @@ export default function AdminProductosPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}
-                        className="text-zinc-400 hover:text-[#22C55E]"
+                        className="text-[#6e6e73] hover:text-[#22C55E]"
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => handleToggleAvailability(product)}
+                        className={product.isAvailable ? "text-[#6e6e73] hover:text-red-400" : "text-[#6e6e73] hover:text-[#22C55E]"}
+                        title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
+                      >
+                        {product.isAvailable ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleDelete(product)}
-                        className="text-zinc-400 hover:text-red-400"
+                        className="text-[#6e6e73] hover:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -195,11 +220,11 @@ export default function AdminProductosPage() {
             size="sm"
             disabled={page <= 1}
             onClick={() => setPage(page - 1)}
-            className="border-zinc-700 text-zinc-400"
+            className="border-[#d2d2d7]/60 text-[#6e6e73]"
           >
             Anterior
           </Button>
-          <span className="text-sm text-zinc-400">
+          <span className="text-sm text-[#6e6e73]">
             Página {page} de {totalPages}
           </span>
           <Button
@@ -207,7 +232,7 @@ export default function AdminProductosPage() {
             size="sm"
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
-            className="border-zinc-700 text-zinc-400"
+            className="border-[#d2d2d7]/60 text-[#6e6e73]"
           >
             Siguiente
           </Button>

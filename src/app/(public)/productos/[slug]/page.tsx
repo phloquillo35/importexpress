@@ -159,16 +159,10 @@ export default function ProductDetailPage() {
           )}
 
           <div className="flex flex-wrap gap-3 mb-8">
-            {product.stock > 0 ? (
-              <span className="inline-flex items-center gap-1.5 text-sm text-[#34c759] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
-                <ShieldCheck className="w-4 h-4" />
-                En stock ({product.stock} unidades)
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 text-sm text-[#ff3b30] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
-                Sin stock
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1.5 text-sm text-[#34c759] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
+              <ShieldCheck className="w-4 h-4" />
+              Disponible
+            </span>
             <span className="inline-flex items-center gap-1.5 text-sm text-[#6e6e73] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
               <Truck className="w-4 h-4" />
               Importado desde Ciudad del Este, Paraguay

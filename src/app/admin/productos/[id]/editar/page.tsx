@@ -42,7 +42,7 @@ export default function EditarProductoPage() {
     return (
       <div className="text-center py-20">
         <Package className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-        <p className="text-zinc-400">Producto no encontrado</p>
+        <p className="text-[#6e6e73]">Producto no encontrado</p>
       </div>
     )
   }
@@ -73,8 +73,8 @@ export default function EditarProductoPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white font-heading">Editar producto</h1>
-        <p className="text-zinc-400 text-sm mt-1">Modificá los datos del producto</p>
+        <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Editar producto</h1>
+        <p className="text-[#6e6e73] text-sm mt-1">Modificá los datos del producto</p>
       </div>
       <ProductForm defaultValues={defaultValues} productSlug={product.slug as string} />
     </div>

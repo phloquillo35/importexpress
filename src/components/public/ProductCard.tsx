@@ -15,6 +15,7 @@ interface ProductCardProps {
     finalPriceARS: number
     images: string[]
     stock: number
+    isAvailable: boolean
     hasFinancing: boolean
     category: { name: string; slug: string } | null
   }
@@ -41,6 +42,8 @@ export function ProductCard({ product }: ProductCardProps) {
       image: product.images?.[0] ?? null,
     })
   }
+
+  const puedeComprar = product.stock > 0
 
   return (
     <div className="group block bg-white rounded-2xl border border-[#d2d2d7]/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300">
@@ -80,20 +83,14 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
 
           <div>
-            {product.stock > 0 ? (
-              <span className="text-[11px] font-medium text-[#34c759]">
-                En stock
-              </span>
-            ) : (
-              <span className="text-[11px] font-medium text-[#ff3b30]">
-                Sin stock
-              </span>
-            )}
+            <span className="text-[11px] font-medium text-[#34c759]">
+              Disponible
+            </span>
           </div>
         </div>
       </Link>
 
-      {product.stock > 0 && (
+      {puedeComprar && (
         <div className="px-5 pb-5">
           <button
             onClick={handleAdd}

@@ -140,33 +140,33 @@ export default function FinanzasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white font-heading">Finanzas</h1>
-          <p className="text-zinc-400 text-sm mt-1">Gestión de ingresos y egresos</p>
+          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Finanzas</h1>
+          <p className="text-[#6e6e73] text-sm mt-1">Gestión de ingresos y egresos</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">
+        <Button onClick={() => setDialogOpen(true)} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">
           <Plus className="w-4 h-4 mr-2" /> Nueva transacción
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <p className="text-sm text-zinc-500">Ingresos</p>
+        <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-5">
+          <p className="text-sm text-[#6e6e73]">Ingresos</p>
           <p className="text-2xl font-bold text-[#22C55E] mt-1">{formatUSD(income)}</p>
         </div>
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <p className="text-sm text-zinc-500">Egresos</p>
+        <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-5">
+          <p className="text-sm text-[#6e6e73]">Egresos</p>
           <p className="text-2xl font-bold text-red-400 mt-1">{formatUSD(expense)}</p>
         </div>
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <p className="text-sm text-zinc-500">Balance</p>
+        <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-5">
+          <p className="text-sm text-[#6e6e73]">Balance</p>
           <p className={`text-2xl font-bold mt-1 ${balance >= 0 ? "text-[#22C55E]" : "text-red-400"}`}>
             {formatUSD(balance)}
           </p>
         </div>
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 lg:p-6">
-        <h2 className="text-lg font-semibold text-white font-heading mb-4">Evolución (6 meses)</h2>
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-4 lg:p-6">
+        <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-4">Evolución (6 meses)</h2>
         {chartData.length > 0 ? (
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -181,18 +181,18 @@ export default function FinanzasPage() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-72 flex items-center justify-center text-zinc-500 text-sm">Sin datos</div>
+          <div className="h-72 flex items-center justify-center text-[#6e6e73] text-sm">Sin datos</div>
         )}
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-zinc-800 flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-white font-heading flex-1">Transacciones</h2>
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-[#d2d2d7]/60 flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading flex-1">Transacciones</h2>
           <Select value={tipoFilter} onValueChange={(v) => setTipoFilter(v || "")}>
-            <SelectTrigger className="w-36 bg-zinc-800 border-zinc-700 text-white">
+            <SelectTrigger className="w-36 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
               <SelectValue placeholder="Filtrar" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
+            <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
               <SelectItem value="all">Todas</SelectItem>
               <SelectItem value="income">Ingresos</SelectItem>
               <SelectItem value="expense">Egresos</SelectItem>
@@ -201,33 +201,33 @@ export default function FinanzasPage() {
         </div>
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-transparent">
-              <TableHead className="text-zinc-400">Concepto</TableHead>
-              <TableHead className="text-zinc-400">Tipo</TableHead>
-              <TableHead className="text-zinc-400 text-right">Monto USD</TableHead>
-              <TableHead className="text-zinc-400 text-right hidden sm:table-cell">Monto ARS</TableHead>
-              <TableHead className="text-zinc-400 text-right">Fecha</TableHead>
+            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
+              <TableHead className="text-[#6e6e73]">Concepto</TableHead>
+              <TableHead className="text-[#6e6e73]">Tipo</TableHead>
+              <TableHead className="text-[#6e6e73] text-right">Monto USD</TableHead>
+              <TableHead className="text-[#6e6e73] text-right hidden sm:table-cell">Monto ARS</TableHead>
+              <TableHead className="text-[#6e6e73] text-right">Fecha</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-zinc-500 py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73] py-12">Cargando...</TableCell></TableRow>
             ) : transactions.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-zinc-500 py-12"><DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin transacciones</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73] py-12"><DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin transacciones</p></TableCell></TableRow>
             ) : (
               transactions.map((t) => (
-                <TableRow key={t.id} className="border-zinc-800/50 hover:bg-white/5">
-                  <TableCell className="text-white">{t.concept}</TableCell>
+                <TableRow key={t.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
+                  <TableCell className="text-[#1d1d1f]">{t.concept}</TableCell>
                   <TableCell>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${t.type === "income" ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-red-500/10 text-red-400"}`}>
                       {t.type === "income" ? "Ingreso" : "Egreso"}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right text-zinc-200">{formatUSD(t.amountUSD)}</TableCell>
-                  <TableCell className="text-right text-zinc-400 text-sm hidden sm:table-cell">
+                  <TableCell className="text-right text-[#1d1d1f]">{formatUSD(t.amountUSD)}</TableCell>
+                  <TableCell className="text-right text-[#6e6e73] text-sm hidden sm:table-cell">
                     {t.amountARS ? `$${t.amountARS.toLocaleString("es-AR")}` : "—"}
                   </TableCell>
-                  <TableCell className="text-right text-zinc-500 text-sm">{formatDate(t.date)}</TableCell>
+                  <TableCell className="text-right text-[#6e6e73] text-sm">{formatDate(t.date)}</TableCell>
                 </TableRow>
               ))
             )}
@@ -236,16 +236,16 @@ export default function FinanzasPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white">
+        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
           <DialogHeader><DialogTitle>Nueva transacción</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Tipo</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v || "income" })}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
+                <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
                   <SelectItem value="income">Ingreso</SelectItem>
                   <SelectItem value="expense">Egreso</SelectItem>
                 </SelectContent>
@@ -253,29 +253,29 @@ export default function FinanzasPage() {
             </div>
             <div className="space-y-2">
               <Label>Concepto</Label>
-              <Input value={form.concept} onChange={(e) => setForm({ ...form, concept: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" placeholder="Venta de productos, pago a proveedor..." />
+              <Input value={form.concept} onChange={(e) => setForm({ ...form, concept: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="Venta de productos, pago a proveedor..." />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Monto USD *</Label>
-                <Input type="number" step="0.01" value={form.amountUSD} onChange={(e) => setForm({ ...form, amountUSD: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+                <Input type="number" step="0.01" value={form.amountUSD} onChange={(e) => setForm({ ...form, amountUSD: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
               </div>
               <div className="space-y-2">
                 <Label>Monto ARS</Label>
-                <Input type="number" value={form.amountARS} onChange={(e) => setForm({ ...form, amountARS: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+                <Input type="number" value={form.amountARS} onChange={(e) => setForm({ ...form, amountARS: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Fecha</Label>
-              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
             </div>
             <div className="space-y-2">
               <Label>Notas</Label>
-              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-zinc-800 border-zinc-700 text-white" />
+              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-zinc-400">Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-[#22C55E] hover:bg-[#16A34A] text-white">{saving ? "Guardando..." : "Crear"}</Button>
+              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-[#6e6e73]">Cancelar</Button>
+              <Button type="submit" disabled={saving} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">{saving ? "Guardando..." : "Crear"}</Button>
             </div>
           </form>
         </DialogContent>

@@ -15,7 +15,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen bg-[#0F172A]">
+    <div className="flex h-screen bg-white">
       <div className="hidden lg:flex">
         <Sidebar />
       </div>

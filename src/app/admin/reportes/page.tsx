@@ -31,29 +31,29 @@ export default function ReportesPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-white font-heading">Reportes</h1>
-        <p className="text-zinc-400 mt-1">Generá y enviá un reporte completo del negocio por email.</p>
+        <h1 className="text-2xl font-semibold text-[#1d1d1f] font-heading">Reportes</h1>
+        <p className="text-[#6e6e73] mt-1">Generá y enviá un reporte completo del negocio por email.</p>
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-6">
+      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-6 space-y-6">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center flex-shrink-0">
             <FileText className="w-6 h-6 text-[#F59E0B]" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-white font-heading">Reporte completo del negocio</h2>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Reporte completo del negocio</h2>
+            <p className="text-sm text-[#6e6e73] leading-relaxed">
               El reporte incluye: productos por categoría, pedidos por estado, ingresos y egresos,
               productos con stock bajo, y más. Se envía al email del administrador.
             </p>
           </div>
         </div>
 
-        <div className="bg-zinc-800/40 rounded-lg p-4 space-y-2">
-          <h3 className="text-sm font-medium text-zinc-300">Contenido del reporte</h3>
-          <ul className="text-sm text-zinc-400 space-y-1.5">
+        <div className="bg-[#f5f5f7]/40 rounded-lg p-4 space-y-2">
+          <h3 className="text-sm font-medium text-[#6e6e73]">Contenido del reporte</h3>
+          <ul className="text-sm text-[#6e6e73] space-y-1.5">
             <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] flex-shrink-0" />
               Productos: total, por categoría, destacados, disponibles
             </li>
             <li className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export default function ReportesPage() {
               Pedidos: cantidad por estado, ingreso total, últimos 30 días
             </li>
             <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] flex-shrink-0" />
               Finanzas: ingresos, egresos, balance
             </li>
             <li className="flex items-center gap-2">
@@ -74,7 +74,7 @@ export default function ReportesPage() {
         <Button
           onClick={handleSend}
           disabled={sending}
-          className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white h-12 text-base gap-2"
+          className="w-full bg-[#0071e3] hover:bg-[#0077ed] text-white h-12 text-base gap-2"
         >
           {sending ? (
             <>
@@ -95,7 +95,7 @@ export default function ReportesPage() {
         </Button>
 
         {sent && (
-          <div className="flex items-center gap-2 text-sm text-[#22C55E] bg-[#22C55E]/5 rounded-lg p-3">
+          <div className="flex items-center gap-2 text-sm text-[#22C55E] bg-[#0071e3]/5 rounded-lg p-3">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
             Reporte enviado exitosamente. Revisá tu casilla de email.
           </div>

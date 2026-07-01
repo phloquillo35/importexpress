@@ -14,7 +14,12 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"))
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")))
 
+    const admin = searchParams.get("admin") || ""
     const where: Record<string, unknown> = {}
+
+    if (!admin) {
+      where.isAvailable = true
+    }
 
     if (search) {
       where.name = { contains: search }
