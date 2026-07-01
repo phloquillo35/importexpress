@@ -155,7 +155,7 @@ export default function ProductDetailPage() {
           )}
 
           {product.description && (
-            <p className="text-white/80 leading-relaxed mb-8">{product.description}</p>
+            <p className="text-white leading-relaxed mb-8">{product.description}</p>
           )}
 
           <div className="flex flex-wrap gap-3 mb-8">
@@ -169,7 +169,7 @@ export default function ProductDetailPage() {
             </span>
             {product.hasFinancing && (
               <span className="inline-flex items-center gap-1.5 text-sm text-[#0071e3] bg-[#e8f0fe] px-3 py-1.5 rounded-full">
-                3 o 6 cuotas sin interés
+                3 o 6 cuotas
               </span>
             )}
           </div>

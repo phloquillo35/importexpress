@@ -78,7 +78,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {product.hasFinancing && (
             <span className="inline-flex items-center gap-1 text-xs font-medium text-[#0071e3] bg-[#e8f0fe] px-2.5 py-1 rounded-full">
-              3 o 6 cuotas sin interés
+              3 o 6 cuotas
             </span>
           )}
 
