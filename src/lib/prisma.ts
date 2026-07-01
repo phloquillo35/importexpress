@@ -1,15 +1,15 @@
 import { PrismaClient } from "@/generated/client"
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
+import { PrismaPg } from "@prisma/adapter-pg"
+import pg from "pg"
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-const databaseUrl = process.env.DATABASE_URL ?? "file:./prisma/dev.db"
-
 const prismaClientSingleton = () => {
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
   return new PrismaClient({
-    adapter: new PrismaBetterSqlite3({ url: databaseUrl }),
+    adapter: new PrismaPg(pool),
   })
 }
 

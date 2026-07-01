@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat python3 make g++
 
 FROM base AS deps
@@ -6,13 +6,14 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
+ENV DATABASE_URL="postgresql://postgres:password@localhost:5432/railway"
 RUN npm ci
 
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-COPY --from=deps /app/prisma/dev.db ./prisma/dev.db
+ENV DATABASE_URL="postgresql://postgres:password@localhost:5432/railway"
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx prisma generate
 RUN npm run build
@@ -31,17 +32,19 @@ COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/next.config.ts ./
 
+RUN npm install prisma@7.8.0 pg@^8.13.0 better-sqlite3@^12.11.1
+
 RUN mkdir -p /data && chown nextjs:nodejs /data
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
+COPY --from=builder /app/scripts ./scripts
 
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT=3000
-ENV DATABASE_URL="file:./prisma/dev.db"
 
 CMD ["/bin/sh", "entrypoint.sh"]

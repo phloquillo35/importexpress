@@ -215,7 +215,7 @@ export default function BultosPage() {
           <SelectTrigger className="w-40 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
             <SelectValue placeholder="Filtrar estado" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+          <SelectContent className=" bg-white text-[#1d1d1f]">
             <SelectItem value="all">Todos</SelectItem>
             {Object.entries(statusConfig).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v.label}</SelectItem>
@@ -271,7 +271,7 @@ export default function BultosPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f] max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className=" bg-white text-[#1d1d1f] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nuevo bulto</DialogTitle></DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -281,7 +281,7 @@ export default function BultosPage() {
                   <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+                  <SelectContent className=" bg-white text-[#1d1d1f]">
                     <SelectItem value="buspack">Buspack</SelectItem>
                     <SelectItem value="correo_argentino">Correo Argentino</SelectItem>
                   </SelectContent>
@@ -325,7 +325,7 @@ export default function BultosPage() {
       </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f] max-w-lg">
+        <DialogContent className=" bg-white text-[#1d1d1f] max-w-lg">
           <DialogHeader><DialogTitle>Editar bulto</DialogTitle></DialogHeader>
           {selectedBulk && (
             <form onSubmit={handleEditSave} className="space-y-4">
@@ -358,7 +358,7 @@ export default function BultosPage() {
                   <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+                  <SelectContent className=" bg-white text-[#1d1d1f]">
                     {Object.entries(statusConfig).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v.label}</SelectItem>
                     ))}

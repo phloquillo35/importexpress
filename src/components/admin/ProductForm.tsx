@@ -24,6 +24,7 @@ interface ProductFormData {
   description: string
   costUSDT: string
   yoniEnabled: boolean
+  yoniPercentage: string
   hasFinancing: boolean
   shippingCost: string
   profitType: string
@@ -47,7 +48,7 @@ interface Distributor {
 }
 
 interface ProductFormProps {
-  defaultValues?: Partial<ProductFormData> & { images?: string[]; specs?: Record<string, string>; finalPriceUSD?: number; finalPriceARS?: number }
+  defaultValues?: Partial<ProductFormData> & { yoniPercentage?: string; images?: string[]; specs?: Record<string, string>; finalPriceUSD?: number; finalPriceARS?: number }
   productSlug?: string
 }
 
@@ -71,6 +72,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       description: "",
       costUSDT: "",
       yoniEnabled: false,
+      yoniPercentage: "25",
       hasFinancing: false,
       shippingCost: "0",
       profitType: "percentage",
@@ -88,6 +90,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   const watchedName = watch("name")
   const costUSDT = watch("costUSDT")
   const yoniEnabled = watch("yoniEnabled")
+  const yoniPercentage = watch("yoniPercentage")
   const shippingCost = watch("shippingCost")
   const profitType = watch("profitType")
   const profitValue = watch("profitValue")
@@ -130,13 +133,14 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     return calculateFinalPrice({
       costUSDT: parseFloat(costUSDT) || 0,
       yoniEnabled: Boolean(yoniEnabled),
+      yoniPercentage: parseFloat(yoniPercentage) || 0,
       shippingCost: parseFloat(shippingCost) || 0,
       profitType: (profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
       profitValue: parseFloat(profitValue) || 0,
       exchangeRate,
       usdtRate,
     })
-  }, [costUSDT, yoniEnabled, shippingCost, profitType, profitValue, exchangeRate, usdtRate])
+  }, [costUSDT, yoniEnabled, yoniPercentage, shippingCost, profitType, profitValue, exchangeRate, usdtRate])
 
   function addSpec() {
     setSpecs([...specs, { key: "", value: "" }])
@@ -202,6 +206,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       costUSDT: parseFloat(data.costUSDT),
       shippingCost: parseFloat(data.shippingCost) || 0,
       profitValue: parseFloat(data.profitValue) || 0,
+      yoniPercentage: parseFloat(data.yoniPercentage) || 0,
       hasFinancing: data.hasFinancing ?? false,
       stock: parseInt(data.stock) || 0,
       minStock: parseInt(data.minStock) || 5,
@@ -278,11 +283,17 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" {...register("yoniEnabled")} defaultChecked={defaultValues?.yoniEnabled ?? false} className="w-4 h-4 rounded border-zinc-600 bg-[#f5f5f7] text-[#22C55E] focus:ring-[#22C55E]" />
-            <span className="text-sm text-[#6e6e73]">Comisión Yoni (25%)</span>
+            <span className="text-sm text-[#6e6e73]">Comisión Yoni</span>
           </label>
+          {yoniEnabled && (
+            <div className="flex items-center gap-2">
+              <Input type="number" step="0.1" min="0" max="100" {...register("yoniPercentage")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f] w-20" placeholder="25" />
+              <span className="text-sm text-[#6e6e73]">%</span>
+            </div>
+          )}
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" {...register("hasFinancing")} defaultChecked={defaultValues?.hasFinancing ?? false} className="w-4 h-4 rounded border-zinc-600 bg-[#f5f5f7] text-[#0071e3] focus:ring-[#0071e3]" />
             <span className="text-sm text-[#6e6e73]">Financiación (3 o 6 cuotas)</span>
@@ -296,7 +307,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
               <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectValue placeholder="Seleccionar" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+              <SelectContent className=" bg-white text-[#1d1d1f]">
                 <SelectItem value="percentage">Porcentaje (%)</SelectItem>
                 <SelectItem value="fixed_ars">Valor fijo (ARS)</SelectItem>
               </SelectContent>
@@ -317,8 +328,8 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             <span className="text-right text-[#6e6e73]">${(parseFloat(costUSDT) || 0).toFixed(2)} USDT</span>
             {yoniEnabled && (
               <>
-                <span className="text-[#6e6e73]">+ Comisión Yoni (25%):</span>
-                <span className="text-right text-[#6e6e73]">${((parseFloat(costUSDT) || 0) * 0.25).toFixed(2)} USDT</span>
+                <span className="text-[#6e6e73]">+ Comisión Yoni ({parseFloat(yoniPercentage) || 0}%):</span>
+                <span className="text-right text-[#6e6e73]">${(((parseFloat(costUSDT) || 0) * (parseFloat(yoniPercentage) || 0)) / 100).toFixed(2)} USDT</span>
               </>
             )}
             <span className="text-[#6e6e73] border-t border-[#d2d2d7]/60 pt-1">+ Costo envío:</span>
@@ -358,7 +369,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
               <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+              <SelectContent className=" bg-white text-[#1d1d1f]">
                 <SelectItem value="__none">Sin categoría</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
@@ -372,7 +383,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
               <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                 <SelectValue placeholder="Seleccionar distribuidor" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+              <SelectContent className=" bg-white text-[#1d1d1f]">
                 <SelectItem value="__none">Sin distribuidor</SelectItem>
                 {distributors.map((d) => (
                   <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>

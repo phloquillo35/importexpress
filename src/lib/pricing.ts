@@ -1,6 +1,7 @@
 export interface PricingInput {
   costUSDT: number
   yoniEnabled: boolean
+  yoniPercentage: number
   shippingCost: number
   profitType: "percentage" | "fixed_usdt" | "fixed_ars"
   profitValue: number
@@ -16,8 +17,8 @@ export interface PricingResult {
 export function calculateFinalPrice(input: PricingInput): PricingResult {
   let baseUSDT = input.costUSDT
 
-  if (input.yoniEnabled) {
-    baseUSDT += input.costUSDT * 0.25
+  if (input.yoniEnabled && input.yoniPercentage > 0) {
+    baseUSDT += input.costUSDT * (input.yoniPercentage / 100)
   }
 
   const baseCostARS = baseUSDT * input.usdtRate

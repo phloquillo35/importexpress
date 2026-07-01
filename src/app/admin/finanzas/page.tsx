@@ -192,7 +192,7 @@ export default function FinanzasPage() {
             <SelectTrigger className="w-36 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
               <SelectValue placeholder="Filtrar" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+            <SelectContent className=" bg-white text-[#1d1d1f]">
               <SelectItem value="all">Todas</SelectItem>
               <SelectItem value="income">Ingresos</SelectItem>
               <SelectItem value="expense">Egresos</SelectItem>
@@ -236,7 +236,7 @@ export default function FinanzasPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+        <DialogContent className=" bg-white text-[#1d1d1f]">
           <DialogHeader><DialogTitle>Nueva transacción</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -245,7 +245,7 @@ export default function FinanzasPage() {
                 <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+                <SelectContent className=" bg-white text-[#1d1d1f]">
                   <SelectItem value="income">Ingreso</SelectItem>
                   <SelectItem value="expense">Egreso</SelectItem>
                 </SelectContent>

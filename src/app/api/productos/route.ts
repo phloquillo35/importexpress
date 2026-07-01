@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, costUSDT, yoniEnabled, hasFinancing, shippingCost, profitType, profitValue } = body
+    const { name, costUSDT, yoniEnabled, yoniPercentage, hasFinancing, shippingCost, profitType, profitValue } = body
 
     if (!name) {
       return Response.json({ error: "name es requerido" }, { status: 400 })
@@ -85,6 +85,7 @@ export async function POST(request: Request) {
 
     const usdt = parseFloat(costUSDT) || 0
     const yoni = yoniEnabled ?? false
+    const yoniPct = parseFloat(yoniPercentage) || 25
     const ship = parseFloat(shippingCost) || 0
     const pType = profitType || "percentage"
     const pValue = parseFloat(profitValue) || 0
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
     const pricing = calculateFinalPrice({
       costUSDT: usdt,
       yoniEnabled: yoni,
+      yoniPercentage: yoniPct,
       shippingCost: ship,
       profitType: pType as "percentage" | "fixed_usdt" | "fixed_ars",
       profitValue: pValue,
@@ -112,6 +114,7 @@ export async function POST(request: Request) {
         costUSD: body.costUSD ? parseFloat(body.costUSD) : null,
         costUSDT: usdt || null,
         yoniEnabled: yoni,
+        yoniPercentage: yoniPct,
         hasFinancing: hasFinancing ?? false,
         shippingCost: ship,
         profitType: pType,

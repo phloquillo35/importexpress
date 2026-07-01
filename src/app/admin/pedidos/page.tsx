@@ -206,7 +206,7 @@ export default function PedidosPage() {
           <SelectTrigger className="w-40 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
             <SelectValue placeholder="Filtrar estado" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+          <SelectContent className=" bg-white text-[#1d1d1f]">
             <SelectItem value="all">Todos</SelectItem>
             {Object.entries(statusConfig).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v.label}</SelectItem>
@@ -249,7 +249,7 @@ export default function PedidosPage() {
                         <SelectTrigger className="w-28 h-7 text-xs bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                           <SelectValue placeholder="Cambiar" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+                        <SelectContent className=" bg-white text-[#1d1d1f]">
                           {Object.entries(statusConfig).map(([k, v]) => (
                             <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
                           ))}
@@ -265,7 +265,7 @@ export default function PedidosPage() {
       </div>
 
       <Dialog open={!!detailOrder} onOpenChange={(o) => { if (!o) setDetailOrder(null) }}>
-        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f] max-w-lg">
+        <DialogContent className=" bg-white text-[#1d1d1f] max-w-lg">
           <DialogHeader><DialogTitle>Detalle del pedido</DialogTitle></DialogHeader>
           {detailOrder && (
             <div className="space-y-4">
@@ -305,7 +305,7 @@ export default function PedidosPage() {
                   <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+                  <SelectContent className=" bg-white text-[#1d1d1f]">
                     {Object.entries(statusConfig).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v.label}</SelectItem>
                     ))}
@@ -321,7 +321,7 @@ export default function PedidosPage() {
       </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f] max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className=" bg-white text-[#1d1d1f] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nuevo pedido</DialogTitle></DialogHeader>
           <form onSubmit={handleCreateOrder} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -350,7 +350,7 @@ export default function PedidosPage() {
                 <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
                   <SelectValue placeholder="Seleccionar distribuidor" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+                <SelectContent className=" bg-white text-[#1d1d1f]">
                   <SelectItem value="__none">Sin distribuidor</SelectItem>
                   {distributors.map((d) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>

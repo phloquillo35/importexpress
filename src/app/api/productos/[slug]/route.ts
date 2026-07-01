@@ -78,6 +78,7 @@ export async function PUT(
     if (body.costUSD !== undefined) data.costUSD = body.costUSD ? parseFloat(body.costUSD) : null
     if (body.costUSDT !== undefined) data.costUSDT = body.costUSDT ? parseFloat(body.costUSDT) : null
     if (body.yoniEnabled !== undefined) data.yoniEnabled = body.yoniEnabled
+    if (body.yoniPercentage !== undefined) data.yoniPercentage = parseFloat(body.yoniPercentage)
     if (body.shippingCost !== undefined) data.shippingCost = parseFloat(body.shippingCost)
     if (body.profitType !== undefined) data.profitType = body.profitType
     if (body.profitValue !== undefined) data.profitValue = parseFloat(body.profitValue)
@@ -91,6 +92,7 @@ export async function PUT(
 
     const costUSDT = body.costUSDT ?? existing.costUSDT ?? existing.priceUSD
     const yoniEnabled = body.yoniEnabled ?? existing.yoniEnabled
+    const yoniPercentage = body.yoniPercentage ?? existing.yoniPercentage ?? 25
     const shippingCost = body.shippingCost ?? existing.shippingCost
     const profitType = body.profitType ?? existing.profitType
     const profitValue = body.profitValue ?? existing.profitValue
@@ -105,6 +107,7 @@ export async function PUT(
     const pricing = calculateFinalPrice({
       costUSDT: Number(costUSDT) || 0,
       yoniEnabled: Boolean(yoniEnabled),
+      yoniPercentage: Number(yoniPercentage) || 0,
       shippingCost: Number(shippingCost) || 0,
       profitType: (profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
       profitValue: Number(profitValue) || 0,

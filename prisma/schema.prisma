@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Admin {
@@ -52,6 +52,7 @@ model Product {
   costUSD       Float?
   costUSDT      Float?
   yoniEnabled   Boolean     @default(false)
+  yoniPercentage Float       @default(25)
   hasFinancing  Boolean     @default(false)
   shippingCost  Float       @default(0)
   profitType    String      @default("percentage")

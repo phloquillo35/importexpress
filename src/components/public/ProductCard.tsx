@@ -43,8 +43,6 @@ export function ProductCard({ product }: ProductCardProps) {
     })
   }
 
-  const puedeComprar = product.stock > 0
-
   return (
     <div className="group block bg-white rounded-2xl border border-[#d2d2d7]/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300">
       <Link href={`/productos/${product.slug}`} className="block">
@@ -90,17 +88,15 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
 
-      {puedeComprar && (
-        <div className="px-5 pb-5">
-          <button
-            onClick={handleAdd}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full transition-colors"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Agregar
-          </button>
-        </div>
-      )}
+      <div className="px-5 pb-5">
+        <button
+          onClick={handleAdd}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full transition-colors"
+        >
+          <ShoppingBag className="w-3.5 h-3.5" />
+          Agregar
+        </button>
+      </div>
     </div>
   )
 }

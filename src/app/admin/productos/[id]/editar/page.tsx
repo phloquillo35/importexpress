@@ -56,6 +56,7 @@ export default function EditarProductoPage() {
     description: (product.description as string) || "",
     costUSDT: product.costUSDT ? String(product.costUSDT) : "",
     yoniEnabled: (product.yoniEnabled as boolean) ?? false,
+    yoniPercentage: product.yoniPercentage ? String(product.yoniPercentage) : "25",
     hasFinancing: (product.hasFinancing as boolean) ?? false,
     shippingCost: product.shippingCost ? String(product.shippingCost) : "0",
     profitType: (product.profitType as string) || "percentage",
