@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/prisma"
 import { genId } from "@/lib/utils"
+import { requireAuth } from "@/lib/auth"
+import { createDistributorSchema } from "@/lib/validators"
 
 export async function GET() {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const distributors = await prisma.distributor.findMany({
       orderBy: { name: "asc" },
     })
@@ -15,7 +20,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const body = await request.json()
+    const parsed = createDistributorSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+
     const { name, contact, website, notes } = body
 
     if (!name) {

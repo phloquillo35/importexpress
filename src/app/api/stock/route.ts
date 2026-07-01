@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma"
+import { requireAuth } from "@/lib/auth"
 
 export async function GET() {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const products = await prisma.product.findMany({
       select: {
         id: true,
@@ -24,6 +28,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { productId, quantity, operation } = await request.json()
 
     if (!productId || quantity === undefined) {

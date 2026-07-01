@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
 
@@ -29,6 +33,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const body = await request.json()
     const { date, distributorId, products, totalCostUSD, status, notes } = body
 

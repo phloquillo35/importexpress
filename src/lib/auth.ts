@@ -56,3 +56,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 })
+
+export async function requireAuth() {
+  const session = await auth()
+  if (!session?.user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  return session
+}

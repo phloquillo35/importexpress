@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const body = await request.json()
 
@@ -33,6 +37,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const existing = await prisma.transaction.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Transacción no encontrada" }, { status: 404 })

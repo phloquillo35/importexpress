@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { genId, slugify } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
+import { requireAuth } from "@/lib/auth"
+import { createProductSchema } from "@/lib/validators"
 
 export async function GET(request: NextRequest) {
   try {
@@ -62,7 +64,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const body = await request.json()
+    const parsed = createProductSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+
     const { name, costUSDT, yoniEnabled, yoniPercentage, hasFinancing, shippingCost, profitType, profitValue } = body
 
     if (!name) {

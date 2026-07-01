@@ -1,13 +1,17 @@
 import nodemailer from "nodemailer"
 import { prisma } from "./prisma"
 
-export async function sendEmail(to: string, subject: string, html: string) {
+let transporter: nodemailer.Transporter | null = null
+let cachedFrom = ""
+
+async function getTransporter() {
+  if (transporter) return { transporter, from: cachedFrom }
+
   const settings = await prisma.setting.findMany({
     where: { key: { in: ["smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"] } },
   })
 
   const get = (key: string) => settings.find((s) => s.key === key)?.value || ""
-
   const host = get("smtp_host")
   const port = Number(get("smtp_port")) || 587
   const user = get("smtp_user")
@@ -15,17 +19,40 @@ export async function sendEmail(to: string, subject: string, html: string) {
   const from = get("smtp_from") || user
 
   if (!host || !user || !pass) {
-    throw new Error(
-      "SMTP no configurado. Primero configurá los datos SMTP en Admin → Configuración."
-    )
+    console.warn("[email] SMTP no configurado — skipping send")
+    return null
   }
 
-  const transporter = nodemailer.createTransport({
+  cachedFrom = from
+  transporter = nodemailer.createTransport({
     host,
     port,
     secure: port === 465,
     auth: { user, pass },
   })
 
-  await transporter.sendMail({ from, to, subject, html })
+  return { transporter, from }
+}
+
+type SendEmailParams = {
+  to: string
+  subject: string
+  text?: string
+  html?: string
+}
+
+export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
+  try {
+    const instance = await getTransporter()
+    if (!instance) return
+    await instance.transporter.sendMail({
+      from: instance.from,
+      to,
+      subject,
+      text,
+      html,
+    })
+  } catch (error) {
+    console.error("[email] Failed to send:", error)
+  }
 }

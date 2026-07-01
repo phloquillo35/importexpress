@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { genId, slugify } from "@/lib/utils"
+import { requireAuth } from "@/lib/auth"
+import { createCategorySchema } from "@/lib/validators"
 
 export async function GET() {
   try {
@@ -16,7 +18,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const body = await request.json()
+    const parsed = createCategorySchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+
     const { name, slug: providedSlug, description, image } = body
 
     if (!name) {

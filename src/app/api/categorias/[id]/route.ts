@@ -1,13 +1,22 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
+import { updateCategorySchema } from "@/lib/validators"
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const body = await request.json()
+    const parsed = updateCategorySchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
 
     const existing = await prisma.category.findUnique({ where: { id } })
     if (!existing) {
@@ -45,6 +54,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
 
     const existing = await prisma.category.findUnique({

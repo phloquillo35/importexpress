@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
+import { updateOrderSchema } from "@/lib/validators"
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const order = await prisma.order.findUnique({
       where: { id },
@@ -29,8 +34,15 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const body = await request.json()
+    const parsed = updateOrderSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
 
     const existing = await prisma.order.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
@@ -67,6 +79,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const existing = await prisma.order.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })

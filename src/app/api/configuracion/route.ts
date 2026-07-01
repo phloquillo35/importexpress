@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { hashSync } from "bcryptjs"
 import { randomUUID } from "crypto"
+import { requireAuth } from "@/lib/auth"
 
 const DEFAULT_KEYS = ["exchange_rate", "usdt_rate", "business_name", "whatsapp", "instagram", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"] as const
 const DEFAULTS: Record<string, string> = {
@@ -60,6 +61,9 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const body = await request.json()
 
     const updated: Record<string, string> = {}

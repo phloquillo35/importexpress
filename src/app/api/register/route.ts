@@ -1,9 +1,22 @@
 import { hash } from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { randomUUID } from "crypto"
+import { NextRequest } from "next/server"
+import { rateLimit } from "@/lib/rate-limit"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const secret = request.headers.get("x-register-secret")
+    if (!secret || secret !== process.env.REGISTER_SECRET) {
+      return Response.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+    const check = rateLimit(ip)
+    if (!check.success) {
+      return Response.json({ error: "Too many requests" }, { status: 429 })
+    }
+
     const { email, password, name } = await request.json()
 
     const existingAdmin = await prisma.admin.findUnique({ where: { email } })

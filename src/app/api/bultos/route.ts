@@ -1,9 +1,14 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { genId } from "@/lib/utils"
+import { requireAuth } from "@/lib/auth"
+import { createBulkSchema } from "@/lib/validators"
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
     const courier = searchParams.get("courier")
@@ -42,7 +47,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const body = await request.json()
+    const parsed = createBulkSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+
     const { type, courier, distributorId, orderItemIds, products, notes } = body
 
     if (!type || !courier) {

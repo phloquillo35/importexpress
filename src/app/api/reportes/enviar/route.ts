@@ -256,7 +256,7 @@ export async function POST() {
   try {
     const data = await gatherReportData()
     const html = buildReportHTML(data)
-    await sendEmail(session.user.email, `Reporte - ${data.businessName}`, html)
+    await sendEmail({ to: session.user.email, subject: `Reporte - ${data.businessName}`, text: `Reporte adjunto de ${data.businessName}`, html })
 
     return Response.json({ success: true, message: "Reporte enviado a " + session.user.email })
   } catch (err) {

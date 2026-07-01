@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { slugify } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
+import { requireAuth } from "@/lib/auth"
+import { updateProductSchema } from "@/lib/validators"
 
 export async function GET(
   request: NextRequest,
@@ -52,8 +54,15 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { slug } = await params
     const body = await request.json()
+    const parsed = updateProductSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
 
     const existing = await prisma.product.findUnique({ where: { slug } })
     if (!existing) {
@@ -138,6 +147,9 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { slug } = await params
     const existing = await prisma.product.findUnique({ where: { slug } })
     if (!existing) {

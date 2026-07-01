@@ -2,9 +2,13 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import * as XLSX from "xlsx"
 import { genId, slugify } from "@/lib/utils"
+import { requireAuth } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const formData = await request.formData()
     const file = formData.get("file") as File | null
 

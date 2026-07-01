@@ -1,12 +1,18 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { calculateFinalPrice } from "@/lib/pricing"
+import { requireAuth } from "@/lib/auth"
+import { updateBulkSchema } from "@/lib/validators"
+import { sendEmail } from "@/lib/email"
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const bulk = await prisma.bulk.findUnique({
       where: { id },
@@ -36,8 +42,15 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const body = await request.json()
+    const parsed = updateBulkSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
 
     const existing = await prisma.bulk.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
@@ -106,10 +119,16 @@ export async function PUT(
         include: { order: true },
       })
 
+      const courier = body.courier || existing.courier || "N/A"
       const emailed = new Set<string>()
       for (const item of orderItems) {
         if (item.order.clientEmail && !emailed.has(item.order.clientEmail)) {
           emailed.add(item.order.clientEmail)
+          sendEmail({
+            to: item.order.clientEmail,
+            subject: "Tu pedido está en camino — ImportExpress",
+            text: `Hola ${item.order.clientName || "cliente"}, tu pedido ya está en camino.\n\nCódigo de seguimiento: ${body.trackingCode}\nCourier: ${courier}\n\nGracias por confiar en ImportExpress.`,
+          }).catch(console.error)
         }
       }
     }
@@ -129,6 +148,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireAuth()
+    if (session instanceof Response) return session
+
     const { id } = await params
     const existing = await prisma.bulk.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
