@@ -5,7 +5,7 @@ export const createProductSchema = z.object({
   slug: z.string().optional(),
   description: z.string().optional(),
   specs: z.any().optional(),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.union([z.string(), z.object({ url: z.string(), color: z.string() })])).optional(),
   priceUSD: z.number().optional(),
   priceARS: z.number().optional(),
   costUSD: z.number().optional(),
