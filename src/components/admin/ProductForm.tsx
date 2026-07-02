@@ -47,8 +47,13 @@ interface Distributor {
   name: string
 }
 
+interface ColorGroup {
+  name: string
+  images: string[]
+}
+
 interface ProductFormProps {
-  defaultValues?: Partial<ProductFormData> & { yoniPercentage?: string; images?: string[]; specs?: Record<string, string>; finalPriceUSD?: number; finalPriceARS?: number }
+  defaultValues?: Partial<ProductFormData> & { yoniPercentage?: string; images?: string[] | { url: string; color: string }[]; specs?: Record<string, string>; finalPriceUSD?: number; finalPriceARS?: number }
   productSlug?: string
 }
 
@@ -61,8 +66,26 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(
     defaultValues?.specs ? Object.entries(defaultValues.specs).map(([k, v]) => ({ key: k, value: v })) : []
   )
-  const [images, setImages] = useState<string[]>(defaultValues?.images || [])
-  const [uploading, setUploading] = useState(false)
+  function parseImagesToColorGroups(images: unknown): ColorGroup[] {
+    if (!images || !Array.isArray(images) || images.length === 0) return []
+    if (typeof images[0] === "string") {
+      return [{ name: "Único", images: images as string[] }]
+    }
+    const map = new Map<string, string[]>()
+    for (const item of images) {
+      const img = item as { url: string; color?: string }
+      const color = img.color || "Único"
+      if (!map.has(color)) map.set(color, [])
+      map.get(color)!.push(img.url)
+    }
+    return Array.from(map.entries()).map(([name, imgs]) => ({ name, images: imgs }))
+  }
+
+  const [colorGroups, setColorGroups] = useState<ColorGroup[]>(() =>
+    parseImagesToColorGroups(defaultValues?.images)
+  )
+  const [uploadingForColor, setUploadingForColor] = useState<number | null>(null)
+  const [newColorName, setNewColorName] = useState("")
   const [saving, setSaving] = useState(false)
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ProductFormData>({
@@ -156,11 +179,11 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     setSpecs(updated)
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>, colorIndex: number) {
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    setUploading(true)
+    setUploadingForColor(colorIndex)
     const uploaded: string[] = []
 
     for (const file of Array.from(files)) {
@@ -176,12 +199,16 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       }
     }
 
-    setImages([...images, ...uploaded])
-    setUploading(false)
+    setColorGroups(prev => prev.map((g, i) =>
+      i === colorIndex ? { ...g, images: [...g.images, ...uploaded] } : g
+    ))
+    setUploadingForColor(null)
   }
 
-  function removeImage(idx: number) {
-    setImages(images.filter((_, i) => i !== idx))
+  function removeImage(colorIndex: number, imageIndex: number) {
+    setColorGroups(prev => prev.map((g, i) =>
+      i === colorIndex ? { ...g, images: g.images.filter((_, j) => j !== imageIndex) } : g
+    ))
   }
 
   async function onSubmit(data: ProductFormData) {
@@ -217,7 +244,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       finalPriceUSD: pricing.finalPriceUSD,
       finalPriceARS: pricing.finalPriceARS,
       exchangeRate,
-      images,
+      images: colorGroups.flatMap(g => g.images.map(url => ({ url, color: g.name }))),
       specs: Object.keys(specsObj).length > 0 ? specsObj : null,
     }
 
@@ -430,22 +457,87 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       </div>
 
       <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Imágenes</h2>
-        <div className="flex flex-wrap gap-3">
-          {images.map((url, i) => (
-            <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#d2d2d7]/60 group">
-              <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
-              <button type="button" onClick={() => removeImage(i)} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <X className="w-5 h-5 text-[#1d1d1f]" />
-              </button>
-            </div>
-          ))}
-          <label className="w-24 h-24 rounded-lg border-2 border-dashed border-[#d2d2d7]/60 flex flex-col items-center justify-center cursor-pointer hover:border-[#22C55E] transition-colors">
-            <Upload className="w-5 h-5 text-[#6e6e73] mb-1" />
-            <span className="text-[10px] text-[#6e6e73]">{uploading ? "Subiendo..." : "Subir"}</span>
-            <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" disabled={uploading} />
-          </label>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading">Colores e Imágenes</h2>
+          <div className="flex items-center gap-2">
+            <Input
+              value={newColorName}
+              onChange={(e) => setNewColorName(e.target.value)}
+              placeholder="Nombre del color"
+              className="bg-white border-[#d2d2d7]/60 text-[#1d1d1f] w-36 h-8 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  if (!newColorName.trim()) { toast.error("Ingresá un nombre"); return }
+                  setColorGroups([...colorGroups, { name: newColorName.trim(), images: [] }])
+                  setNewColorName("")
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (!newColorName.trim()) { toast.error("Ingresá un nombre para el color"); return }
+                setColorGroups([...colorGroups, { name: newColorName.trim(), images: [] }])
+                setNewColorName("")
+              }}
+              className="border-[#d2d2d7]/60 text-[#6e6e73] flex-shrink-0"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Color
+            </Button>
+          </div>
         </div>
+
+        {colorGroups.length === 0 ? (
+          <p className="text-sm text-[#6e6e73]">Sin colores. Agregá un color para subir imágenes.</p>
+        ) : (
+          <div className="space-y-4">
+            {colorGroups.map((group, ci) => (
+              <div key={ci} className="bg-[#f5f5f7] border border-[#d2d2d7]/60 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-[#1d1d1f]">{group.name}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setColorGroups(colorGroups.filter((_, i) => i !== ci))}
+                    className="text-red-400 h-7 w-7"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {group.images.map((url, ii) => (
+                    <div key={ii} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#d2d2d7]/60 group">
+                      <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(ci, ii)}
+                        className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="w-24 h-24 rounded-lg border-2 border-dashed border-[#d2d2d7]/60 flex flex-col items-center justify-center cursor-pointer hover:border-[#22C55E] transition-colors">
+                    <Upload className="w-5 h-5 text-[#6e6e73] mb-1" />
+                    <span className="text-[10px] text-[#6e6e73]">{uploadingForColor === ci ? "Subiendo..." : "Subir"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleImageUpload(e, ci)}
+                      className="hidden"
+                      disabled={uploadingForColor === ci}
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-end gap-3 pb-8">

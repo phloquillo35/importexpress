@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useParams } from "next/navigation"
-import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus } from "lucide-react"
+import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { ProductCard } from "@/components/public/ProductCard"
@@ -34,6 +34,36 @@ export default function ProductDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState(false)
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
+
+  function parseProductImages(images: unknown): { colors: string[]; byColor: Record<string, string[]> } {
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return { colors: [], byColor: {} }
+    }
+    if (typeof images[0] === "string") {
+      return { colors: ["Único"], byColor: { Único: images as string[] } }
+    }
+    const byColor: Record<string, string[]> = {}
+    for (const item of images) {
+      const img = item as { url: string; color?: string }
+      const color = img.color || "Único"
+      if (!byColor[color]) byColor[color] = []
+      byColor[color].push(img.url)
+    }
+    return { colors: Object.keys(byColor), byColor }
+  }
+
+  const parsed = useMemo(() => product ? parseProductImages(product.images) : { colors: [], byColor: {} }, [product])
+  const [selectedColor, setSelectedColor] = useState("")
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const currentImages = selectedColor ? parsed.byColor[selectedColor] || [] : []
+
+  useEffect(() => {
+    if (parsed.colors.length > 0) {
+      setSelectedColor(parsed.colors[0])
+      setCurrentIndex(0)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id])
 
   useEffect(() => {
     fetchExchangeRate().then(setExchangeRate)
@@ -130,11 +160,68 @@ export default function ProductDetailPage() {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-        <div className="aspect-square bg-[#f5f5f7] rounded-2xl flex items-center justify-center overflow-hidden">
-          {product.images?.[0] ? (
-            <img src={product.images[0]} alt={product.name} loading="lazy" className="w-full h-full object-contain p-8" />
-          ) : (
-            <Package className="w-24 h-24 text-[#6e6e73]" />
+        <div className="space-y-4">
+          <div className="aspect-square bg-[#f5f5f7] rounded-2xl flex items-center justify-center overflow-hidden relative">
+            {currentImages.length > 0 ? (
+              <>
+                <img
+                  src={currentImages[currentIndex]}
+                  alt={product.name}
+                  loading="lazy"
+                  className="w-full h-full object-contain p-8 transition-opacity duration-300"
+                />
+                {currentImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentIndex(i => (i - 1 + currentImages.length) % currentImages.length)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-[#1d1d1f]" />
+                    </button>
+                    <button
+                      onClick={() => setCurrentIndex(i => (i + 1) % currentImages.length)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all"
+                    >
+                      <ChevronRight className="w-5 h-5 text-[#1d1d1f]" />
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <Package className="w-24 h-24 text-[#6e6e73]" />
+            )}
+          </div>
+
+          {currentImages.length > 1 && (
+            <div className="flex justify-center gap-2">
+              {currentImages.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i === currentIndex ? "bg-[#1d1d1f] w-4" : "bg-[#d2d2d7]"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          {parsed.colors.length > 1 && (
+            <div className="flex flex-wrap gap-2 justify-center">
+              {parsed.colors.map(color => (
+                <button
+                  key={color}
+                  onClick={() => { setSelectedColor(color); setCurrentIndex(0) }}
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                    selectedColor === color
+                      ? "bg-[#1d1d1f] text-white border-[#1d1d1f]"
+                      : "bg-white text-[#1d1d1f] border-[#d2d2d7] hover:border-[#1d1d1f]"
+                  }`}
+                >
+                  {color}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -176,7 +263,7 @@ export default function ProductDetailPage() {
 
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => addItem({ slug: product.slug, name: product.name, price: Math.round(arsPrice ?? 0), image: product.images?.[0] ?? null })}
+              onClick={() => addItem({ slug: product.slug, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[currentIndex] || product.images?.[0]) ?? null })}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
             >
               <Plus className="w-5 h-5" />
