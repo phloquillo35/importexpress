@@ -336,13 +336,14 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
               </SelectTrigger>
               <SelectContent className=" bg-white text-[#1d1d1f]">
                 <SelectItem value="percentage">Porcentaje (%)</SelectItem>
+                <SelectItem value="fixed_usdt">Valor fijo (USDT)</SelectItem>
                 <SelectItem value="fixed_ars">Valor fijo (ARS)</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="profitValue" className="text-[#6e6e73]">
-              {profitType === "percentage" ? "Ganancia (%)" : "Ganancia fija (ARS)"}
+              {profitType === "percentage" ? "Ganancia (%)" : profitType === "fixed_usdt" ? "Ganancia fija (USDT)" : "Ganancia fija (ARS)"}
             </Label>
             <Input id="profitValue" type="number" step="0.01" {...register("profitValue")} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="0" />
           </div>
@@ -361,15 +362,17 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             )}
             <span className="text-[#6e6e73] border-t border-[#d2d2d7]/60 pt-1">+ Costo envío:</span>
             <span className="text-right text-[#6e6e73] border-t border-[#d2d2d7]/60 pt-1">${(parseFloat(shippingCost) || 0).toLocaleString("es-AR")} ARS</span>
-            <span className="text-[#6e6e73]">+ Ganancia:</span>
-            <span className="text-right text-[#6e6e73]">
+            <span className="text-[#1d1d1f] font-semibold border-t border-[#d2d2d7]/60 pt-1">Subtotal (costo + logística):</span>
+            <span className="text-right text-[#1d1d1f] font-semibold border-t border-[#d2d2d7]/60 pt-1">${pricing.subtotalARS.toLocaleString("es-AR")} ARS</span>
+            <span className="text-[#0071e3]">+ Ganancia:</span>
+            <span className="text-right text-[#0071e3]">
               {profitType === "percentage"
-                ? `${profitValue || 0}%`
-                : `$${parseFloat(profitValue || "0").toLocaleString("es-AR")} ARS`}
+                ? `${profitValue || 0}% = $${pricing.profitARS.toLocaleString("es-AR")} ARS ($${pricing.profitUSDT.toFixed(2)} USDT)`
+                : `$${pricing.profitARS.toLocaleString("es-AR")} ARS ($${pricing.profitUSDT.toFixed(2)} USDT)`}
             </span>
-            <span className="text-[#6e6e73] font-medium border-t border-[#d2d2d7]/60 pt-1">Total ARS:</span>
+            <span className="text-[#1d1d1f] font-bold border-t border-[#d2d2d7]/60 pt-1">Precio Final ARS:</span>
             <span className="text-right text-[#22C55E] font-bold border-t border-[#d2d2d7]/60 pt-1">${pricing.finalPriceARS.toLocaleString("es-AR")} ARS</span>
-            <span className="text-[#6e6e73] font-medium">Total USD (ref):</span>
+            <span className="text-[#1d1d1f] font-bold">Precio Final USD (ref):</span>
             <span className="text-right text-[#F59E0B] font-bold">${pricing.finalPriceUSD.toFixed(2)} USD</span>
           </div>
         </div>

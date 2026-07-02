@@ -12,6 +12,9 @@ export interface PricingInput {
 export interface PricingResult {
   finalPriceUSD: number
   finalPriceARS: number
+  subtotalARS: number
+  profitARS: number
+  profitUSDT: number
 }
 
 export function calculateFinalPrice(input: PricingInput): PricingResult {
@@ -28,6 +31,8 @@ export function calculateFinalPrice(input: PricingInput): PricingResult {
   let profitARS = 0
   if (input.profitType === "percentage") {
     profitARS = subtotalARS * (input.profitValue / 100)
+  } else if (input.profitType === "fixed_usdt") {
+    profitARS = input.profitValue * input.usdtRate
   } else {
     profitARS = input.profitValue
   }
@@ -35,5 +40,11 @@ export function calculateFinalPrice(input: PricingInput): PricingResult {
   const finalPriceARS = Math.round(subtotalARS + profitARS)
   const finalPriceUSD = Math.round((finalPriceARS / input.exchangeRate) * 100) / 100
 
-  return { finalPriceUSD, finalPriceARS }
+  return {
+    finalPriceUSD,
+    finalPriceARS,
+    subtotalARS,
+    profitARS,
+    profitUSDT: Math.round((profitARS / input.usdtRate) * 100) / 100,
+  }
 }
