@@ -153,7 +153,7 @@ export default function ProductDetailPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
       <Link
         href="/productos"
-        className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-primary mb-8 transition-colors font-medium"
+        className="inline-flex items-center gap-2 text-sm text-foreground/70 dark:text-muted-foreground hover:text-primary mb-8 transition-colors font-medium"
       >
         <ArrowLeft className="w-4 h-4" />
         Volver al catálogo
@@ -235,14 +235,14 @@ export default function ProductDetailPage() {
             </Link>
           )}
 
-          <h1 className="text-2xl lg:text-3xl font-bold text-white font-heading mb-4">{product.name}</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground font-heading mb-4">{product.name}</h1>
 
           {arsPrice && (
-            <p className="text-3xl font-bold text-white mb-6">${Math.round(arsPrice).toLocaleString("es-AR")} ARS</p>
+            <p className="text-3xl font-bold text-foreground mb-6">${Math.round(arsPrice).toLocaleString("es-AR")} ARS</p>
           )}
 
           {product.description && (
-            <p className="text-white leading-relaxed mb-8">{product.description}</p>
+            <p className="text-foreground leading-relaxed mb-8">{product.description}</p>
           )}
 
           <div className="flex flex-wrap gap-3 mb-8">
@@ -281,7 +281,7 @@ export default function ProductDetailPage() {
           </div>
 
           {product.costUSD && (
-            <p className="text-xs text-white/70 mt-4">
+            <p className="text-xs text-foreground/70 dark:text-muted-foreground mt-4">
               El precio final puede variar según el tipo de cambio del día.
             </p>
           )}
@@ -290,7 +290,7 @@ export default function ProductDetailPage() {
 
       {specs && Object.keys(specs).length > 0 && (
         <div className="mt-12 lg:mt-16">
-          <h2 className="text-xl font-bold text-white font-heading mb-6">Especificaciones Técnicas</h2>
+          <h2 className="text-xl font-bold text-foreground font-heading mb-6">Especificaciones Técnicas</h2>
           <div className="bg-muted rounded-2xl overflow-hidden max-w-2xl border border-border/60">
             <table className="w-full text-sm">
               <tbody>
@@ -308,7 +308,7 @@ export default function ProductDetailPage() {
 
       {related.length > 0 && (
         <div className="mt-12 lg:mt-16">
-          <h2 className="text-xl font-bold text-white font-heading mb-6">Productos Relacionados</h2>
+          <h2 className="text-xl font-bold text-foreground font-heading mb-6">Productos Relacionados</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} />
