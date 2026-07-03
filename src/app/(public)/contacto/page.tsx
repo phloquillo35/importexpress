@@ -41,10 +41,10 @@ export default function ContactoPage() {
     <div>
       <div className="border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 lg:py-20 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-heading mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground font-heading mb-4">
             Contacto
           </h1>
-          <p className="text-white/70 max-w-xl mx-auto">
+          <p className="text-foreground/70 dark:text-muted-foreground max-w-xl mx-auto">
             Estamos para ayudarte. Elegí el canal que prefieras
           </p>
         </div>
@@ -81,11 +81,11 @@ export default function ContactoPage() {
           <div className="w-12 h-12 rounded-xl bg-card/20 flex items-center justify-center mx-auto mb-4 border border-white/30">
             <MapPin className="w-6 h-6 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold text-white font-heading mb-2">Ubicación</h3>
-          <p className="text-white/70">
+          <h3 className="text-lg font-semibold text-foreground font-heading mb-2">Ubicación</h3>
+          <p className="text-foreground/70 dark:text-muted-foreground">
             Tucumán, Argentina
           </p>
-          <p className="text-white/70 text-sm mt-2">
+          <p className="text-foreground/70 dark:text-muted-foreground text-sm mt-2">
             Importamos desde Ciudad del Este, Paraguay con envíos a todo el país
           </p>
         </div>

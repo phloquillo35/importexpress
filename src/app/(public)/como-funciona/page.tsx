@@ -38,10 +38,10 @@ export default function ComoFuncionaPage() {
     <div>
       <div className="border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 lg:py-20 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-heading mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground font-heading mb-4">
             ¿Cómo funciona?
           </h1>
-          <p className="text-white/70 max-w-xl mx-auto">
+          <p className="text-foreground/70 dark:text-muted-foreground max-w-xl mx-auto">
             Te explicamos paso a paso cómo hacer tu primera importación con nosotros
           </p>
         </div>
@@ -93,10 +93,10 @@ export default function ComoFuncionaPage() {
         </div>
 
         <div className="text-center mb-16 rounded-3xl py-12 px-6 backdrop-blur-sm bg-card/10 border border-white/20">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading mb-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-heading mb-3">
             ¿Listo para empezar?
           </h2>
-          <p className="text-white/70 mb-8 max-w-lg mx-auto">
+          <p className="text-foreground/70 dark:text-muted-foreground mb-8 max-w-lg mx-auto">
             Contactanos por WhatsApp y te asesoramos sin compromiso
           </p>
           <Link
@@ -111,7 +111,7 @@ export default function ComoFuncionaPage() {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-heading text-center mb-10">
             Preguntas Frecuentes
           </h2>
           <div className="space-y-3">
