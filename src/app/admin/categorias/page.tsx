@@ -125,15 +125,15 @@ export default function AdminCategoriasPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Categorías</h1>
-          <p className="text-[#6e6e73] text-sm mt-1">Gestioná las categorías de productos</p>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Categorías</h1>
+          <p className="text-muted-foreground text-sm mt-1">Gestioná las categorías de productos</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Button onClick={openNew} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">
+          <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" />
             Nueva categoría
           </Button>
-          <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+          <DialogContent className="bg-popover border-border text-foreground">
             <DialogHeader>
               <DialogTitle>{editing ? "Editar categoría" : "Nueva categoría"}</DialogTitle>
             </DialogHeader>
@@ -147,7 +147,7 @@ export default function AdminCategoriasPage() {
                     const val = e.target.value
                     setForm((prev) => ({ ...prev, name: val, slug: !editing ? val.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "") : prev.slug }))
                   }}
-                  className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]"
+                  className="bg-muted border-border text-foreground"
                   placeholder="Nombre de la categoría"
                 />
               </div>
@@ -157,7 +157,7 @@ export default function AdminCategoriasPage() {
                   id="slug"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]"
+                  className="bg-muted border-border text-foreground"
                   placeholder="categoria-slug"
                 />
               </div>
@@ -167,16 +167,16 @@ export default function AdminCategoriasPage() {
                   id="description"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]"
+                  className="bg-muted border-border text-foreground"
                   placeholder="Descripción opcional"
                   rows={3}
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-[#6e6e73]">
+                <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-[#0071e3] hover:bg-[#0077ed] text-white">
+                <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   {editing ? "Guardar cambios" : "Crear categoría"}
                 </Button>
               </div>
@@ -185,42 +185,42 @@ export default function AdminCategoriasPage() {
         </Dialog>
       </div>
 
-      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
-              <TableHead className="text-[#6e6e73]">Nombre</TableHead>
-              <TableHead className="text-[#6e6e73] hidden md:table-cell">Slug</TableHead>
-              <TableHead className="text-[#6e6e73] hidden lg:table-cell">Descripción</TableHead>
-              <TableHead className="text-[#6e6e73] text-center">Productos</TableHead>
-              <TableHead className="text-[#6e6e73] hidden sm:table-cell">Creada</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Acciones</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Nombre</TableHead>
+              <TableHead className="text-muted-foreground hidden md:table-cell">Slug</TableHead>
+              <TableHead className="text-muted-foreground hidden lg:table-cell">Descripción</TableHead>
+              <TableHead className="text-muted-foreground text-center">Productos</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Creada</TableHead>
+              <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-[#6e6e73] py-12">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-[#6e6e73] py-12">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                   <Tags className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No hay categorías</p>
                 </TableCell>
               </TableRow>
             ) : (
               categories.map((cat) => (
-                <TableRow key={cat.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
-                  <TableCell className="font-medium text-[#1d1d1f]">{cat.name}</TableCell>
-                  <TableCell className="text-[#6e6e73] hidden md:table-cell">{cat.slug}</TableCell>
-                  <TableCell className="text-[#6e6e73] hidden lg:table-cell max-w-[200px] truncate">
+                <TableRow key={cat.id} className="border-border hover:bg-muted">
+                  <TableCell className="font-medium text-foreground">{cat.name}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{cat.slug}</TableCell>
+                  <TableCell className="text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">
                     {cat.description || "—"}
                   </TableCell>
-                  <TableCell className="text-center text-[#6e6e73]">{cat._count.products}</TableCell>
-                  <TableCell className="text-[#6e6e73] text-sm hidden sm:table-cell">
+                  <TableCell className="text-center text-muted-foreground">{cat._count.products}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">
                     {formatDate(cat.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
@@ -229,7 +229,7 @@ export default function AdminCategoriasPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => openEdit(cat)}
-                        className="text-[#6e6e73] hover:text-[#22C55E]"
+                        className="text-muted-foreground hover:text-[#22C55E]"
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -237,7 +237,7 @@ export default function AdminCategoriasPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(cat)}
-                        className="text-[#6e6e73] hover:text-red-400"
+                        className="text-muted-foreground hover:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

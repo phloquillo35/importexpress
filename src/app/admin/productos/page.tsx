@@ -102,12 +102,12 @@ export default function AdminProductosPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Productos</h1>
-          <p className="text-[#6e6e73] text-sm mt-1">{total} productos registrados</p>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Productos</h1>
+          <p className="text-muted-foreground text-sm mt-1">{total} productos registrados</p>
         </div>
         <Button
           onClick={() => router.push("/admin/productos/nuevo")}
-          className="bg-[#0071e3] hover:bg-[#0077ed] text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nuevo producto
@@ -116,57 +116,57 @@ export default function AdminProductosPage() {
 
       <form onSubmit={handleSearch} className="flex gap-2 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6e6e73]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar productos..."
-            className="pl-9 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f] placeholder-[#6e6e73]"
+            className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
           />
         </div>
-        <Button type="submit" variant="secondary" className="bg-[#f5f5f7] text-[#6e6e73] hover:bg-zinc-700">
+        <Button type="submit" variant="secondary" className="bg-muted text-muted-foreground hover:bg-zinc-700">
           Buscar
         </Button>
       </form>
 
-      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
-              <TableHead className="text-[#6e6e73]">Producto</TableHead>
-              <TableHead className="text-[#6e6e73] hidden md:table-cell">Categoría</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Costo USDT</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Precio final ARS</TableHead>
-              <TableHead className="text-[#6e6e73] text-center">Stock</TableHead>
-              <TableHead className="text-[#6e6e73] text-center hidden sm:table-cell">Disp.</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Acciones</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Producto</TableHead>
+              <TableHead className="text-muted-foreground hidden md:table-cell">Categoría</TableHead>
+              <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
+              <TableHead className="text-muted-foreground text-right">Precio final ARS</TableHead>
+              <TableHead className="text-muted-foreground text-center">Stock</TableHead>
+              <TableHead className="text-muted-foreground text-center hidden sm:table-cell">Disp.</TableHead>
+              <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#6e6e73] py-12">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#6e6e73] py-12">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
                   <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No hay productos</p>
                 </TableCell>
               </TableRow>
             ) : (
               products.map((product) => (
-                <TableRow key={product.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
-                  <TableCell className="font-medium text-[#1d1d1f]">{product.name}</TableCell>
-                  <TableCell className="text-[#6e6e73] hidden md:table-cell">
+                <TableRow key={product.id} className="border-border hover:bg-muted">
+                  <TableCell className="font-medium text-foreground">{product.name}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">
                     {product.category?.name || "—"}
                   </TableCell>
-                  <TableCell className="text-right text-[#1d1d1f]">${(product.costUSDT || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-foreground">${(product.costUSDT || 0).toFixed(2)}</TableCell>
                   <TableCell className="text-right text-[#F59E0B] font-medium">${(product.finalPriceARS || 0).toLocaleString("es-AR")}</TableCell>
                   <TableCell className="text-center">
-                    <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-[#6e6e73]"}>
+                    <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-muted-foreground"}>
                       {product.stock}
                     </span>
                   </TableCell>
@@ -183,7 +183,7 @@ export default function AdminProductosPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}
-                        className="text-[#6e6e73] hover:text-[#22C55E]"
+                        className="text-muted-foreground hover:text-[#22C55E]"
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -191,7 +191,7 @@ export default function AdminProductosPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleToggleAvailability(product)}
-                        className={product.isAvailable ? "text-[#6e6e73] hover:text-red-400" : "text-[#6e6e73] hover:text-[#22C55E]"}
+                        className={product.isAvailable ? "text-muted-foreground hover:text-red-400" : "text-muted-foreground hover:text-[#22C55E]"}
                         title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
                       >
                         {product.isAvailable ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -200,7 +200,7 @@ export default function AdminProductosPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(product)}
-                        className="text-[#6e6e73] hover:text-red-400"
+                        className="text-muted-foreground hover:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -220,11 +220,11 @@ export default function AdminProductosPage() {
             size="sm"
             disabled={page <= 1}
             onClick={() => setPage(page - 1)}
-            className="border-[#d2d2d7]/60 text-[#6e6e73]"
+            className="border-border text-muted-foreground"
           >
             Anterior
           </Button>
-          <span className="text-sm text-[#6e6e73]">
+          <span className="text-sm text-muted-foreground">
             Página {page} de {totalPages}
           </span>
           <Button
@@ -232,7 +232,7 @@ export default function AdminProductosPage() {
             size="sm"
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
-            className="border-[#d2d2d7]/60 text-[#6e6e73]"
+            className="border-border text-muted-foreground"
           >
             Siguiente
           </Button>

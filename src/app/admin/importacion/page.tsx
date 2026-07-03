@@ -144,20 +144,20 @@ export default function ImportacionPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Importación</h1>
-          <p className="text-[#6e6e73] text-sm mt-1">Lotes de importación</p>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Importación</h1>
+          <p className="text-muted-foreground text-sm mt-1">Lotes de importación</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">
+        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" /> Nuevo lote
         </Button>
       </div>
 
       <div className="flex gap-2">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
-          <SelectTrigger className="w-40 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+          <SelectTrigger className="w-40 bg-muted border-border text-foreground">
             <SelectValue placeholder="Filtrar" />
           </SelectTrigger>
-          <SelectContent className=" bg-white text-[#1d1d1f]">
+          <SelectContent className=" bg-popover text-popover-foreground">
             <SelectItem value="all">Todos</SelectItem>
             {Object.entries(statusConfig).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v.label}</SelectItem>
@@ -166,39 +166,39 @@ export default function ImportacionPage() {
         </Select>
       </div>
 
-      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
-              <TableHead className="text-[#6e6e73]">Fecha</TableHead>
-              <TableHead className="text-[#6e6e73]">Distribuidor</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Productos</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Costo</TableHead>
-              <TableHead className="text-[#6e6e73] text-center">Estado</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Acción</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Fecha</TableHead>
+              <TableHead className="text-muted-foreground">Distribuidor</TableHead>
+              <TableHead className="text-muted-foreground text-right">Productos</TableHead>
+              <TableHead className="text-muted-foreground text-right">Costo</TableHead>
+              <TableHead className="text-muted-foreground text-center">Estado</TableHead>
+              <TableHead className="text-muted-foreground text-right">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-[#6e6e73] py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : batches.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-[#6e6e73] py-12"><Ship className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin lotes</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12"><Ship className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin lotes</p></TableCell></TableRow>
             ) : (
               batches.map((b) => {
                 const cfg = statusConfig[b.status] || statusConfig.pending
                 return (
-                  <TableRow key={b.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
-                    <TableCell className="text-[#6e6e73]">{formatDate(b.date)}</TableCell>
-                    <TableCell className="text-[#6e6e73]">{b.distributor?.name || "—"}</TableCell>
-                    <TableCell className="text-right text-[#6e6e73]">{Array.isArray(b.products) ? b.products.length : 0}</TableCell>
-                    <TableCell className="text-right text-[#1d1d1f]">{formatUSD(b.totalCostUSD)}</TableCell>
+                  <TableRow key={b.id} className="border-border hover:bg-muted">
+                    <TableCell className="text-muted-foreground">{formatDate(b.date)}</TableCell>
+                    <TableCell className="text-muted-foreground">{b.distributor?.name || "—"}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{Array.isArray(b.products) ? b.products.length : 0}</TableCell>
+                    <TableCell className="text-right text-foreground">{formatUSD(b.totalCostUSD)}</TableCell>
                     <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
                     <TableCell className="text-right">
                       <Select onValueChange={(v: any) => updateStatus(b.id, v || "pending")}>
-                        <SelectTrigger className="w-28 h-7 text-xs bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+                        <SelectTrigger className="w-28 h-7 text-xs bg-muted border-border text-foreground">
                           <SelectValue placeholder="Cambiar" />
                         </SelectTrigger>
-                        <SelectContent className=" bg-white text-[#1d1d1f]">
+                        <SelectContent className=" bg-popover text-popover-foreground">
                           {Object.entries(statusConfig).map(([k, v]) => (
                             <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
                           ))}
@@ -214,16 +214,16 @@ export default function ImportacionPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className=" bg-white text-[#1d1d1f] max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className=" bg-popover text-popover-foreground max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nuevo lote de importación</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Distribuidor</Label>
               <Select value={form.distributorId} onValueChange={(v) => setForm({ ...form, distributorId: v || "" })}>
-                <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
-                <SelectContent className=" bg-white text-[#1d1d1f]">
+                <SelectContent className=" bg-popover text-popover-foreground">
                   <SelectItem value="none">Sin distribuidor</SelectItem>
                   {distributors.map((d) => (<SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>))}
                 </SelectContent>
@@ -232,20 +232,20 @@ export default function ImportacionPage() {
             <div className="space-y-2">
               <Label>Productos</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6e6e73]" />
-                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar..." className="pl-9 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar..." className="pl-9 bg-muted border-border text-foreground" />
               </div>
               <div className="max-h-32 overflow-y-auto space-y-1">
                 {filteredProducts.slice(0, 8).map((p) => (
-                  <button key={p.id} type="button" onClick={() => addProduct(p)} className="w-full text-left px-3 py-1.5 rounded text-sm text-[#6e6e73] hover:bg-[#f5f5f7]">{p.name}</button>
+                  <button key={p.id} type="button" onClick={() => addProduct(p)} className="w-full text-left px-3 py-1.5 rounded text-sm text-muted-foreground hover:bg-muted">{p.name}</button>
                 ))}
               </div>
             </div>
             {cart.length > 0 && (
-              <div className="bg-[#f5f5f7]/50 rounded-lg p-3 space-y-1">
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                 {cart.map((item) => (
                   <div key={item.productId} className="flex items-center justify-between text-sm">
-                    <span className="text-[#6e6e73]">{item.name} × {item.quantity}</span>
+                    <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
                     <button type="button" onClick={() => setCart(cart.filter(c => c.productId !== item.productId))} className="text-red-400 text-xs">Quitar</button>
                   </div>
                 ))}
@@ -253,15 +253,15 @@ export default function ImportacionPage() {
             )}
             <div className="space-y-2">
               <Label>Costo total USD</Label>
-              <Input type="number" step="0.01" value={form.totalCostUSD} onChange={(e) => setForm({ ...form, totalCostUSD: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+              <Input type="number" step="0.01" value={form.totalCostUSD} onChange={(e) => setForm({ ...form, totalCostUSD: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
             <div className="space-y-2">
               <Label>Notas</Label>
-              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-[#6e6e73]">Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">{saving ? "Guardando..." : "Crear lote"}</Button>
+              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
+              <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear lote"}</Button>
             </div>
           </form>
         </DialogContent>

@@ -47,16 +47,16 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "bg-white border-r border-[#d2d2d7]/60 flex flex-col transition-all duration-300",
+        "bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
         collapsed ? "w-16" : "w-60"
       )}
     >
-      <div className="flex items-center gap-3 px-4 h-16 border-b border-[#d2d2d7]/60">
+      <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
         <div className="w-8 h-8 rounded-lg bg-[#F59E0B] flex items-center justify-center flex-shrink-0">
           <Package className="w-4 h-4 text-white" />
         </div>
         {!collapsed && (
-          <span className="font-heading font-semibold text-[#1d1d1f] text-sm">Lo Pedís, Lo Tenes</span>
+          <span className="font-heading font-semibold text-sidebar-foreground text-sm">Lo Pedís, Lo Tenes</span>
         )}
       </div>
 
@@ -73,8 +73,8 @@ export function Sidebar({ onClose }: SidebarProps) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                 isActive
-                  ? "bg-[#0071e3]/10 text-[#0071e3]"
-                  : "text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-[#f5f5f7]"
+                  ? "bg-primary/10 text-primary"
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10"
               )}
               title={collapsed ? link.label : undefined}
             >
@@ -85,17 +85,17 @@ export function Sidebar({ onClose }: SidebarProps) {
         })}
       </nav>
 
-      <div className="border-t border-[#d2d2d7]/60 p-2 space-y-1">
+      <div className="border-t border-sidebar-border p-2 space-y-1">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-[#f5f5f7] transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 transition-colors"
         >
           {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
           {!collapsed && <span>Colapsar</span>}
         </button>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[#6e6e73] hover:text-red-400 hover:bg-red-500/5 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-red-400 hover:bg-red-500/5 transition-colors"
           title={collapsed ? "Cerrar sesión" : undefined}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />

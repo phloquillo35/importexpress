@@ -97,41 +97,41 @@ export default function DistribuidoresPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Distribuidores</h1>
-          <p className="text-[#6e6e73] text-sm mt-1">{distributors.length} distribuidores</p>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Distribuidores</h1>
+          <p className="text-muted-foreground text-sm mt-1">{distributors.length} distribuidores</p>
         </div>
-        <Button onClick={openNew} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">
+        <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" /> Nuevo distribuidor
         </Button>
       </div>
 
-      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
-              <TableHead className="text-[#6e6e73]">Nombre</TableHead>
-              <TableHead className="text-[#6e6e73] hidden md:table-cell">Contacto</TableHead>
-              <TableHead className="text-[#6e6e73] hidden lg:table-cell">Web</TableHead>
-              <TableHead className="text-[#6e6e73] hidden sm:table-cell">Creado</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Acciones</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Nombre</TableHead>
+              <TableHead className="text-muted-foreground hidden md:table-cell">Contacto</TableHead>
+              <TableHead className="text-muted-foreground hidden lg:table-cell">Web</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Creado</TableHead>
+              <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73] py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : distributors.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73] py-12"><Truck className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin distribuidores</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12"><Truck className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin distribuidores</p></TableCell></TableRow>
             ) : (
               distributors.map((d) => (
-                <TableRow key={d.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
-                  <TableCell className="font-medium text-[#1d1d1f]">{d.name}</TableCell>
-                  <TableCell className="text-[#6e6e73] hidden md:table-cell">{d.contact || "—"}</TableCell>
-                  <TableCell className="text-[#6e6e73] hidden lg:table-cell">{d.website || "—"}</TableCell>
-                  <TableCell className="text-[#6e6e73] text-sm hidden sm:table-cell">{formatDate(d.createdAt)}</TableCell>
+                <TableRow key={d.id} className="border-border hover:bg-muted">
+                  <TableCell className="font-medium text-foreground">{d.name}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{d.contact || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground hidden lg:table-cell">{d.website || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{formatDate(d.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(d)} className="text-[#6e6e73] hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(d)} className="text-[#6e6e73] hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(d)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(d)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -142,28 +142,28 @@ export default function DistribuidoresPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-[#d2d2d7]/60 text-[#1d1d1f]">
+        <DialogContent className="bg-popover border-border text-foreground">
           <DialogHeader><DialogTitle>{editing ? "Editar distribuidor" : "Nuevo distribuidor"}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Nombre</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
             <div className="space-y-2">
               <Label>Contacto</Label>
-              <Input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="Teléfono o email" />
+              <Input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} className="bg-muted border-border text-foreground" placeholder="Teléfono o email" />
             </div>
             <div className="space-y-2">
               <Label>Sitio web</Label>
-              <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="https://..." />
+              <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className="bg-muted border-border text-foreground" placeholder="https://..." />
             </div>
             <div className="space-y-2">
               <Label>Notas</Label>
-              <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" rows={3} />
+              <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-muted border-border text-foreground" rows={3} />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-[#6e6e73]">Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">{saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear"}</Button>
+              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
+              <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear"}</Button>
             </div>
           </form>
         </DialogContent>

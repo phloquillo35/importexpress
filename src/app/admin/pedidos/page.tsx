@@ -35,7 +35,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400" },
   demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400" },
   llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]" },
-  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-[#6e6e73]" },
+  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-muted-foreground" },
   cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400" },
 }
 
@@ -193,20 +193,20 @@ export default function PedidosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Pedidos</h1>
-          <p className="text-[#6e6e73] text-sm mt-1">{orders.length} pedidos</p>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Pedidos</h1>
+          <p className="text-muted-foreground text-sm mt-1">{orders.length} pedidos</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">
+        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
         </Button>
       </div>
 
       <div className="flex gap-2">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
-          <SelectTrigger className="w-40 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+          <SelectTrigger className="w-40 bg-muted border-border text-foreground">
             <SelectValue placeholder="Filtrar estado" />
           </SelectTrigger>
-          <SelectContent className=" bg-white text-[#1d1d1f]">
+          <SelectContent className=" bg-card text-foreground">
             <SelectItem value="all">Todos</SelectItem>
             {Object.entries(statusConfig).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v.label}</SelectItem>
@@ -215,41 +215,41 @@ export default function PedidosPage() {
         </Select>
       </div>
 
-      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
-              <TableHead className="text-[#6e6e73]">Cliente</TableHead>
-              <TableHead className="text-[#6e6e73] hidden sm:table-cell">Contacto</TableHead>
-              <TableHead className="text-[#6e6e73] hidden md:table-cell">Distribuidor</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Total</TableHead>
-              <TableHead className="text-[#6e6e73] text-center">Estado</TableHead>
-              <TableHead className="text-[#6e6e73] text-right hidden md:table-cell">Fecha</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Acción</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Cliente</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Contacto</TableHead>
+              <TableHead className="text-muted-foreground hidden md:table-cell">Distribuidor</TableHead>
+              <TableHead className="text-muted-foreground text-right">Total</TableHead>
+              <TableHead className="text-muted-foreground text-center">Estado</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden md:table-cell">Fecha</TableHead>
+              <TableHead className="text-muted-foreground text-right">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-[#6e6e73] py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-[#6e6e73] py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
                 const cfg = statusConfig[o.status] || statusConfig.pending
                 return (
-                  <TableRow key={o.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7] cursor-pointer" onClick={() => setDetailOrder(o)}>
-                    <TableCell className="font-medium text-[#1d1d1f]">{o.clientName} {o.clientSurname}</TableCell>
-                    <TableCell className="text-[#6e6e73] text-sm hidden sm:table-cell">{o.clientPhone || o.clientContact}</TableCell>
-                    <TableCell className="text-[#6e6e73] text-sm hidden md:table-cell">{o.distributor?.name || "—"}</TableCell>
-                    <TableCell className="text-right text-[#1d1d1f]">{formatUSD(o.totalUSD)}</TableCell>
+                  <TableRow key={o.id} className="border-border hover:bg-muted cursor-pointer" onClick={() => setDetailOrder(o)}>
+                    <TableCell className="font-medium text-foreground">{o.clientName} {o.clientSurname}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{o.clientPhone || o.clientContact}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm hidden md:table-cell">{o.distributor?.name || "—"}</TableCell>
+                    <TableCell className="text-right text-foreground">{formatUSD(o.totalUSD)}</TableCell>
                     <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
-                    <TableCell className="text-right text-[#6e6e73] text-sm hidden md:table-cell">{formatDate(o.createdAt)}</TableCell>
+                    <TableCell className="text-right text-muted-foreground text-sm hidden md:table-cell">{formatDate(o.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
-                        <SelectTrigger className="w-28 h-7 text-xs bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+                        <SelectTrigger className="w-28 h-7 text-xs bg-muted border-border text-foreground">
                           <SelectValue placeholder="Cambiar" />
                         </SelectTrigger>
-                        <SelectContent className=" bg-white text-[#1d1d1f]">
+                        <SelectContent className=" bg-card text-foreground">
                           {Object.entries(statusConfig).map(([k, v]) => (
                             <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
                           ))}
@@ -265,26 +265,26 @@ export default function PedidosPage() {
       </div>
 
       <Dialog open={!!detailOrder} onOpenChange={(o) => { if (!o) setDetailOrder(null) }}>
-        <DialogContent className=" bg-white text-[#1d1d1f] max-w-lg">
+        <DialogContent className=" bg-card text-foreground max-w-lg">
           <DialogHeader><DialogTitle>Detalle del pedido</DialogTitle></DialogHeader>
           {detailOrder && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><p className="text-[#6e6e73]">Nombre</p><p className="text-[#1d1d1f]">{detailOrder.clientName} {detailOrder.clientSurname}</p></div>
-                <div><p className="text-[#6e6e73]">Teléfono</p><p className="text-[#1d1d1f]">{detailOrder.clientPhone || "—"}</p></div>
-                <div><p className="text-[#6e6e73]">Email</p><p className="text-[#1d1d1f]">{detailOrder.clientEmail || "—"}</p></div>
-                <div><p className="text-[#6e6e73]">Distribuidor</p><p className="text-[#1d1d1f]">{detailOrder.distributor?.name || "—"}</p></div>
+                <div><p className="text-muted-foreground">Nombre</p><p className="text-foreground">{detailOrder.clientName} {detailOrder.clientSurname}</p></div>
+                <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{detailOrder.clientPhone || "—"}</p></div>
+                <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{detailOrder.clientEmail || "—"}</p></div>
+                <div><p className="text-muted-foreground">Distribuidor</p><p className="text-foreground">{detailOrder.distributor?.name || "—"}</p></div>
               </div>
               <div>
-                <p className="text-sm text-[#6e6e73] mb-2">Productos</p>
+                <p className="text-sm text-muted-foreground mb-2">Productos</p>
                 {detailOrder.items.map((item) => (
-                  <div key={item.id} className="border border-[#d2d2d7]/60 rounded-lg p-3 mb-2">
+                  <div key={item.id} className="border border-border rounded-lg p-3 mb-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-[#6e6e73]">{item.product.name} × {item.quantity}</span>
-                      <span className="text-[#1d1d1f]">{formatUSD(item.priceUSD * item.quantity)}</span>
+                      <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
+                      <span className="text-foreground">{formatUSD(item.priceUSD * item.quantity)}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1.5 text-xs">
-                      <span className="text-zinc-600">
+                      <span className="text-muted-foreground">
                         {item.bulkType === "grande" ? "📦 Buspack" : item.bulkType === "chico" ? "📬 Correo Arg." : "—"}
                       </span>
                       {item.trackingCode && (
@@ -295,17 +295,17 @@ export default function PedidosPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between border-t border-[#d2d2d7]/60 pt-2">
-                <span className="font-medium text-[#1d1d1f]">Total</span>
+              <div className="flex justify-between border-t border-border pt-2">
+                <span className="font-medium text-foreground">Total</span>
                 <span className="font-bold text-[#F59E0B]">{formatUSD(detailOrder.totalUSD)}</span>
               </div>
               <div>
-                <p className="text-sm text-[#6e6e73] mb-1">Estado del pedido</p>
+                <p className="text-sm text-muted-foreground mb-1">Estado del pedido</p>
                 <Select value={detailOrder.status} onValueChange={(v: any) => updateStatus(detailOrder.id, v)}>
-                  <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className=" bg-white text-[#1d1d1f]">
+                  <SelectContent className=" bg-card text-foreground">
                     {Object.entries(statusConfig).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v.label}</SelectItem>
                     ))}
@@ -313,7 +313,7 @@ export default function PedidosPage() {
                 </Select>
               </div>
               {detailOrder.notes && (
-                <div><p className="text-sm text-[#6e6e73]">Notas</p><p className="text-[#6e6e73]">{detailOrder.notes}</p></div>
+                <div><p className="text-sm text-muted-foreground">Notas</p><p className="text-muted-foreground">{detailOrder.notes}</p></div>
               )}
             </div>
           )}
@@ -321,36 +321,36 @@ export default function PedidosPage() {
       </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className=" bg-white text-[#1d1d1f] max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className=" bg-card text-foreground max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nuevo pedido</DialogTitle></DialogHeader>
           <form onSubmit={handleCreateOrder} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nombre</Label>
-                <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="bg-muted border-border text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label>Apellido</Label>
-                <Input value={form.clientSurname} onChange={(e) => setForm({ ...form, clientSurname: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Input value={form.clientSurname} onChange={(e) => setForm({ ...form, clientSurname: e.target.value })} className="bg-muted border-border text-foreground" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Teléfono</Label>
-                <Input value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Input value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} className="bg-muted border-border text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" value={form.clientEmail} onChange={(e) => setForm({ ...form, clientEmail: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Input type="email" value={form.clientEmail} onChange={(e) => setForm({ ...form, clientEmail: e.target.value })} className="bg-muted border-border text-foreground" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Distribuidor</Label>
               <Select value={form.distributorId} onValueChange={(v) => setForm({ ...form, distributorId: v === "__none" ? "" : v || "" })}>
-                <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder="Seleccionar distribuidor" />
                 </SelectTrigger>
-                <SelectContent className=" bg-white text-[#1d1d1f]">
+                <SelectContent className=" bg-card text-foreground">
                   <SelectItem value="__none">Sin distribuidor</SelectItem>
                   {distributors.map((d) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
@@ -361,34 +361,34 @@ export default function PedidosPage() {
             <div className="space-y-2">
               <Label>Productos</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6e6e73]" />
-                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar producto..." className="pl-9 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar producto..." className="pl-9 bg-muted border-border text-foreground" />
               </div>
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {filteredProducts.slice(0, 10).map((p) => (
-                  <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-2 rounded-lg text-sm text-[#6e6e73] hover:bg-[#f5f5f7] transition-colors">
-                    {p.name} <span className="text-[#6e6e73]">({formatUSD(p.priceUSD)})</span>
+                  <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors">
+                    {p.name} <span className="text-muted-foreground">({formatUSD(p.priceUSD)})</span>
                   </button>
                 ))}
               </div>
             </div>
             {cart.length > 0 && (
-              <div className="bg-[#f5f5f7]/50 rounded-lg p-3 space-y-2">
+              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                 {cart.map((item) => (
                   <div key={item.productId} className="flex items-center justify-between text-sm">
-                    <span className="text-[#6e6e73]">{item.name} × {item.quantity}</span>
+                    <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
                     <button type="button" onClick={() => removeFromCart(item.productId)} className="text-red-400 text-xs hover:text-red-300">Quitar</button>
                   </div>
                 ))}
-                <div className="border-t border-[#d2d2d7]/60 pt-2 flex justify-between font-medium">
-                  <span className="text-[#1d1d1f]">Total</span>
+                <div className="border-t border-border pt-2 flex justify-between font-medium">
+                  <span className="text-foreground">Total</span>
                   <span className="text-[#F59E0B]">{formatUSD(totalUSD)}</span>
                 </div>
               </div>
             )}
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-[#6e6e73]">Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">{saving ? "Guardando..." : "Crear pedido"}</Button>
+              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
+              <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear pedido"}</Button>
             </div>
           </form>
         </DialogContent>

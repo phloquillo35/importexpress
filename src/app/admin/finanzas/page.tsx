@@ -140,33 +140,33 @@ export default function FinanzasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading">Finanzas</h1>
-          <p className="text-[#6e6e73] text-sm mt-1">Gestión de ingresos y egresos</p>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Finanzas</h1>
+          <p className="text-muted-foreground text-sm mt-1">Gestión de ingresos y egresos</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">
+        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" /> Nueva transacción
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-5">
-          <p className="text-sm text-[#6e6e73]">Ingresos</p>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <p className="text-sm text-muted-foreground">Ingresos</p>
           <p className="text-2xl font-bold text-[#22C55E] mt-1">{formatUSD(income)}</p>
         </div>
-        <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-5">
-          <p className="text-sm text-[#6e6e73]">Egresos</p>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <p className="text-sm text-muted-foreground">Egresos</p>
           <p className="text-2xl font-bold text-red-400 mt-1">{formatUSD(expense)}</p>
         </div>
-        <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-5">
-          <p className="text-sm text-[#6e6e73]">Balance</p>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <p className="text-sm text-muted-foreground">Balance</p>
           <p className={`text-2xl font-bold mt-1 ${balance >= 0 ? "text-[#22C55E]" : "text-red-400"}`}>
             {formatUSD(balance)}
           </p>
         </div>
       </div>
 
-      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl p-4 lg:p-6">
-        <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-4">Evolución (6 meses)</h2>
+      <div className="bg-card border border-border rounded-xl p-4 lg:p-6">
+        <h2 className="text-lg font-semibold text-foreground font-heading mb-4">Evolución (6 meses)</h2>
         {chartData.length > 0 ? (
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -174,25 +174,25 @@ export default function FinanzasPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                 <XAxis dataKey="month" stroke="#71717a" fontSize={12} />
                 <YAxis stroke="#71717a" fontSize={12} />
-                <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px", color: "#f4f4f5" }} />
+                <Tooltip contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--foreground)" }} />
                 <Line type="monotone" dataKey="income" stroke="#22C55E" strokeWidth={2} name="Ingresos" />
                 <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Egresos" />
               </LineChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-72 flex items-center justify-center text-[#6e6e73] text-sm">Sin datos</div>
+          <div className="h-72 flex items-center justify-center text-muted-foreground text-sm">Sin datos</div>
         )}
       </div>
 
-      <div className="bg-white border border-[#d2d2d7]/60 rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-[#d2d2d7]/60 flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-[#1d1d1f] font-heading flex-1">Transacciones</h2>
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-border flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-foreground font-heading flex-1">Transacciones</h2>
           <Select value={tipoFilter} onValueChange={(v) => setTipoFilter(v || "")}>
-            <SelectTrigger className="w-36 bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+            <SelectTrigger className="w-36 bg-muted border-border text-foreground">
               <SelectValue placeholder="Filtrar" />
             </SelectTrigger>
-            <SelectContent className=" bg-white text-[#1d1d1f]">
+            <SelectContent className=" bg-card text-foreground">
               <SelectItem value="all">Todas</SelectItem>
               <SelectItem value="income">Ingresos</SelectItem>
               <SelectItem value="expense">Egresos</SelectItem>
@@ -201,33 +201,33 @@ export default function FinanzasPage() {
         </div>
         <Table>
           <TableHeader>
-            <TableRow className="border-[#d2d2d7]/60 hover:bg-transparent">
-              <TableHead className="text-[#6e6e73]">Concepto</TableHead>
-              <TableHead className="text-[#6e6e73]">Tipo</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Monto USD</TableHead>
-              <TableHead className="text-[#6e6e73] text-right hidden sm:table-cell">Monto ARS</TableHead>
-              <TableHead className="text-[#6e6e73] text-right">Fecha</TableHead>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Concepto</TableHead>
+              <TableHead className="text-muted-foreground">Tipo</TableHead>
+              <TableHead className="text-muted-foreground text-right">Monto USD</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden sm:table-cell">Monto ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Fecha</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73] py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : transactions.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73] py-12"><DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin transacciones</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12"><DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin transacciones</p></TableCell></TableRow>
             ) : (
               transactions.map((t) => (
-                <TableRow key={t.id} className="border-[#d2d2d7]/60 hover:bg-[#f5f5f7]">
-                  <TableCell className="text-[#1d1d1f]">{t.concept}</TableCell>
+                <TableRow key={t.id} className="border-border hover:bg-muted">
+                  <TableCell className="text-foreground">{t.concept}</TableCell>
                   <TableCell>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${t.type === "income" ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-red-500/10 text-red-400"}`}>
                       {t.type === "income" ? "Ingreso" : "Egreso"}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right text-[#1d1d1f]">{formatUSD(t.amountUSD)}</TableCell>
-                  <TableCell className="text-right text-[#6e6e73] text-sm hidden sm:table-cell">
+                  <TableCell className="text-right text-foreground">{formatUSD(t.amountUSD)}</TableCell>
+                  <TableCell className="text-right text-muted-foreground text-sm hidden sm:table-cell">
                     {t.amountARS ? `$${t.amountARS.toLocaleString("es-AR")}` : "—"}
                   </TableCell>
-                  <TableCell className="text-right text-[#6e6e73] text-sm">{formatDate(t.date)}</TableCell>
+                  <TableCell className="text-right text-muted-foreground text-sm">{formatDate(t.date)}</TableCell>
                 </TableRow>
               ))
             )}
@@ -236,16 +236,16 @@ export default function FinanzasPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className=" bg-white text-[#1d1d1f]">
+        <DialogContent className=" bg-card text-foreground">
           <DialogHeader><DialogTitle>Nueva transacción</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Tipo</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v || "income" })}>
-                <SelectTrigger className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className=" bg-white text-[#1d1d1f]">
+                <SelectContent className=" bg-card text-foreground">
                   <SelectItem value="income">Ingreso</SelectItem>
                   <SelectItem value="expense">Egreso</SelectItem>
                 </SelectContent>
@@ -253,29 +253,29 @@ export default function FinanzasPage() {
             </div>
             <div className="space-y-2">
               <Label>Concepto</Label>
-              <Input value={form.concept} onChange={(e) => setForm({ ...form, concept: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" placeholder="Venta de productos, pago a proveedor..." />
+              <Input value={form.concept} onChange={(e) => setForm({ ...form, concept: e.target.value })} className="bg-muted border-border text-foreground" placeholder="Venta de productos, pago a proveedor..." />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Monto USD *</Label>
-                <Input type="number" step="0.01" value={form.amountUSD} onChange={(e) => setForm({ ...form, amountUSD: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Input type="number" step="0.01" value={form.amountUSD} onChange={(e) => setForm({ ...form, amountUSD: e.target.value })} className="bg-muted border-border text-foreground" />
               </div>
               <div className="space-y-2">
                 <Label>Monto ARS</Label>
-                <Input type="number" value={form.amountARS} onChange={(e) => setForm({ ...form, amountARS: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+                <Input type="number" value={form.amountARS} onChange={(e) => setForm({ ...form, amountARS: e.target.value })} className="bg-muted border-border text-foreground" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Fecha</Label>
-              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
             <div className="space-y-2">
               <Label>Notas</Label>
-              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-[#f5f5f7] border-[#d2d2d7]/60 text-[#1d1d1f]" />
+              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-[#6e6e73]">Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-[#0071e3] hover:bg-[#0077ed] text-white">{saving ? "Guardando..." : "Crear"}</Button>
+              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
+              <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear"}</Button>
             </div>
           </form>
         </DialogContent>

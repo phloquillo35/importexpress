@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rubik, Nunito_Sans } from "next/font/google";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -27,9 +28,17 @@ export default function RootLayout({
     <html
       lang="es"
       className={`${rubik.variable} ${nunitoSans.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <SessionProvider>{children}</SessionProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>{children}</SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
