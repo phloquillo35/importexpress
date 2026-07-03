@@ -38,4 +38,5 @@ rm -f /data/prisma/.migrated-to-pg
 node /app/scripts/migrate-to-pg.mjs 2>&1 || true
 
 echo "→ Starting application..."
+export HOSTNAME=0.0.0.0
 exec node server.js
