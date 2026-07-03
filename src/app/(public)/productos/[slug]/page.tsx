@@ -94,16 +94,16 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 bg-card">
         <div className="space-y-6">
-          <Skeleton className="h-6 w-32 bg-[#f5f5f7]" />
+          <Skeleton className="h-6 w-32 bg-muted" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <Skeleton className="aspect-square rounded-2xl bg-[#f5f5f7]" />
+            <Skeleton className="aspect-square rounded-2xl bg-muted" />
             <div className="space-y-4">
-              <Skeleton className="h-4 w-20 bg-[#f5f5f7]" />
-              <Skeleton className="h-8 w-3/4 bg-[#f5f5f7]" />
-              <Skeleton className="h-6 w-24 bg-[#f5f5f7]" />
-              <Skeleton className="h-20 w-full bg-[#f5f5f7]" />
+              <Skeleton className="h-4 w-20 bg-muted" />
+              <Skeleton className="h-8 w-3/4 bg-muted" />
+              <Skeleton className="h-6 w-24 bg-muted" />
+              <Skeleton className="h-20 w-full bg-muted" />
             </div>
           </div>
         </div>
@@ -113,13 +113,13 @@ export default function ProductDetailPage() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center bg-card">
         <AlertCircle className="w-16 h-16 text-[#ff3b30] mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading mb-2">Error al cargar el producto</h1>
-        <p className="text-[#6e6e73] mb-6">No pudimos cargar la información. Intentá de nuevo más tarde.</p>
+        <h1 className="text-2xl font-bold text-foreground font-heading mb-2">Error al cargar el producto</h1>
+        <p className="text-muted-foreground mb-6">No pudimos cargar la información. Intentá de nuevo más tarde.</p>
         <Link
           href="/productos"
-          className="inline-flex items-center gap-2 text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium"
+          className="inline-flex items-center gap-2 text-primary hover:text-[#0077ed] transition-colors font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al catálogo
@@ -130,13 +130,13 @@ export default function ProductDetailPage() {
 
   if (notFound || !product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center bg-white">
-        <Package className="w-16 h-16 text-[#6e6e73] mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-[#1d1d1f] font-heading mb-2">Producto no encontrado</h1>
-        <p className="text-[#6e6e73] mb-6">El producto que buscás no existe o fue eliminado</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center bg-card">
+        <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-foreground font-heading mb-2">Producto no encontrado</h1>
+        <p className="text-muted-foreground mb-6">El producto que buscás no existe o fue eliminado</p>
         <Link
           href="/productos"
-          className="inline-flex items-center gap-2 text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium"
+          className="inline-flex items-center gap-2 text-primary hover:text-[#0077ed] transition-colors font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al catálogo
@@ -153,7 +153,7 @@ export default function ProductDetailPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
       <Link
         href="/productos"
-        className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-[#0071e3] mb-8 transition-colors font-medium"
+        className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-primary mb-8 transition-colors font-medium"
       >
         <ArrowLeft className="w-4 h-4" />
         Volver al catálogo
@@ -161,7 +161,7 @@ export default function ProductDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
         <div className="space-y-4">
-          <div className="aspect-square bg-[#f5f5f7] rounded-2xl flex items-center justify-center overflow-hidden relative">
+          <div className="aspect-square bg-muted rounded-2xl flex items-center justify-center overflow-hidden relative">
             {currentImages.length > 0 ? (
               <>
                 <img
@@ -176,19 +176,19 @@ export default function ProductDetailPage() {
                       onClick={() => setCurrentIndex(i => (i - 1 + currentImages.length) % currentImages.length)}
                       className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all"
                     >
-                      <ChevronLeft className="w-5 h-5 text-[#1d1d1f]" />
+                      <ChevronLeft className="w-5 h-5 text-foreground" />
                     </button>
                     <button
                       onClick={() => setCurrentIndex(i => (i + 1) % currentImages.length)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all"
                     >
-                      <ChevronRight className="w-5 h-5 text-[#1d1d1f]" />
+                      <ChevronRight className="w-5 h-5 text-foreground" />
                     </button>
                   </>
                 )}
               </>
             ) : (
-              <Package className="w-24 h-24 text-[#6e6e73]" />
+              <Package className="w-24 h-24 text-muted-foreground" />
             )}
           </div>
 
@@ -215,7 +215,7 @@ export default function ProductDetailPage() {
                   className={`px-4 py-1.5 text-xs font-medium rounded-full border transition-all ${
                     selectedColor === color
                       ? "bg-[#1d1d1f] text-white border-[#1d1d1f]"
-                      : "bg-white text-[#1d1d1f] border-[#d2d2d7] hover:border-[#1d1d1f]"
+                      : "bg-card text-foreground border-border hover:border-[#1d1d1f]"
                   }`}
                 >
                   {color}
@@ -229,7 +229,7 @@ export default function ProductDetailPage() {
           {product.category && (
             <Link
               href={`/categorias/${product.category.slug}`}
-              className="inline-block text-xs font-medium uppercase tracking-wider text-[#0071e3] mb-3"
+              className="inline-block text-xs font-medium uppercase tracking-wider text-primary mb-3"
             >
               {product.category.name}
             </Link>
@@ -246,16 +246,16 @@ export default function ProductDetailPage() {
           )}
 
           <div className="flex flex-wrap gap-3 mb-8">
-            <span className="inline-flex items-center gap-1.5 text-sm text-[#34c759] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
+            <span className="inline-flex items-center gap-1.5 text-sm text-[#34c759] bg-muted px-3 py-1.5 rounded-full">
               <ShieldCheck className="w-4 h-4" />
               Disponible
             </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-[#6e6e73] bg-[#f5f5f7] px-3 py-1.5 rounded-full">
+            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
               <Truck className="w-4 h-4" />
               Importado desde Ciudad del Este, Paraguay
             </span>
             {product.hasFinancing && (
-              <span className="inline-flex items-center gap-1.5 text-sm text-[#0071e3] bg-[#e8f0fe] px-3 py-1.5 rounded-full">
+              <span className="inline-flex items-center gap-1.5 text-sm text-primary bg-primary/10 px-3 py-1.5 rounded-full">
                 3 o 6 cuotas
               </span>
             )}
@@ -273,7 +273,7 @@ export default function ProductDetailPage() {
               href={`https://wa.me/5491123456789?text=${encodeURIComponent(`Hola! Me interesa el producto: ${product.name} (${arsPrice ? "$" + Math.round(arsPrice).toLocaleString("es-AR") + " ARS" : "consultar precio"})`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
             >
               <ShoppingBag className="w-5 h-5" />
               Consultar por WhatsApp
@@ -291,13 +291,13 @@ export default function ProductDetailPage() {
       {specs && Object.keys(specs).length > 0 && (
         <div className="mt-12 lg:mt-16">
           <h2 className="text-xl font-bold text-white font-heading mb-6">Especificaciones Técnicas</h2>
-          <div className="bg-[#f5f5f7] rounded-2xl overflow-hidden max-w-2xl border border-[#d2d2d7]/60">
+          <div className="bg-muted rounded-2xl overflow-hidden max-w-2xl border border-border/60">
             <table className="w-full text-sm">
               <tbody>
                 {Object.entries(specs).map(([key, value], i) => (
-                  <tr key={key} className={i % 2 === 0 ? "bg-white/50" : ""}>
-                    <td className="px-5 py-3.5 text-[#6e6e73] font-medium capitalize w-1/3">{key.replace(/_/g, " ")}</td>
-                    <td className="px-5 py-3.5 text-[#1d1d1f]">{value}</td>
+                  <tr key={key} className={i % 2 === 0 ? "bg-card/50" : ""}>
+                    <td className="px-5 py-3.5 text-muted-foreground font-medium capitalize w-1/3">{key.replace(/_/g, " ")}</td>
+                    <td className="px-5 py-3.5 text-foreground">{value}</td>
                   </tr>
                 ))}
               </tbody>

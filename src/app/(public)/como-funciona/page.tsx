@@ -36,7 +36,7 @@ export default function ComoFuncionaPage() {
 
   return (
     <div>
-      <div className="border-b border-[#d2d2d7]/50">
+      <div className="border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 lg:py-20 text-center">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-heading mb-4">
             ¿Cómo funciona?
@@ -49,50 +49,50 @@ export default function ComoFuncionaPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
-            <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
-              <Search className="w-7 h-7 text-[#0071e3]" />
+          <div className="text-center p-8 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
+            <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-5">
+              <Search className="w-7 h-7 text-primary" />
             </div>
             <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
               1
             </div>
-            <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-3">Elegí tus productos</h3>
-            <p className="text-sm text-[#6e6e73] leading-relaxed">
+            <h3 className="text-lg font-semibold text-foreground font-heading mb-3">Elegí tus productos</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Navegá por nuestro catálogo online y seleccioná los productos que querés importar. 
               Si no encontrás algo, consultanos igual — podemos conseguirlo.
             </p>
           </div>
 
-          <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
-            <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
-              <Ship className="w-7 h-7 text-[#0071e3]" />
+          <div className="text-center p-8 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
+            <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-5">
+              <Ship className="w-7 h-7 text-primary" />
             </div>
             <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
               2
             </div>
-            <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-3">Nos encargamos de todo</h3>
-            <p className="text-sm text-[#6e6e73] leading-relaxed">
+            <h3 className="text-lg font-semibold text-foreground font-heading mb-3">Nos encargamos de todo</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Una vez que confirmás tu pedido, gestionamos la compra internacional desde Ciudad del Este, Paraguay, 
               trámites aduaneros, impuestos y logística hasta tu puerta.
             </p>
           </div>
 
-          <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
-            <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
-              <CreditCard className="w-7 h-7 text-[#0071e3]" />
+          <div className="text-center p-8 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all">
+            <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-5">
+              <CreditCard className="w-7 h-7 text-primary" />
             </div>
             <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
               3
             </div>
-            <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-3">Recibí en tu casa</h3>
-            <p className="text-sm text-[#6e6e73] leading-relaxed">
+            <h3 className="text-lg font-semibold text-foreground font-heading mb-3">Recibí en tu casa</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Te mantenemos informado en cada etapa. Recibís tus productos directamente en tu domicilio, 
               con total seguridad y transparencia.
             </p>
           </div>
         </div>
 
-        <div className="text-center mb-16 rounded-3xl py-12 px-6 backdrop-blur-sm bg-white/10 border border-white/20">
+        <div className="text-center mb-16 rounded-3xl py-12 px-6 backdrop-blur-sm bg-card/10 border border-white/20">
           <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading mb-3">
             ¿Listo para empezar?
           </h2>
@@ -103,7 +103,7 @@ export default function ComoFuncionaPage() {
             href="https://wa.me/5491123456789"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors"
           >
             <MessageCircle className="w-5 h-5" />
             Escribinos por WhatsApp
@@ -118,21 +118,21 @@ export default function ComoFuncionaPage() {
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl border border-[#d2d2d7]/60 overflow-hidden"
+                className="bg-card rounded-2xl border border-border/60 overflow-hidden"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-5 text-left text-[#1d1d1f] font-medium transition-colors hover:bg-[#f5f5f7]"
+                  className="w-full flex items-center justify-between p-5 text-left text-foreground font-medium transition-colors hover:bg-muted"
                 >
                   <span>{faq.q}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-[#6e6e73] transition-transform duration-200 ${
+                    className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${
                       openFaq === i ? "rotate-180" : ""
                     }`}
                   />
                 </button>
                 {openFaq === i && (
-                  <div className="px-5 pb-5 text-sm text-[#6e6e73] leading-relaxed">
+                  <div className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
                     {faq.a}
                   </div>
                 )}

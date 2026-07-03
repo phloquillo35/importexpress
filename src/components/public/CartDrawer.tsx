@@ -49,55 +49,55 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         <div className="fixed inset-0 z-[60] bg-black/40" onClick={onClose} />
       )}
       <div
-        className={`fixed top-0 right-0 z-[70] h-full w-full sm:w-[420px] bg-white shadow-2xl transition-transform duration-300 flex flex-col ${
+        className={`fixed top-0 right-0 z-[70] h-full w-full sm:w-[420px] bg-background shadow-2xl transition-transform duration-300 flex flex-col ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#d2d2d7]/50">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-[#0071e3]" />
-            <h2 className="font-heading font-semibold text-[#1d1d1f] text-lg">Carrito</h2>
+            <ShoppingBag className="w-5 h-5 text-primary" />
+            <h2 className="font-heading font-semibold text-foreground text-lg">Carrito</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 text-[#6e6e73] hover:text-[#1d1d1f] transition-colors">
+          <button onClick={onClose} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-[#6e6e73]">
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <ShoppingBag className="w-12 h-12 mb-3 opacity-50" />
               <p className="text-sm">Tu carrito está vacío</p>
             </div>
           ) : (
             <>
               {items.map((item) => (
-                <div key={item.slug} className="flex items-center gap-3 p-3 bg-[#f5f5f7] rounded-xl">
-                  <div className="w-14 h-14 rounded-lg bg-white flex items-center justify-center overflow-hidden shrink-0">
+                <div key={item.slug} className="flex items-center gap-3 p-3 bg-muted rounded-xl">
+                  <div className="w-14 h-14 rounded-lg bg-card flex items-center justify-center overflow-hidden shrink-0">
                     {item.image ? (
                       <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
                     ) : (
-                      <ShoppingBag className="w-6 h-6 text-[#6e6e73]" />
+                      <ShoppingBag className="w-6 h-6 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#1d1d1f] truncate">{item.name}</p>
-                    <p className="text-xs text-[#6e6e73]">${item.price.toLocaleString("es-AR")} ARS c/u</p>
-                    <p className="text-sm font-bold text-[#0071e3]">
+                    <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">${item.price.toLocaleString("es-AR")} ARS c/u</p>
+                    <p className="text-sm font-bold text-primary">
                       ${(item.price * item.quantity).toLocaleString("es-AR")} ARS
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity - 1)}
-                      className="p-1 rounded-full bg-white border border-[#d2d2d7]/60 text-[#6e6e73] hover:text-[#1d1d1f] transition-colors"
+                      className="p-1 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="w-8 text-center text-sm font-medium text-[#1d1d1f]">{item.quantity}</span>
+                    <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity + 1)}
-                      className="p-1 rounded-full bg-white border border-[#d2d2d7]/60 text-[#6e6e73] hover:text-[#1d1d1f] transition-colors"
+                      className="p-1 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -111,21 +111,21 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 </div>
               ))}
 
-              <div className="pt-3 pb-2 flex justify-between items-center border-t border-[#d2d2d7]/50">
-                <span className="text-sm text-[#6e6e73]">Total</span>
-                <span className="text-xl font-bold text-[#1d1d1f]">${total.toLocaleString("es-AR")} ARS</span>
+              <div className="pt-3 pb-2 flex justify-between items-center border-t border-border/50">
+                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="text-xl font-bold text-foreground">${total.toLocaleString("es-AR")} ARS</span>
               </div>
             </>
           )}
         </div>
 
         {items.length > 0 && (
-          <div className="px-5 py-4 border-t border-[#d2d2d7]/50 space-y-3">
+          <div className="px-5 py-4 border-t border-border/50 space-y-3">
             {!showForm ? (
               <>
                 <button
                   onClick={() => setShowForm(true)}
-                  className="w-full py-3 bg-[#0071e3] hover:bg-[#0077ed] text-white text-sm font-medium rounded-full transition-colors"
+                  className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
                 >
                   Finalizar pedido
                 </button>
@@ -144,7 +144,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   required
-                  className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#d2d2d7]/60 rounded-xl text-sm text-[#1d1d1f] placeholder-[#6e6e73] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
                 <input
                   type="tel"
@@ -152,7 +152,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   required
-                  className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#d2d2d7]/60 rounded-xl text-sm text-[#1d1d1f] placeholder-[#6e6e73] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
                 <input
                   type="text"
@@ -160,7 +160,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   value={form.address}
                   onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
                   required
-                  className="w-full px-4 py-2.5 bg-[#f5f5f7] border border-[#d2d2d7]/60 rounded-xl text-sm text-[#1d1d1f] placeholder-[#6e6e73] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
                 <button
                   type="submit"
@@ -171,7 +171,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="w-full py-2 text-xs text-[#6e6e73] hover:text-[#1d1d1f] transition-colors"
+                  className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Volver
                 </button>

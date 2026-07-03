@@ -62,13 +62,13 @@ export default function HomePage() {
     <div>
       <section className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f5f5f7] border border-[#d2d2d7]/50 text-[#0071e3] text-xs font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border/50 text-primary text-xs font-medium mb-6">
             <Star className="w-3 h-3" />
             Importación directa sin intermediarios
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white font-heading leading-tight mb-4">
             Todo lo que necesitás,{" "}
-            <span className="text-[#0071e3]">
+            <span className="text-primary">
               importado para vos
             </span>
           </h1>
@@ -79,14 +79,14 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/productos"
-              className="inline-flex items-center gap-2 px-7 py-3 bg-[#0071e3] hover:bg-[#0077ed] text-white text-sm font-medium rounded-full transition-all duration-300"
+              className="inline-flex items-center gap-2 px-7 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-all duration-300"
             >
               Explorar productos
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/como-funciona"
-              className="inline-flex items-center gap-2 px-7 py-3 bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#0071e3] text-sm font-medium rounded-full transition-all duration-300"
+              className="inline-flex items-center gap-2 px-7 py-3 bg-muted hover:bg-[#e8e8ed] text-primary text-sm font-medium rounded-full transition-all duration-300"
             >
               Cómo funciona
             </Link>
@@ -101,7 +101,7 @@ export default function HomePage() {
               <h2 className="text-3xl sm:text-4xl font-bold text-white font-heading">Productos Destacados</h2>
               <p className="text-white/70 mt-1.5">Lo más elegido por nuestros clientes</p>
             </div>
-            <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium">
+            <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
               Ver todos
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -110,12 +110,12 @@ export default function HomePage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-[#d2d2d7]/60 overflow-hidden">
-                  <Skeleton className="aspect-[4/3] !rounded-none bg-[#f5f5f7]" />
+                <div key={i} className="bg-card rounded-2xl border border-border/60 overflow-hidden">
+                  <Skeleton className="aspect-[4/3] !rounded-none bg-muted" />
                   <div className="p-5 space-y-3">
-                    <Skeleton className="h-3 w-16 bg-[#f5f5f7]" />
-                    <Skeleton className="h-4 w-3/4 bg-[#f5f5f7]" />
-                    <Skeleton className="h-5 w-20 bg-[#f5f5f7]" />
+                    <Skeleton className="h-3 w-16 bg-muted" />
+                    <Skeleton className="h-4 w-3/4 bg-muted" />
+                    <Skeleton className="h-5 w-20 bg-muted" />
                   </div>
                 </div>
               ))}
@@ -136,7 +136,7 @@ export default function HomePage() {
           )}
 
           <div className="sm:hidden mt-6 text-center">
-            <Link href="/productos" className="inline-flex items-center gap-1 text-sm text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium">
+            <Link href="/productos" className="inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
               Ver todos
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -151,7 +151,7 @@ export default function HomePage() {
               <h2 className="text-3xl sm:text-4xl font-bold text-white font-heading">Categorías</h2>
               <p className="text-white/70 mt-1.5">Explorá por categoría</p>
             </div>
-            <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium">
+            <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
               Ver todo
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -160,7 +160,7 @@ export default function HomePage() {
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square rounded-2xl bg-white" />
+                <Skeleton key={i} className="aspect-square rounded-2xl bg-card" />
               ))}
             </div>
           ) : error ? (
@@ -174,15 +174,15 @@ export default function HomePage() {
                 <Link
                   key={cat.id}
                   href={`/categorias/${cat.slug}`}
-                  className="group flex flex-col items-center justify-center gap-3 p-6 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:scale-[1.02] transition-all duration-300"
+                  className="group flex flex-col items-center justify-center gap-3 p-6 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:scale-[1.02] transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-[#f5f5f7] flex items-center justify-center group-hover:bg-[#e8e8ed] transition-colors">
-                    <Package className="w-6 h-6 text-[#0071e3]" />
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-[#e8e8ed] transition-colors">
+                    <Package className="w-6 h-6 text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-[#1d1d1f] text-center">
+                  <span className="text-sm font-medium text-foreground text-center">
                     {cat.name}
                   </span>
-                  <span className="text-xs text-[#6e6e73]">{cat._count.products} productos</span>
+                  <span className="text-xs text-muted-foreground">{cat._count.products} productos</span>
                 </Link>
               ))}
             </div>
@@ -191,7 +191,7 @@ export default function HomePage() {
           )}
 
           <div className="sm:hidden mt-6 text-center">
-            <Link href="/productos" className="inline-flex items-center gap-1 text-sm text-[#0071e3] hover:text-[#0077ed] transition-colors font-medium">
+            <Link href="/productos" className="inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
               Ver todo
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -209,41 +209,41 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
-              <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
-                <Package className="w-7 h-7 text-[#0071e3]" />
+            <div className="text-center p-8 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
+              <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-5">
+                <Package className="w-7 h-7 text-primary" />
               </div>
               <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
                 1
               </div>
-              <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-2">Elegí tus productos</h3>
-              <p className="text-sm text-[#6e6e73] leading-relaxed">
+              <h3 className="text-lg font-semibold text-foreground font-heading mb-2">Elegí tus productos</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Navegá por nuestro catálogo y seleccioná los productos que querés importar.
               </p>
             </div>
 
-            <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
-              <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
-                <Ship className="w-7 h-7 text-[#0071e3]" />
+            <div className="text-center p-8 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
+              <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-5">
+                <Ship className="w-7 h-7 text-primary" />
               </div>
               <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
                 2
               </div>
-              <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-2">Nos encargamos de todo</h3>
-              <p className="text-sm text-[#6e6e73] leading-relaxed">
+              <h3 className="text-lg font-semibold text-foreground font-heading mb-2">Nos encargamos de todo</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Gestionamos la importación desde Ciudad del Este, Paraguay, trámites aduaneros y logística hasta tu puerta.
               </p>
             </div>
 
-            <div className="text-center p-8 bg-white rounded-2xl border border-[#d2d2d7]/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
-              <div className="w-14 h-14 rounded-xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-5">
-                <CreditCard className="w-7 h-7 text-[#0071e3]" />
+            <div className="text-center p-8 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
+              <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-5">
+                <CreditCard className="w-7 h-7 text-primary" />
               </div>
               <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm font-bold flex items-center justify-center mx-auto mb-4">
                 3
               </div>
-              <h3 className="text-lg font-semibold text-[#1d1d1f] font-heading mb-2">Recibí en tu casa</h3>
-              <p className="text-sm text-[#6e6e73] leading-relaxed">
+              <h3 className="text-lg font-semibold text-foreground font-heading mb-2">Recibí en tu casa</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Te entregamos los productos directamente en tu domicilio. Rápido y seguro.
               </p>
             </div>
