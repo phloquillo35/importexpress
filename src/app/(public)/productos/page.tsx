@@ -138,7 +138,7 @@ function ProductosContent() {
               <h3 className="text-sm font-semibold text-foreground font-heading mb-4">Categorías</h3>
               <div className="space-y-1">
                 <button
-                  onClick={() => updateParams({ categoria: undefined })}
+                  onClick={() => { updateParams({ categoria: undefined }); setShowFilters(false) }}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                     !currentCategory
                       ? "bg-primary/10 text-primary font-medium"
@@ -150,7 +150,7 @@ function ProductosContent() {
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => updateParams({ categoria: cat.slug })}
+                    onClick={() => { updateParams({ categoria: cat.slug }); setShowFilters(false) }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                       currentCategory === cat.slug
                         ? "bg-primary/10 text-primary font-medium"
