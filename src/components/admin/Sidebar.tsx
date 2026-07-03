@@ -53,7 +53,6 @@ export function Sidebar({ onClose }: SidebarProps) {
     >
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
         <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-        </div>
         {!collapsed && (
           <span className="font-heading font-semibold text-sidebar-foreground text-sm">Lo Pedís, Lo Tenes</span>
         )}
