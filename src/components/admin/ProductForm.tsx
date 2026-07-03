@@ -330,10 +330,15 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-muted-foreground">Tipo de ganancia</Label>
-            <Select onValueChange={(v) => { if (v) setValue("profitType", v) }} value={profitType || "percentage"}>
+            <Select onValueChange={(v) => { if (v) setValue("profitType", v) }} defaultValue={defaultValues?.profitType || "percentage"}>
               <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue placeholder="Seleccionar">
-                  {profitType === "percentage" ? "Porcentaje (%)" : profitType === "fixed_usdt" ? "Valor fijo (USDT)" : profitType === "fixed_ars" ? "Valor fijo (ARS)" : "Seleccionar"}
+                  {(value) =>
+                    value === "percentage" ? "Porcentaje (%)" :
+                    value === "fixed_usdt" ? "Valor fijo (USDT)" :
+                    value === "fixed_ars" ? "Valor fijo (ARS)" :
+                    "Seleccionar"
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className=" bg-popover text-popover-foreground">
@@ -397,10 +402,13 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-muted-foreground">Categoría</Label>
-            <Select onValueChange={(v) => { if (v) setValue("categoryId", v === "__none" ? "" : v) }} value={watch("categoryId") || "__none"}>
+            <Select onValueChange={(v) => { if (v) setValue("categoryId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.categoryId || "__none"}>
               <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue placeholder="Seleccionar categoría">
-                  {watch("categoryId") ? (categories.find(c => c.id === watch("categoryId"))?.name || "Sin categoría") : "Sin categoría"}
+                  {(value) =>
+                    !value || value === "__none" ? "Sin categoría" :
+                    categories.find(c => c.id === value)?.name || "Sin categoría"
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className=" bg-popover text-popover-foreground">
@@ -413,10 +421,13 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
           </div>
           <div className="space-y-2">
             <Label className="text-muted-foreground">Distribuidor</Label>
-            <Select onValueChange={(v) => { if (v) setValue("distributorId", v === "__none" ? "" : v) }} value={watch("distributorId") || "__none"}>
+            <Select onValueChange={(v) => { if (v) setValue("distributorId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.distributorId || "__none"}>
               <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue placeholder="Seleccionar distribuidor">
-                  {watch("distributorId") ? (distributors.find(d => d.id === watch("distributorId"))?.name || "Sin distribuidor") : "Sin distribuidor"}
+                  {(value) =>
+                    !value || value === "__none" ? "Sin distribuidor" :
+                    distributors.find(d => d.id === value)?.name || "Sin distribuidor"
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className=" bg-popover text-popover-foreground">
