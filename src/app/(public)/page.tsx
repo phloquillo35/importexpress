@@ -72,7 +72,7 @@ export default function HomePage() {
               importado para vos
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-foreground/70 dark:text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
             Importamos productos de alta calidad desde Ciudad del Este, Paraguay directo a tu casa. 
             Electrónica, hogar, moda y más, con los mejores precios del mercado.
           </p>
@@ -99,7 +99,7 @@ export default function HomePage() {
           <div className="flex items-end justify-between mb-10">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-heading">Productos Destacados</h2>
-              <p className="text-muted-foreground mt-1.5">Lo más elegido por nuestros clientes</p>
+              <p className="text-foreground/70 dark:text-muted-foreground mt-1.5">Lo más elegido por nuestros clientes</p>
             </div>
             <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
               Ver todos
@@ -121,7 +121,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-12 text-foreground/70 dark:text-muted-foreground">
               <AlertCircle className="w-12 h-12 mb-3 text-[#ff3b30]" />
               <p className="text-sm">Error al cargar productos</p>
             </div>
@@ -132,7 +132,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-12">No hay productos destacados aún</p>
+            <p className="text-center text-foreground/70 dark:text-muted-foreground py-12">No hay productos destacados aún</p>
           )}
 
           <div className="sm:hidden mt-6 text-center">
@@ -149,7 +149,7 @@ export default function HomePage() {
           <div className="flex items-end justify-between mb-10">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-heading">Categorías</h2>
-              <p className="text-muted-foreground mt-1.5">Explorá por categoría</p>
+              <p className="text-foreground/70 dark:text-muted-foreground mt-1.5">Explorá por categoría</p>
             </div>
             <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
               Ver todo
@@ -164,7 +164,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-12 text-foreground/70 dark:text-muted-foreground">
               <AlertCircle className="w-12 h-12 mb-3 text-[#ff3b30]" />
               <p className="text-sm">Error al cargar categorías</p>
             </div>
@@ -187,7 +187,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-12">No hay categorías disponibles</p>
+            <p className="text-center text-foreground/70 dark:text-muted-foreground py-12">No hay categorías disponibles</p>
           )}
 
           <div className="sm:hidden mt-6 text-center">
@@ -203,7 +203,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-heading mb-3">¿Cómo funciona?</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-foreground/70 dark:text-muted-foreground max-w-xl mx-auto">
               Tres pasos simples para recibir tus productos importados
             </p>
           </div>
