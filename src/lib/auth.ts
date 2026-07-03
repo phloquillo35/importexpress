@@ -31,6 +31,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: admin.id,
           email: admin.email,
           name: admin.name,
+          role: admin.role,
         }
       },
     }),
@@ -40,17 +41,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 15 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.role = user.role
+        token.lastActivity = Math.floor(Date.now() / 1000)
+        return token
       }
+
+      const now = Math.floor(Date.now() / 1000)
+      const lastActivity = token.lastActivity as number | undefined
+      if (lastActivity && now - lastActivity > 900) {
+        return {}
+      }
+
+      token.lastActivity = now
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (token && session.user) {
         session.user.id = token.id as string
+        session.user.role = token.role as string
       }
       return session
     },
@@ -61,6 +75,17 @@ export async function requireAuth() {
   const session = await auth()
   if (!session?.user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  return session
+}
+
+export async function requireRole(...roles: string[]) {
+  const session = await auth()
+  if (!session?.user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  if (!roles.includes(session.user.role)) {
+    return Response.json({ error: "Forbidden" }, { status: 403 })
   }
   return session
 }

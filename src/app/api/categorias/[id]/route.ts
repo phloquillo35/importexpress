@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
-import { requireAuth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 import { updateCategorySchema } from "@/lib/validators"
 
 export async function PUT(
@@ -8,7 +8,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { id } = await params
@@ -35,11 +35,12 @@ export async function PUT(
     }
     if (body.description !== undefined) data.description = body.description
     if (body.image !== undefined) data.image = body.image
+    if (body.parentId !== undefined) data.parentId = body.parentId
 
     const category = await prisma.category.update({
       where: { id },
       data,
-      include: { _count: { select: { products: true } } },
+      include: { _count: { select: { products: true } }, children: { select: { id: true, name: true, slug: true } }, parent: { select: { id: true, name: true, slug: true } } },
     })
 
     return Response.json(category)
@@ -54,7 +55,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { id } = await params

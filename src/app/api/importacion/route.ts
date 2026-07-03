@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
-import { requireAuth } from "@/lib/auth"
+import { requireAuth, requireRole } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const body = await request.json()

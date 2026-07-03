@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
-import { requireAuth } from "@/lib/auth"
+import { requireAuth, requireRole } from "@/lib/auth"
 import { updateOrderSchema } from "@/lib/validators"
 
 export async function GET(
@@ -34,7 +34,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { id } = await params
@@ -79,7 +79,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { id } = await params

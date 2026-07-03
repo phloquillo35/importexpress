@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
-import { requireAuth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { id } = await params
@@ -37,7 +37,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { id } = await params

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { genId } from "@/lib/utils"
-import { requireAuth } from "@/lib/auth"
+import { requireAuth, requireRole } from "@/lib/auth"
 import { createOrderSchema } from "@/lib/validators"
 
 const statusOrder: Record<string, number> = {
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const body = await request.json()

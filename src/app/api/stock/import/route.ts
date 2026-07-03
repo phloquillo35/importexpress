@@ -2,11 +2,11 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import * as XLSX from "xlsx"
 import { genId, slugify } from "@/lib/utils"
-import { requireAuth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const formData = await request.formData()
