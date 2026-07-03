@@ -15,7 +15,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 rounded-b-2xl overflow-hidden">
+      <nav className="sticky top-0 z-50 bg-background/70 dark:bg-background/85 backdrop-blur-xl border-b border-border/50 rounded-b-2xl overflow-hidden">
         <div className="px-4 sm:px-6">
           <div className="flex items-center justify-between h-12 lg:h-14">
             <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -76,7 +76,7 @@ export function Navbar() {
         </div>
 
         {menuOpen && (
-          <div className="md:hidden border-t border-border/50 bg-background/90 backdrop-blur-xl rounded-b-2xl overflow-hidden">
+          <div className="md:hidden border-t border-border/50 bg-background/90 dark:bg-background/95 backdrop-blur-xl rounded-b-2xl overflow-hidden">
             <div className="px-4 py-4 space-y-1">
               <Link
                 href="/productos"
