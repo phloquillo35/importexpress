@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Navbar } from "@/components/public/Navbar"
+import { HeroBackground } from "@/components/public/HeroBackground"
 import { CartProvider } from "@/context/CartContext"
 
 export const metadata: Metadata = {
@@ -16,21 +17,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <CartProvider>
     <div className="min-h-screen flex flex-col">
-      <div className="fixed inset-0 -z-10">
-        <div className="relative w-full h-full">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          >
-            <source src="/videos/hero.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/60" />
-        </div>
-      </div>
+      <HeroBackground />
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
