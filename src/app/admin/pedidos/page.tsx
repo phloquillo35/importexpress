@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { Package, Plus, Search } from "lucide-react"
+import { useEffect, useState, useCallback, Fragment } from "react"
+import { Package, Plus, Search, ChevronDown, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
-import { formatUSD, formatDate, formatARS } from "@/lib/utils"
+import { formatUSD } from "@/lib/utils"
+import { calculateFinalPrice } from "@/lib/pricing"
 import {
   Table,
   TableBody,
@@ -46,7 +47,23 @@ interface OrderItem {
   trackingCode: string | null
   shippingStatus: string
   bulkType: string | null
-  product: { name: string; slug: string }
+  product: {
+    name: string
+    slug: string
+    images: string[]
+    categoryId: string | null
+    stock: number
+    costUSDT: number | null
+    priceUSD: number
+    finalPriceUSD: number
+    finalPriceARS: number
+    yoniEnabled: boolean
+    yoniType: string
+    yoniValue: number
+    shippingCost: number
+    profitType: string
+    profitValue: number
+  }
   bulk: { courier: string; trackingCode: string | null; type: string } | null
 }
 
@@ -78,6 +95,29 @@ interface Product {
   stock: number
 }
 
+function computeItemPricing(item: OrderItem, exchangeRate: number, usdtRate: number) {
+  const perUnit = calculateFinalPrice({
+    costUSDT: item.product.costUSDT || 0,
+    yoniEnabled: item.product.yoniEnabled,
+    yoniType: (item.product.yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+    yoniValue: item.product.yoniValue || 0,
+    shippingCost: item.product.shippingCost || 0,
+    profitType: (item.product.profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+    profitValue: item.product.profitValue || 0,
+    exchangeRate,
+    usdtRate,
+  })
+  return {
+    costUSDT: (item.product.costUSDT || 0) * item.quantity,
+    yoniUSDT: Math.round(perUnit.yoniUSDT * item.quantity * 100) / 100,
+    shippingCost: (item.product.shippingCost || 0) * item.quantity,
+    subtotalARS: Math.round(perUnit.subtotalARS * item.quantity),
+    profitARS: Math.round(perUnit.profitARS * item.quantity),
+    finalPriceARS: Math.round(perUnit.finalPriceARS * item.quantity),
+    finalPriceUSD: Math.round(perUnit.finalPriceUSD * item.quantity * 100) / 100,
+  }
+}
+
 export default function PedidosPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,6 +130,9 @@ export default function PedidosPage() {
   const [distributors, setDistributors] = useState<Distributor[]>([])
   const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", distributorId: "", clientContact: "" })
   const [saving, setSaving] = useState(false)
+  const [exchangeRate, setExchangeRate] = useState(1)
+  const [usdtRate, setUsdtRate] = useState(1)
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -108,6 +151,10 @@ export default function PedidosPage() {
   useEffect(() => {
     fetch("/api/productos?limit=100").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
     fetch("/api/distribuidores").then(r => r.json()).then(d => setDistributors(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar distribuidores"))
+    fetch("/api/configuracion").then(r => r.json()).then(data => {
+      setExchangeRate(Number(data.exchange_rate) || 1)
+      setUsdtRate(Number(data.usdt_rate) || 1)
+    }).catch(() => {})
   }, [])
 
   async function updateStatus(orderId: string, newStatus: string) {
@@ -189,6 +236,15 @@ export default function PedidosPage() {
     return <Badge className={`${cfg.className} border-0 text-[10px]`}>{cfg.label}</Badge>
   }
 
+  function toggleOrderExpand(orderId: string) {
+    setExpandedOrders(prev => {
+      const next = new Set(prev)
+      if (next.has(orderId)) next.delete(orderId)
+      else next.add(orderId)
+      return next
+    })
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -219,44 +275,140 @@ export default function PedidosPage() {
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground w-8"></TableHead>
               <TableHead className="text-muted-foreground">Cliente</TableHead>
               <TableHead className="text-muted-foreground hidden sm:table-cell">Contacto</TableHead>
-              <TableHead className="text-muted-foreground hidden md:table-cell">Distribuidor</TableHead>
-              <TableHead className="text-muted-foreground text-right">Total</TableHead>
+              <TableHead className="text-muted-foreground">Producto</TableHead>
+              <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
+              <TableHead className="text-muted-foreground text-right">Logística</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden md:table-cell">Envío ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden md:table-cell">Subtotal ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Ganancia ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Final ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Final USD</TableHead>
+              <TableHead className="text-muted-foreground text-center">Tracking</TableHead>
               <TableHead className="text-muted-foreground text-center">Estado</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden md:table-cell">Fecha</TableHead>
               <TableHead className="text-muted-foreground text-right">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
                 const cfg = statusConfig[o.status] || statusConfig.pending
+                const isExpanded = expandedOrders.has(o.id)
+                const hasMultipleItems = o.items.length > 1
+
                 return (
-                  <TableRow key={o.id} className="border-border hover:bg-muted cursor-pointer" onClick={() => setDetailOrder(o)}>
-                    <TableCell className="font-medium text-foreground">{o.clientName} {o.clientSurname}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{o.clientPhone || o.clientContact}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm hidden md:table-cell">{o.distributor?.name || "—"}</TableCell>
-                    <TableCell className="text-right text-foreground">{formatUSD(o.totalUSD)}</TableCell>
-                    <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm hidden md:table-cell">{formatDate(o.createdAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
-                        <SelectTrigger className="w-28 h-7 text-xs bg-muted border-border text-foreground">
-                          <SelectValue placeholder="Cambiar" />
-                        </SelectTrigger>
-                        <SelectContent className=" bg-card text-foreground">
-                          {Object.entries(statusConfig).map(([k, v]) => (
-                            <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
+                  <Fragment key={o.id}>
+                    {o.items.map((item, itemIdx) => {
+                      const isFirst = itemIdx === 0
+                      const pricing = computeItemPricing(item, exchangeRate, usdtRate)
+                      return (
+                        <TableRow
+                          key={item.id}
+                          className={`border-border hover:bg-muted ${isFirst ? "" : "border-t-0"}`}
+                        >
+                          {isFirst ? (
+                            <>
+                              <TableCell
+                                className="text-muted-foreground cursor-pointer"
+                                onClick={() => hasMultipleItems && toggleOrderExpand(o.id)}
+                              >
+                                {hasMultipleItems ? (
+                                  isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+                                ) : null}
+                              </TableCell>
+                              <TableCell
+                                className="font-medium text-foreground cursor-pointer"
+                                onClick={() => setDetailOrder(o)}
+                              >
+                                {o.clientName} {o.clientSurname}
+                              </TableCell>
+                              <TableCell
+                                className="text-muted-foreground text-sm hidden sm:table-cell cursor-pointer"
+                                onClick={() => setDetailOrder(o)}
+                              >
+                                {o.clientPhone || o.clientContact}
+                              </TableCell>
+                            </>
+                          ) : (
+                            <>
+                              <TableCell className="text-muted-foreground" />
+                              <TableCell />
+                              <TableCell className="hidden sm:table-cell" />
+                            </>
+                          )}
+
+                          <TableCell className="text-foreground text-sm">
+                            {item.product.name}
+                            <span className="text-muted-foreground ml-1">×{item.quantity}</span>
+                          </TableCell>
+                          <TableCell className="text-right text-foreground text-sm">
+                            ${pricing.costUSDT.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground text-sm">
+                            {item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground text-sm hidden md:table-cell">
+                            ${pricing.shippingCost.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-foreground text-sm hidden md:table-cell">
+                            ${pricing.subtotalARS.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-[#0071e3] text-sm hidden lg:table-cell">
+                            ${pricing.profitARS.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-[#22C55E] font-medium text-sm">
+                            ${pricing.finalPriceARS.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground text-sm hidden lg:table-cell">
+                            ${pricing.finalPriceUSD.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-center text-xs text-muted-foreground">
+                            {item.trackingCode ? (
+                              <span className="text-blue-400">{item.trackingCode}</span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {getItemStatusBadge(item.shippingStatus)}
+                          </TableCell>
+
+                          {isFirst ? (
+                            <TableCell className="text-right">
+                              <div className="flex items-center gap-1">
+                                <Badge className={`${cfg.className} border-0 text-[10px] mr-1 hidden lg:inline-flex`}>
+                                  {cfg.label}
+                                </Badge>
+                                <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
+                                  <SelectTrigger className="w-24 h-7 text-xs bg-muted border-border text-foreground">
+                                    <SelectValue placeholder="Cambiar" />
+                                  </SelectTrigger>
+                                  <SelectContent className=" bg-card text-foreground">
+                                    {Object.entries(statusConfig).map(([k, v]) => (
+                                      <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </TableCell>
+                          ) : (
+                            <TableCell className="text-right" />
+                          )}
+                        </TableRow>
+                      )
+                    })}
+                    <TableRow className="border-border hover:bg-transparent">
+                      <TableCell colSpan={14} className="py-1 px-0">
+                        <div className="h-px bg-border/50" />
+                      </TableCell>
+                    </TableRow>
+                  </Fragment>
                 )
               })
             )}

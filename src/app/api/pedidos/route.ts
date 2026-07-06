@@ -29,7 +29,17 @@ export async function GET(request: NextRequest) {
       include: {
         distributor: { select: { id: true, name: true } },
         items: {
-          include: { product: { select: { name: true, slug: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
+          include: {
+            product: {
+              select: {
+                name: true, slug: true, images: true, categoryId: true, stock: true,
+                costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
+                yoniEnabled: true, yoniType: true, yoniValue: true,
+                shippingCost: true, profitType: true, profitValue: true,
+              },
+            },
+            bulk: { select: { courier: true, trackingCode: true, type: true } },
+          },
         },
       },
     })
@@ -89,7 +99,17 @@ export async function POST(request: Request) {
       include: {
         distributor: { select: { id: true, name: true } },
         items: {
-          include: { product: { select: { name: true } }, bulk: { select: { courier: true, trackingCode: true, type: true } } },
+          include: {
+            product: {
+              select: {
+                name: true, slug: true, images: true, categoryId: true, stock: true,
+                costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
+                yoniEnabled: true, yoniType: true, yoniValue: true,
+                shippingCost: true, profitType: true, profitValue: true,
+              },
+            },
+            bulk: { select: { courier: true, trackingCode: true, type: true } },
+          },
         },
       },
     })
