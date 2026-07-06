@@ -20,7 +20,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { formatDate } from "@/lib/utils"
 
@@ -49,6 +48,7 @@ export default function AdminCategoriasPage() {
   const [form, setForm] = useState({ name: "", slug: "", description: "" })
   const [showSubcategories, setShowSubcategories] = useState(false)
   const [subcatInputs, setSubcatInputs] = useState<string[]>([""])
+  const [saving, setSaving] = useState(false)
 
   async function loadCategories() {
     try {
@@ -87,6 +87,7 @@ export default function AdminCategoriasPage() {
       return
     }
 
+    setSaving(true)
     try {
       if (editing) {
         const res = await fetch(`/api/categorias/${editing.id}`, {
@@ -120,6 +121,8 @@ export default function AdminCategoriasPage() {
       loadCategories()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al guardar")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -239,8 +242,8 @@ export default function AdminCategoriasPage() {
                 <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  {editing ? "Guardar cambios" : "Crear categoría"}
+                <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear categoría"}
                 </Button>
               </div>
             </form>
