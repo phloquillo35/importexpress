@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { name, costUSDT, yoniEnabled, yoniPercentage, hasFinancing, shippingCost, profitType, profitValue } = body
+    const { name, costUSDT, yoniEnabled, yoniType, yoniValue, hasFinancing, shippingCost, profitType, profitValue } = body
 
     if (!name) {
       return Response.json({ error: "name es requerido" }, { status: 400 })
@@ -95,17 +95,19 @@ export async function POST(request: Request) {
 
     const usdt = parseFloat(costUSDT) || 0
     const yoni = yoniEnabled ?? false
-    const yoniPct = parseFloat(yoniPercentage) || 25
+    const yT = (yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage"
+    const yV = parseFloat(yoniValue) || 25
     const ship = parseFloat(shippingCost) || 0
-    const pType = profitType || "percentage"
+    const pType = (profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage"
     const pValue = parseFloat(profitValue) || 0
 
     const pricing = calculateFinalPrice({
       costUSDT: usdt,
       yoniEnabled: yoni,
-      yoniPercentage: yoniPct,
+      yoniType: yT,
+      yoniValue: yV,
       shippingCost: ship,
-      profitType: pType as "percentage" | "fixed_usdt" | "fixed_ars",
+      profitType: pType,
       profitValue: pValue,
       exchangeRate,
       usdtRate,
@@ -124,7 +126,8 @@ export async function POST(request: Request) {
         costUSD: body.costUSD ? parseFloat(body.costUSD) : null,
         costUSDT: usdt || null,
         yoniEnabled: yoni,
-        yoniPercentage: yoniPct,
+        yoniType: yT,
+        yoniValue: yV,
         hasFinancing: hasFinancing ?? false,
         shippingCost: ship,
         profitType: pType,

@@ -24,7 +24,8 @@ interface ProductFormData {
   description: string
   costUSDT: string
   yoniEnabled: boolean
-  yoniPercentage: string
+  yoniType: string
+  yoniValue: string
   hasFinancing: boolean
   shippingCost: string
   profitType: string
@@ -55,7 +56,7 @@ interface ColorGroup {
 }
 
 interface ProductFormProps {
-  defaultValues?: Partial<ProductFormData> & { yoniPercentage?: string; images?: string[] | { url: string; color: string }[]; specs?: Record<string, string>; finalPriceUSD?: number; finalPriceARS?: number }
+  defaultValues?: Partial<ProductFormData> & { yoniType?: string; yoniValue?: string; images?: string[] | { url: string; color: string }[]; specs?: Record<string, string>; finalPriceUSD?: number; finalPriceARS?: number }
   productSlug?: string
 }
 
@@ -99,7 +100,8 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       description: "",
       costUSDT: "",
       yoniEnabled: false,
-      yoniPercentage: "25",
+      yoniType: "percentage",
+      yoniValue: "25",
       hasFinancing: false,
       shippingCost: "0",
       profitType: "percentage",
@@ -117,7 +119,8 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   const watchedName = watch("name")
   const costUSDT = watch("costUSDT")
   const yoniEnabled = watch("yoniEnabled")
-  const yoniPercentage = watch("yoniPercentage")
+  const yoniType = watch("yoniType")
+  const yoniValue = watch("yoniValue")
   const shippingCost = watch("shippingCost")
   const profitType = watch("profitType")
   const profitValue = watch("profitValue")
@@ -170,14 +173,15 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     return calculateFinalPrice({
       costUSDT: parseFloat(costUSDT) || 0,
       yoniEnabled: Boolean(yoniEnabled),
-      yoniPercentage: parseFloat(yoniPercentage) || 0,
+      yoniType: (yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+      yoniValue: parseFloat(yoniValue) || 0,
       shippingCost: parseFloat(shippingCost) || 0,
       profitType: (profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
       profitValue: parseFloat(profitValue) || 0,
       exchangeRate,
       usdtRate,
     })
-  }, [costUSDT, yoniEnabled, yoniPercentage, shippingCost, profitType, profitValue, exchangeRate, usdtRate])
+  }, [costUSDT, yoniEnabled, yoniType, yoniValue, shippingCost, profitType, profitValue, exchangeRate, usdtRate])
 
   function addSpec() {
     setSpecs([...specs, { key: "", value: "" }])
@@ -247,7 +251,8 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       costUSDT: parseFloat(data.costUSDT),
       shippingCost: parseFloat(data.shippingCost) || 0,
       profitValue: parseFloat(data.profitValue) || 0,
-      yoniPercentage: parseFloat(data.yoniPercentage) || 0,
+      yoniType: data.yoniType || "percentage",
+      yoniValue: parseFloat(data.yoniValue) || 0,
       hasFinancing: data.hasFinancing ?? false,
       stock: parseInt(data.stock) || 0,
       minStock: parseInt(data.minStock) || 5,
@@ -324,16 +329,32 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 flex-wrap">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" {...register("yoniEnabled")} defaultChecked={defaultValues?.yoniEnabled ?? false} className="w-4 h-4 rounded border-zinc-600 bg-muted text-[#22C55E] focus:ring-[#22C55E]" />
             <span className="text-sm text-muted-foreground">Comisión Yoni</span>
           </label>
           {yoniEnabled && (
-            <div className="flex items-center gap-2">
-              <Input type="number" step="0.1" min="0" max="100" {...register("yoniPercentage")} className="bg-muted border-border text-foreground w-20" placeholder="25" />
-              <span className="text-sm text-muted-foreground">%</span>
-            </div>
+            <>
+              <Select onValueChange={(v) => { if (v) setValue("yoniType", v) }} defaultValue={defaultValues?.yoniType || "percentage"}>
+                <SelectTrigger className="bg-muted border-border text-foreground w-40">
+                  <SelectValue placeholder="Tipo">
+                    {(value) =>
+                      value === "percentage" ? "Porcentaje (%)" :
+                      value === "fixed_usdt" ? "Valor fijo (USDT)" :
+                      value === "fixed_ars" ? "Valor fijo (ARS)" :
+                      "Seleccionar"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-popover text-popover-foreground">
+                  <SelectItem value="percentage">Porcentaje (%)</SelectItem>
+                  <SelectItem value="fixed_usdt">Valor fijo (USDT)</SelectItem>
+                  <SelectItem value="fixed_ars">Valor fijo (ARS)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input type="number" step="0.01" min="0" {...register("yoniValue")} className="bg-muted border-border text-foreground w-24" placeholder="25" />
+            </>
           )}
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" {...register("hasFinancing")} defaultChecked={defaultValues?.hasFinancing ?? false} className="w-4 h-4 rounded border-zinc-600 bg-muted text-[#0071e3] focus:ring-[#0071e3]" />
@@ -377,8 +398,8 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             <span className="text-right text-muted-foreground">${(parseFloat(costUSDT) || 0).toFixed(2)} USDT</span>
             {yoniEnabled && (
               <>
-                <span className="text-muted-foreground">+ Comisión Yoni ({parseFloat(yoniPercentage) || 0}%):</span>
-                <span className="text-right text-muted-foreground">${(((parseFloat(costUSDT) || 0) * (parseFloat(yoniPercentage) || 0)) / 100).toFixed(2)} USDT</span>
+                <span className="text-muted-foreground">+ Comisión Yoni {yoniType === "percentage" ? `(${parseFloat(yoniValue) || 0}%)` : ""}:</span>
+                <span className="text-right text-muted-foreground">${pricing.yoniUSDT.toFixed(2)} USDT</span>
               </>
             )}
             <span className="text-muted-foreground border-t border-border pt-1">+ Costo envío:</span>

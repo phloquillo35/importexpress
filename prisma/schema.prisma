@@ -56,7 +56,8 @@ model Product {
   costUSD       Float?
   costUSDT      Float?
   yoniEnabled   Boolean     @default(false)
-  yoniPercentage Float       @default(25)
+  yoniType      String      @default("percentage")
+  yoniValue     Float       @default(25) @map("yoniPercentage")
   hasFinancing  Boolean     @default(false)
   shippingCost  Float       @default(0)
   profitType    String      @default("percentage")

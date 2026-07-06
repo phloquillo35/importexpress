@@ -11,6 +11,8 @@ export const createProductSchema = z.object({
   costUSD: z.number().optional(),
   costUSDT: z.number(),
   yoniEnabled: z.boolean().optional().default(false),
+  yoniType: z.enum(["percentage", "fixed_usdt", "fixed_ars"]).optional().default("percentage"),
+  yoniValue: z.number().optional().default(25),
   hasFinancing: z.boolean().optional().default(false),
   shippingCost: z.number().optional().default(0),
   profitType: z.enum(["percentage", "fixed_usdt", "fixed_ars"]).optional().default("percentage"),
