@@ -332,11 +332,11 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         <div className="flex items-center gap-6 flex-wrap">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" {...register("yoniEnabled")} defaultChecked={defaultValues?.yoniEnabled ?? false} className="w-4 h-4 rounded border-zinc-600 bg-muted text-[#22C55E] focus:ring-[#22C55E]" />
-            <span className="text-sm text-muted-foreground">Comisión Yoni</span>
+            <span className="text-sm text-muted-foreground">Logística</span>
           </label>
           {yoniEnabled && (
             <>
-              <Select onValueChange={(v) => { if (v) setValue("yoniType", v) }} defaultValue={defaultValues?.yoniType || "percentage"}>
+              <Select value={yoniType} onValueChange={(v) => { if (v) setValue("yoniType", v) }}>
                 <SelectTrigger className="bg-muted border-border text-foreground w-40">
                   <SelectValue placeholder="Tipo">
                     {(value) =>
@@ -353,7 +353,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
                   <SelectItem value="fixed_ars">Valor fijo (ARS)</SelectItem>
                 </SelectContent>
               </Select>
-              <Input type="number" step="0.01" min="0" {...register("yoniValue")} className="bg-muted border-border text-foreground w-24" placeholder="25" />
+              <input type="number" step="0.01" min="0" {...register("yoniValue")} className="bg-muted border-border text-foreground w-24 h-8 rounded-lg border border-input px-2.5 py-1 text-base" placeholder="25" />
             </>
           )}
           <label className="flex items-center gap-2 cursor-pointer">
@@ -398,8 +398,8 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             <span className="text-right text-muted-foreground">${(parseFloat(costUSDT) || 0).toFixed(2)} USDT</span>
             {yoniEnabled && (
               <>
-                <span className="text-muted-foreground">+ Comisión Yoni {yoniType === "percentage" ? `(${parseFloat(yoniValue) || 0}%)` : ""}:</span>
-                <span className="text-right text-muted-foreground">${pricing.yoniUSDT.toFixed(2)} USDT</span>
+                <span className="text-muted-foreground">+ Logística {yoniType === "percentage" ? `(${parseFloat(yoniValue) || 0}%)` : yoniType === "fixed_ars" ? `($${(parseFloat(yoniValue) || 0).toLocaleString("es-AR")} ARS)` : ""}:</span>
+                <span className="text-right text-muted-foreground">{yoniType === "fixed_ars" ? `$${(parseFloat(yoniValue) || 0).toLocaleString("es-AR")} ARS` : `$${pricing.yoniUSDT.toFixed(2)} USDT`}</span>
               </>
             )}
             <span className="text-muted-foreground border-t border-border pt-1">+ Costo envío:</span>
