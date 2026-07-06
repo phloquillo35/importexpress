@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Pencil, Trash2, Tags } from "lucide-react"
+import { Plus, Pencil, Trash2, Tags, X } from "lucide-react"
 import { toast } from "sonner"
 import {
   Table,
@@ -24,6 +24,12 @@ import {
 } from "@/components/ui/dialog"
 import { formatDate } from "@/lib/utils"
 
+interface Subcategory {
+  id: string
+  name: string
+  slug: string
+}
+
 interface Category {
   id: string
   name: string
@@ -31,6 +37,8 @@ interface Category {
   description: string | null
   createdAt: string
   _count: { products: number }
+  children: Subcategory[]
+  parent: Subcategory | null
 }
 
 export default function AdminCategoriasPage() {
@@ -39,6 +47,8 @@ export default function AdminCategoriasPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
   const [form, setForm] = useState({ name: "", slug: "", description: "" })
+  const [showSubcategories, setShowSubcategories] = useState(false)
+  const [subcatInputs, setSubcatInputs] = useState<string[]>([""])
 
   async function loadCategories() {
     try {
@@ -59,6 +69,8 @@ export default function AdminCategoriasPage() {
   function openNew() {
     setEditing(null)
     setForm({ name: "", slug: "", description: "" })
+    setShowSubcategories(false)
+    setSubcatInputs([""])
     setDialogOpen(true)
   }
 
@@ -88,10 +100,15 @@ export default function AdminCategoriasPage() {
         }
         toast.success("Categoría actualizada")
       } else {
+        const body: Record<string, unknown> = { ...form }
+        if (showSubcategories) {
+          const subs = subcatInputs.map(s => s.trim()).filter(Boolean)
+          if (subs.length > 0) body.subcategories = subs
+        }
         const res = await fetch("/api/categorias", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify(body),
         })
         if (!res.ok) {
           const err = await res.json()
@@ -172,6 +189,52 @@ export default function AdminCategoriasPage() {
                   rows={3}
                 />
               </div>
+              {!editing && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowSubcategories(!showSubcategories)
+                      if (!showSubcategories) setSubcatInputs([""])
+                    }}
+                    className="border-border text-muted-foreground"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    {showSubcategories ? "Ocultar subcategorías" : "Agregar subcategorías"}
+                  </Button>
+
+                  {showSubcategories && (
+                    <div className="space-y-2 border border-border rounded-lg p-4 bg-muted/30">
+                      <Label className="text-muted-foreground text-sm font-medium">Subcategorías</Label>
+                      {subcatInputs.map((val, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input
+                            value={val}
+                            onChange={(e) => {
+                              const updated = [...subcatInputs]
+                              updated[i] = e.target.value
+                              setSubcatInputs(updated)
+                            }}
+                            className="bg-muted border-border text-foreground flex-1"
+                            placeholder="Nombre de la subcategoría"
+                          />
+                          {subcatInputs.length > 1 && (
+                            <Button type="button" variant="ghost" size="icon" onClick={() => setSubcatInputs(subcatInputs.filter((_, j) => j !== i))} className="text-red-400 flex-shrink-0">
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" size="sm" onClick={() => setSubcatInputs([...subcatInputs, ""])} className="border-border text-muted-foreground">
+                        <Plus className="w-4 h-4 mr-1" /> Agregar otra
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="flex justify-end gap-3 pt-2">
                 <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">
                   Cancelar
@@ -192,6 +255,7 @@ export default function AdminCategoriasPage() {
               <TableHead className="text-muted-foreground">Nombre</TableHead>
               <TableHead className="text-muted-foreground hidden md:table-cell">Slug</TableHead>
               <TableHead className="text-muted-foreground hidden lg:table-cell">Descripción</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Subcategorías</TableHead>
               <TableHead className="text-muted-foreground text-center">Productos</TableHead>
               <TableHead className="text-muted-foreground hidden sm:table-cell">Creada</TableHead>
               <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
@@ -200,13 +264,13 @@ export default function AdminCategoriasPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
                   <Tags className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No hay categorías</p>
                 </TableCell>
@@ -218,6 +282,23 @@ export default function AdminCategoriasPage() {
                   <TableCell className="text-muted-foreground hidden md:table-cell">{cat.slug}</TableCell>
                   <TableCell className="text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">
                     {cat.description || "—"}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {cat.parent ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        ← {cat.parent.name}
+                      </span>
+                    ) : cat.children.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {cat.children.map((child) => (
+                          <span key={child.id} className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            {child.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center text-muted-foreground">{cat._count.products}</TableCell>
                   <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">

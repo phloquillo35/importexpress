@@ -40,6 +40,8 @@ interface ProductFormData {
 interface Category {
   id: string
   name: string
+  parent: { id: string; name: string } | null
+  children: { id: string; name: string }[]
 }
 
 interface Distributor {
@@ -60,6 +62,8 @@ interface ProductFormProps {
 export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
+  const [selectedParentId, setSelectedParentId] = useState("")
+  const [selectedSubcatId, setSelectedSubcatId] = useState("")
   const [distributors, setDistributors] = useState<Distributor[]>([])
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
@@ -121,7 +125,17 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   useEffect(() => {
     fetch("/api/categorias")
       .then((r) => r.json())
-      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const cats = Array.isArray(data) ? data : []
+        setCategories(cats)
+        if (defaultValues?.categoryId) {
+          const cat = cats.find((c: Category) => c.id === defaultValues.categoryId)
+          if (cat) {
+            setSelectedParentId(cat.parent ? cat.parent.id : cat.id)
+            if (cat.parent) setSelectedSubcatId(cat.id)
+          }
+        }
+      })
       .catch(() => {})
 
     fetch("/api/distribuidores")
@@ -402,7 +416,13 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-muted-foreground">Categoría</Label>
-            <Select onValueChange={(v) => { if (v) setValue("categoryId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.categoryId || "__none"}>
+            <Select value={selectedParentId || "__none"} onValueChange={(v) => {
+              if (!v) return
+              const pid = v === "__none" ? "" : v
+              setSelectedParentId(pid)
+              setSelectedSubcatId("")
+              setValue("categoryId", pid)
+            }}>
               <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue placeholder="Seleccionar categoría">
                   {(value) =>
@@ -413,12 +433,46 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
               </SelectTrigger>
               <SelectContent className=" bg-popover text-popover-foreground">
                 <SelectItem value="__none">Sin categoría</SelectItem>
-                {categories.map((cat) => (
+                {categories.filter(c => !c.parent).map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          {(() => {
+            const parent = categories.find(c => c.id === selectedParentId)
+            if (!parent || parent.children.length === 0) return null
+            return (
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Subcategoría</Label>
+                <Select value={selectedSubcatId || "__none"} onValueChange={(v) => {
+                  if (!v) return
+                  if (v === "__none") {
+                    setSelectedSubcatId("")
+                    setValue("categoryId", selectedParentId)
+                  } else {
+                    setSelectedSubcatId(v)
+                    setValue("categoryId", v)
+                  }
+                }}>
+                  <SelectTrigger className="bg-muted border-border text-foreground">
+                    <SelectValue placeholder="Seleccionar subcategoría">
+                      {(value) =>
+                        !value || value === "__none" ? "Sin subcategoría" :
+                        parent.children.find(c => c.id === value)?.name || "Sin subcategoría"
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className=" bg-popover text-popover-foreground">
+                    <SelectItem value="__none">Sin subcategoría</SelectItem>
+                    {parent.children.map((child) => (
+                      <SelectItem key={child.id} value={child.id}>{child.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )
+          })()}
           <div className="space-y-2">
             <Label className="text-muted-foreground">Distribuidor</Label>
             <Select onValueChange={(v) => { if (v) setValue("distributorId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.distributorId || "__none"}>
