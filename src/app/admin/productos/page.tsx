@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { formatUSD } from "@/lib/utils"
+import { calculateFinalPrice } from "@/lib/pricing"
 
 interface Product {
   id: string
@@ -23,7 +24,14 @@ interface Product {
   name: string
   priceUSD: number
   costUSDT: number | null
+  finalPriceUSD: number
   finalPriceARS: number
+  yoniEnabled: boolean
+  yoniType: string
+  yoniValue: number
+  shippingCost: number
+  profitType: string
+  profitValue: number
   stock: number
   minStock: number
   isAvailable: boolean
@@ -38,6 +46,8 @@ export default function AdminProductosPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
+  const [exchangeRate, setExchangeRate] = useState(1)
+  const [usdtRate, setUsdtRate] = useState(1)
   const limit = 20
 
   const fetchProducts = useCallback(async () => {
@@ -64,6 +74,13 @@ export default function AdminProductosPage() {
   useEffect(() => {
     fetchProducts()
   }, [fetchProducts])
+
+  useEffect(() => {
+    fetch("/api/configuracion").then(r => r.json()).then(data => {
+      setExchangeRate(Number(data.exchange_rate) || 1)
+      setUsdtRate(Number(data.usdt_rate) || 1)
+    }).catch(() => {})
+  }, [])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -136,7 +153,12 @@ export default function AdminProductosPage() {
               <TableHead className="text-muted-foreground">Producto</TableHead>
               <TableHead className="text-muted-foreground hidden md:table-cell">Categoría</TableHead>
               <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
-              <TableHead className="text-muted-foreground text-right">Precio final ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Logística</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden sm:table-cell">Envío ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden sm:table-cell">Subtotal ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Ganancia ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Final ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Final USD</TableHead>
               <TableHead className="text-muted-foreground text-center">Stock</TableHead>
               <TableHead className="text-muted-foreground text-center hidden sm:table-cell">Disp.</TableHead>
               <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
@@ -145,26 +167,55 @@ export default function AdminProductosPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={12} className="text-center text-muted-foreground py-12">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={12} className="text-center text-muted-foreground py-12">
                   <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No hay productos</p>
                 </TableCell>
               </TableRow>
             ) : (
-              products.map((product) => (
+              products.map((product) => {
+                const pricing = calculateFinalPrice({
+                  costUSDT: product.costUSDT || 0,
+                  yoniEnabled: product.yoniEnabled,
+                  yoniType: (product.yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+                  yoniValue: product.yoniValue || 0,
+                  shippingCost: product.shippingCost || 0,
+                  profitType: (product.profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+                  profitValue: product.profitValue || 0,
+                  exchangeRate,
+                  usdtRate,
+                })
+                return (
                 <TableRow key={product.id} className="border-border hover:bg-muted">
                   <TableCell className="font-medium text-foreground">{product.name}</TableCell>
                   <TableCell className="text-muted-foreground hidden md:table-cell">
                     {product.category?.name || "—"}
                   </TableCell>
                   <TableCell className="text-right text-foreground">${(product.costUSDT || 0).toFixed(2)}</TableCell>
-                  <TableCell className="text-right text-[#F59E0B] font-medium">${(product.finalPriceARS || 0).toLocaleString("es-AR")}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground hidden sm:table-cell">
+                    ${(product.shippingCost || 0).toLocaleString("es-AR")}
+                  </TableCell>
+                  <TableCell className="text-right text-foreground hidden sm:table-cell">
+                    ${pricing.subtotalARS.toLocaleString("es-AR")}
+                  </TableCell>
+                  <TableCell className="text-right text-[#0071e3] hidden lg:table-cell">
+                    ${pricing.profitARS.toLocaleString("es-AR")}
+                  </TableCell>
+                  <TableCell className="text-right text-[#22C55E] font-medium">
+                    ${pricing.finalPriceARS.toLocaleString("es-AR")}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground hidden lg:table-cell">
+                    ${pricing.finalPriceUSD.toFixed(2)}
+                  </TableCell>
                   <TableCell className="text-center">
                     <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-muted-foreground"}>
                       {product.stock}
@@ -207,7 +258,8 @@ export default function AdminProductosPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                )
+              })
             )}
           </TableBody>
         </Table>
