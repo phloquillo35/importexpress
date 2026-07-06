@@ -241,9 +241,9 @@ export default function AdminCategoriasPage() {
                 <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">
                   Cancelar
                 </Button>
-                <Button type="button" disabled={saving} onClick={handleSubmit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <button type="button" disabled={saving} onClick={handleSubmit} className="bg-primary hover:bg-primary/90 text-primary-foreground inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50">
                   {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear categoría"}
-                </Button>
+                </button>
               </div>
             </form>
           </DialogContent>
