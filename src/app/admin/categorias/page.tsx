@@ -80,8 +80,7 @@ export default function AdminCategoriasPage() {
     setDialogOpen(true)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit() {
     if (!form.name.trim()) {
       toast.error("El nombre es requerido")
       return
@@ -157,7 +156,7 @@ export default function AdminCategoriasPage() {
             <DialogHeader>
               <DialogTitle>{editing ? "Editar categoría" : "Nueva categoría"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre</Label>
                 <Input
@@ -242,7 +241,7 @@ export default function AdminCategoriasPage() {
                 <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button type="button" disabled={saving} onClick={handleSubmit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear categoría"}
                 </Button>
               </div>
