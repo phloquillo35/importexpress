@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { slugify } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
-import { requireAuth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 import { updateProductSchema } from "@/lib/validators"
 
 export async function GET(
@@ -54,7 +54,7 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { slug } = await params
@@ -147,7 +147,7 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { slug } = await params

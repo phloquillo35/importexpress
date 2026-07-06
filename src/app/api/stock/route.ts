@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { requireAuth } from "@/lib/auth"
+import { requireAuth, requireRole } from "@/lib/auth"
 
 export async function GET() {
   try {
@@ -28,7 +28,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const { productId, quantity, operation } = await request.json()

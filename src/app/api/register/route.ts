@@ -3,13 +3,12 @@ import { prisma } from "@/lib/prisma"
 import { randomUUID } from "crypto"
 import { NextRequest } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
+import { requireRole } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
-    const secret = request.headers.get("x-register-secret")
-    if (!secret || secret !== process.env.REGISTER_SECRET) {
-      return Response.json({ error: "Forbidden" }, { status: 403 })
-    }
+    const session = await requireRole("admin")
+    if (session instanceof Response) return session
 
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
     const check = rateLimit(ip)

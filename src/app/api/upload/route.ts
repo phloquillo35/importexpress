@@ -2,7 +2,7 @@ import { NextRequest } from "next/server"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { randomUUID } from "crypto"
-import { requireAuth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 
 const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(process.cwd(), "public", "uploads")
 const MAX_SIZE = 10 * 1024 * 1024
@@ -10,7 +10,7 @@ const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif", "ap
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const formData = await request.formData()

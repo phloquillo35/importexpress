@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma"
-import { requireAuth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 
 export async function GET() {
   try {
-    const session = await requireAuth()
+    const session = await requireRole("admin")
     if (session instanceof Response) return session
 
     const admins = await prisma.admin.findMany({
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, role: true },
       orderBy: { createdAt: "asc" },
     })
 
