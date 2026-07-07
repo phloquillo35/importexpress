@@ -32,8 +32,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (categoria) {
-      const cat = await prisma.category.findUnique({ where: { slug: categoria } })
-      if (cat) where.categoryId = cat.id
+      const cat = await prisma.category.findUnique({
+        where: { slug: categoria },
+        include: { children: { select: { id: true } } },
+      })
+      if (cat) {
+        const categoryIds = [cat.id, ...cat.children.map(c => c.id)]
+        where.categoryId = { in: categoryIds }
+      }
     }
 
     if (destacados === "true") {

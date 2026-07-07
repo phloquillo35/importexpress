@@ -24,6 +24,7 @@ interface Category {
   id: string
   name: string
   slug: string
+  parent: { id: string; name: string; slug: string } | null
   _count: { products: number }
 }
 
@@ -147,20 +148,38 @@ function ProductosContent() {
                 >
                   Todas las categorías
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => { updateParams({ categoria: cat.slug }); setShowFilters(false) }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      currentCategory === cat.slug
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {cat.name}
-                    <span className="text-xs text-muted-foreground ml-2">({cat._count.products})</span>
-                  </button>
-                ))}
+                {categories.filter(c => !c.parent).map((parent) => {
+                  const children = categories.filter(c => c.parent?.id === parent.id)
+                  return (
+                    <div key={parent.id}>
+                      <button
+                        onClick={() => { updateParams({ categoria: parent.slug }); setShowFilters(false) }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          currentCategory === parent.slug
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {parent.name}
+                        <span className="text-xs text-muted-foreground ml-2">({parent._count.products})</span>
+                      </button>
+                      {children.map((child) => (
+                        <button
+                          key={child.id}
+                          onClick={() => { updateParams({ categoria: child.slug }); setShowFilters(false) }}
+                          className={`w-full text-left pl-7 pr-3 py-1.5 rounded-lg text-sm transition-colors ${
+                            currentCategory === child.slug
+                              ? "bg-primary/5 text-primary font-medium"
+                              : "text-muted-foreground/70 hover:text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          └ {child.name}
+                          <span className="text-xs text-muted-foreground ml-2">({child._count.products})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </aside>

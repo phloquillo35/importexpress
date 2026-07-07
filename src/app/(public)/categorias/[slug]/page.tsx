@@ -12,6 +12,8 @@ interface Category {
   name: string
   slug: string
   description: string | null
+  parent: { id: string; name: string; slug: string } | null
+  children: { id: string; name: string; slug: string }[]
 }
 
 interface Product {
@@ -141,6 +143,19 @@ export default function CategoryPage() {
             <p className="text-white/70 mt-2 max-w-xl">{category.description}</p>
           )}
           <p className="text-sm text-white/70 mt-2">{products.length} productos</p>
+          {category?.children && category.children.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {category.children.map((child) => (
+                <Link
+                  key={child.id}
+                  href={`/categorias/${child.slug}`}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-full transition-colors"
+                >
+                  {child.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -155,6 +170,22 @@ export default function CategoryPage() {
           <div className="flex flex-col items-center justify-center py-20 text-white/70">
             <Package className="w-16 h-16 mb-4 opacity-50" />
             <p className="text-lg font-medium text-white mb-1">No hay productos en esta categoría</p>
+            {category?.children && category.children.length > 0 && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-white/70 mb-3">Explorá sus subcategorías:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {category.children.map((child) => (
+                    <Link
+                      key={child.id}
+                      href={`/categorias/${child.slug}`}
+                      className="inline-flex items-center gap-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-full transition-colors"
+                    >
+                      {child.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

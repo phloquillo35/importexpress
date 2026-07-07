@@ -11,6 +11,7 @@ interface Category {
   name: string
   slug: string
   image: string | null
+  parent: { id: string; name: string; slug: string } | null
   _count: { products: number }
 }
 
@@ -168,9 +169,9 @@ export default function HomePage() {
               <AlertCircle className="w-12 h-12 mb-3 text-[#ff3b30]" />
               <p className="text-sm">Error al cargar categorías</p>
             </div>
-          ) : categories.length > 0 ? (
+          ) : categories.filter(c => !c.parent).length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {categories.map((cat) => (
+              {categories.filter(c => !c.parent).map((cat) => (
                 <Link
                   key={cat.id}
                   href={`/categorias/${cat.slug}`}
@@ -188,6 +189,13 @@ export default function HomePage() {
             </div>
           ) : (
             <p className="text-center text-foreground/70 dark:text-muted-foreground py-12">No hay categorías disponibles</p>
+          )}
+          {categories.some(c => c.parent) && (
+            <div className="mt-4 text-center">
+              <Link href="/productos" className="text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
+                Ver subcategorías disponibles
+              </Link>
+            </div>
           )}
 
           <div className="sm:hidden mt-6 text-center">
