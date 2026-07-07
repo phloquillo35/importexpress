@@ -47,6 +47,13 @@ interface OrderItem {
   trackingCode: string | null
   shippingStatus: string
   bulkType: string | null
+  costUSDT: number | null
+  yoniEnabled: boolean
+  yoniType: string
+  yoniValue: number
+  shippingCost: number
+  profitType: string
+  profitValue: number
   product: {
     name: string
     slug: string
@@ -85,6 +92,8 @@ interface Order {
   status: string
   notes: string | null
   createdAt: string
+  exchangeRate: number
+  usdtRate: number
   items: OrderItem[]
 }
 
@@ -97,20 +106,20 @@ interface Product {
 
 function computeItemPricing(item: OrderItem, exchangeRate: number, usdtRate: number) {
   const perUnit = calculateFinalPrice({
-    costUSDT: item.product.costUSDT || 0,
-    yoniEnabled: item.product.yoniEnabled,
-    yoniType: (item.product.yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
-    yoniValue: item.product.yoniValue || 0,
-    shippingCost: item.product.shippingCost || 0,
-    profitType: (item.product.profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
-    profitValue: item.product.profitValue || 0,
+    costUSDT: item.costUSDT ?? item.product.costUSDT ?? 0,
+    yoniEnabled: item.yoniEnabled ?? item.product.yoniEnabled,
+    yoniType: (item.yoniType ?? item.product.yoniType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
+    yoniValue: item.yoniValue ?? item.product.yoniValue ?? 0,
+    shippingCost: item.shippingCost ?? item.product.shippingCost ?? 0,
+    profitType: (item.profitType ?? item.product.profitType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
+    profitValue: item.profitValue ?? item.product.profitValue ?? 0,
     exchangeRate,
     usdtRate,
   })
   return {
-    costUSDT: (item.product.costUSDT || 0) * item.quantity,
+    costUSDT: (item.costUSDT ?? item.product.costUSDT ?? 0) * item.quantity,
     yoniUSDT: Math.round(perUnit.yoniUSDT * item.quantity * 100) / 100,
-    shippingCost: (item.product.shippingCost || 0) * item.quantity,
+    shippingCost: (item.shippingCost ?? item.product.shippingCost ?? 0) * item.quantity,
     subtotalARS: Math.round(perUnit.subtotalARS * item.quantity),
     profitARS: Math.round(perUnit.profitARS * item.quantity),
     finalPriceARS: Math.round(perUnit.finalPriceARS * item.quantity),
@@ -306,7 +315,7 @@ export default function PedidosPage() {
                   <Fragment key={o.id}>
                     {o.items.map((item, itemIdx) => {
                       const isFirst = itemIdx === 0
-                      const pricing = computeItemPricing(item, exchangeRate, usdtRate)
+                      const pricing = computeItemPricing(item, o.exchangeRate || exchangeRate, o.usdtRate || usdtRate)
                       return (
                         <TableRow
                           key={item.id}

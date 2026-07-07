@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { hashSync } from "bcryptjs"
 import { randomUUID } from "crypto"
 import { requireRole } from "@/lib/auth"
+import { calculateFinalPrice } from "@/lib/pricing"
 
 const DEFAULT_KEYS = ["exchange_rate", "usdt_rate", "business_name", "whatsapp", "instagram", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"] as const
 const DEFAULTS: Record<string, string> = {
@@ -77,6 +78,36 @@ export async function PUT(request: Request) {
         })
         updated[key] = String(body[key])
       }
+    }
+
+    const ratesChanged = body.exchange_rate !== undefined || body.usdt_rate !== undefined
+    if (ratesChanged) {
+      const settings = await prisma.setting.findMany({
+        where: { key: { in: ["exchange_rate", "usdt_rate"] } },
+      })
+      const exchangeRate = parseFloat(settings.find(s => s.key === "exchange_rate")?.value || DEFAULTS.exchange_rate)
+      const usdtRate = parseFloat(settings.find(s => s.key === "usdt_rate")?.value || DEFAULTS.usdt_rate)
+
+      const products = await prisma.product.findMany()
+      await Promise.all(
+        products.map((p) => {
+          const result = calculateFinalPrice({
+            costUSDT: p.costUSDT ?? 0,
+            yoniEnabled: p.yoniEnabled,
+            yoniType: p.yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
+            yoniValue: p.yoniValue,
+            shippingCost: p.shippingCost,
+            profitType: p.profitType as "percentage" | "fixed_usdt" | "fixed_ars",
+            profitValue: p.profitValue,
+            exchangeRate,
+            usdtRate,
+          })
+          return prisma.product.update({
+            where: { id: p.id },
+            data: { finalPriceUSD: result.finalPriceUSD, finalPriceARS: result.finalPriceARS },
+          })
+        }),
+      )
     }
 
     return Response.json(updated)

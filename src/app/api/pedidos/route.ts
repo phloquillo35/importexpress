@@ -75,6 +75,23 @@ export async function POST(request: Request) {
       return Response.json({ error: "clientName y items son requeridos" }, { status: 400 })
     }
 
+    const [exchangeRateSetting, usdtRateSetting] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: "exchange_rate" } }),
+      prisma.setting.findUnique({ where: { key: "usdt_rate" } }),
+    ])
+    const exchangeRate = parseFloat(exchangeRateSetting?.value || "1350")
+    const usdtRate = parseFloat(usdtRateSetting?.value || "1400")
+
+    const productIds = items.map((item: { productId: string }) => item.productId)
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true, costUSDT: true, yoniEnabled: true, yoniType: true, yoniValue: true,
+        shippingCost: true, profitType: true, profitValue: true,
+      },
+    })
+    const productMap = new Map(products.map((p) => [p.id, p]))
+
     const order = await prisma.order.create({
       data: {
         id: genId(),
@@ -87,13 +104,25 @@ export async function POST(request: Request) {
         totalUSD: parseFloat(totalUSD) || 0,
         totalARS: totalARS ? parseFloat(totalARS) : null,
         notes: notes || null,
+        exchangeRate,
+        usdtRate,
         items: {
-          create: items.map((item: { productId: string; quantity: number; priceUSD: number }) => ({
-            id: genId(),
-            productId: item.productId,
-            quantity: item.quantity,
-            priceUSD: item.priceUSD,
-          })),
+          create: items.map((item: { productId: string; quantity: number; priceUSD: number }) => {
+            const product = productMap.get(item.productId)
+            return {
+              id: genId(),
+              productId: item.productId,
+              quantity: item.quantity,
+              priceUSD: item.priceUSD,
+              costUSDT: product?.costUSDT ?? null,
+              yoniEnabled: product?.yoniEnabled ?? false,
+              yoniType: product?.yoniType ?? "percentage",
+              yoniValue: product?.yoniValue ?? 25,
+              shippingCost: product?.shippingCost ?? 0,
+              profitType: product?.profitType ?? "percentage",
+              profitValue: product?.profitValue ?? 0,
+            }
+          }),
         },
       },
       include: {
