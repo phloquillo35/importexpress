@@ -24,7 +24,7 @@ interface ProductCardProps {
     stock: number
     isAvailable: boolean
     hasFinancing: boolean
-    category: { name: string; slug: string } | null
+    category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
   }
 }
 
@@ -99,7 +99,9 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className={`p-5 space-y-3 ${cardColors.length > 1 ? "pt-2" : ""}`}>
           {product.category && (
             <span className="inline-block text-[11px] font-medium uppercase tracking-wider text-primary">
-              {product.category.name}
+              {product.category.parent
+                ? `${product.category.parent.name} - ${product.category.name}`
+                : product.category.name}
             </span>
           )}
 

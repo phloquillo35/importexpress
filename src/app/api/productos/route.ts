@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: { category: { select: { name: true, slug: true } } },
+        include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } } },
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
         categoryId: body.categoryId || null,
         distributorId: body.distributorId || null,
       },
-      include: { category: { select: { name: true, slug: true } }, distributor: { select: { name: true } } },
+      include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } }, distributor: { select: { name: true } } },
     })
 
     return Response.json(product, { status: 201 })

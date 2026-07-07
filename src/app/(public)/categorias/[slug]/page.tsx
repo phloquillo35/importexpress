@@ -27,7 +27,7 @@ interface Product {
   stock: number
   isAvailable: boolean
   hasFinancing: boolean
-  category: { name: string; slug: string } | null
+  category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
 export default function CategoryPage() {

@@ -13,7 +13,7 @@ export async function GET(
     const { slug } = await params
     const product = await prisma.product.findUnique({
       where: { slug },
-      include: { category: { select: { name: true, slug: true } } },
+      include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } } },
     })
 
     if (!product) {
@@ -38,7 +38,7 @@ export async function GET(
         images: true,
         stock: true,
         hasFinancing: true,
-        category: { select: { name: true, slug: true } },
+        category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } },
       },
     })
 
@@ -135,7 +135,7 @@ export async function PUT(
     const updated = await prisma.product.update({
       where: { slug },
       data,
-      include: { category: { select: { name: true, slug: true } } },
+      include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } } },
     })
 
     return Response.json(updated)

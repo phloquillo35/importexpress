@@ -23,7 +23,7 @@ interface Product {
   stock: number
   isAvailable: boolean
   hasFinancing: boolean
-  category: { name: string; slug: string } | null
+  category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
 export default function ProductDetailPage() {
@@ -231,7 +231,9 @@ export default function ProductDetailPage() {
               href={`/categorias/${product.category.slug}`}
               className="inline-block text-xs font-medium uppercase tracking-wider text-primary mb-3"
             >
-              {product.category.name}
+              {product.category.parent
+                ? `${product.category.parent.name} - ${product.category.name}`
+                : product.category.name}
             </Link>
           )}
 
