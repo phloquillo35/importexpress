@@ -213,7 +213,7 @@ export default function BultosPage() {
       <div className="flex gap-2">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
           <SelectTrigger className="w-40 bg-muted border-border text-foreground">
-            <SelectValue placeholder="Filtrar estado" />
+            <SelectValue placeholder="Filtrar estado">{(value) => !value ? "Filtrar estado" : statusConfig[value]?.label || value}</SelectValue>
           </SelectTrigger>
           <SelectContent className=" bg-card text-foreground">
             <SelectItem value="all">Todos</SelectItem>
@@ -279,7 +279,7 @@ export default function BultosPage() {
                 <Label>Courier</Label>
                 <Select value={form.courier} onValueChange={(v) => { if (v) setForm({ ...form, courier: v, type: v === "buspack" ? "grande" : "chico" }) }}>
                   <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue />
+                    <SelectValue>{(value) => !value ? "Seleccionar" : value === "buspack" ? "Buspack" : "Correo Argentino"}</SelectValue>
                   </SelectTrigger>
                   <SelectContent className=" bg-card text-foreground">
                     <SelectItem value="buspack">Buspack</SelectItem>
@@ -356,7 +356,7 @@ export default function BultosPage() {
                 <Label>Estado</Label>
                 <Select value={editForm.status} onValueChange={(v) => { if (v) setEditForm({ ...editForm, status: v }) }}>
                   <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue />
+                    <SelectValue>{(value) => !value ? "Seleccionar" : statusConfig[value]?.label || value}</SelectValue>
                   </SelectTrigger>
                   <SelectContent className=" bg-card text-foreground">
                     {Object.entries(statusConfig).map(([k, v]) => (

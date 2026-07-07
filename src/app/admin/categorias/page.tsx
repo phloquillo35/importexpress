@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Pencil, Trash2, Tags, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Tags, X, Eye, Package } from "lucide-react"
 import { toast } from "sonner"
 import {
   Table,
@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { formatDate } from "@/lib/utils"
+import { formatDate, formatUSD } from "@/lib/utils"
 
 interface Subcategory {
   id: string
@@ -40,6 +40,16 @@ interface Category {
   parent: Subcategory | null
 }
 
+interface ViewProduct {
+  id: string
+  slug: string
+  name: string
+  priceUSD: number
+  finalPriceARS: number
+  stock: number
+  isAvailable: boolean
+}
+
 export default function AdminCategoriasPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,6 +59,9 @@ export default function AdminCategoriasPage() {
   const [showSubcategories, setShowSubcategories] = useState(false)
   const [subcatInputs, setSubcatInputs] = useState<string[]>([""])
   const [saving, setSaving] = useState(false)
+  const [viewingCategory, setViewingCategory] = useState<Category | null>(null)
+  const [categoryProducts, setCategoryProducts] = useState<ViewProduct[]>([])
+  const [viewLoading, setViewLoading] = useState(false)
 
   async function loadCategories() {
     try {
@@ -137,6 +150,21 @@ export default function AdminCategoriasPage() {
       loadCategories()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al eliminar")
+    }
+  }
+
+  async function openView(cat: Category) {
+    setViewingCategory(cat)
+    setViewLoading(true)
+    setCategoryProducts([])
+    try {
+      const res = await fetch(`/api/productos?categoriaId=${cat.id}&admin=1&limit=100`)
+      const data = await res.json()
+      setCategoryProducts(data.products || [])
+    } catch {
+      toast.error("Error al cargar productos")
+    } finally {
+      setViewLoading(false)
     }
   }
 
@@ -311,6 +339,14 @@ export default function AdminCategoriasPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => openView(cat)}
+                        className="text-muted-foreground hover:text-blue-400"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => openEdit(cat)}
                         className="text-muted-foreground hover:text-[#22C55E]"
                       >
@@ -332,6 +368,53 @@ export default function AdminCategoriasPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!viewingCategory} onOpenChange={(o) => { if (!o) setViewingCategory(null) }}>
+        <DialogContent className="bg-popover border-border text-foreground max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{viewingCategory?.name} — Productos</DialogTitle>
+          </DialogHeader>
+          {viewLoading ? (
+            <div className="text-center text-muted-foreground py-12">Cargando productos...</div>
+          ) : categoryProducts.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">
+              <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>No hay productos en esta categoría</p>
+            </div>
+          ) : (
+            <div className="max-h-[60vh] overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead className="text-muted-foreground">Nombre</TableHead>
+                    <TableHead className="text-muted-foreground text-right">Precio USD</TableHead>
+                    <TableHead className="text-muted-foreground text-right">Final ARS</TableHead>
+                    <TableHead className="text-muted-foreground text-center">Stock</TableHead>
+                    <TableHead className="text-muted-foreground text-center">Disponible</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categoryProducts.map((p) => (
+                    <TableRow key={p.id} className="border-border hover:bg-muted">
+                      <TableCell className="font-medium text-foreground">{p.name}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{formatUSD(p.priceUSD)}</TableCell>
+                      <TableCell className="text-right text-foreground">${p.finalPriceARS.toLocaleString("es-AR")}</TableCell>
+                      <TableCell className="text-center text-muted-foreground">{p.stock}</TableCell>
+                      <TableCell className="text-center">
+                        {p.isAvailable ? (
+                          <span className="text-[#22C55E] text-xs">Sí</span>
+                        ) : (
+                          <span className="text-red-400 text-xs">No</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

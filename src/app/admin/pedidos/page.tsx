@@ -269,7 +269,7 @@ export default function PedidosPage() {
       <div className="flex gap-2">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
           <SelectTrigger className="w-40 bg-muted border-border text-foreground">
-            <SelectValue placeholder="Filtrar estado" />
+            <SelectValue placeholder="Filtrar estado">{(value) => !value ? "Filtrar estado" : value === "all" ? "Todos" : statusConfig[value]?.label || value}</SelectValue>
           </SelectTrigger>
           <SelectContent className=" bg-card text-foreground">
             <SelectItem value="all">Todos</SelectItem>
@@ -396,13 +396,13 @@ export default function PedidosPage() {
                                 </Badge>
                                 <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
                                   <SelectTrigger className="w-24 h-7 text-xs bg-muted border-border text-foreground">
-                                    <SelectValue placeholder="Cambiar" />
-                                  </SelectTrigger>
-                                  <SelectContent className=" bg-card text-foreground">
-                                    {Object.entries(statusConfig).map(([k, v]) => (
-                                      <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
-                                    ))}
-                                  </SelectContent>
+                                <SelectValue placeholder="Cambiar">{(value) => !value ? "Cambiar" : statusConfig[value]?.label || value}</SelectValue>
+                              </SelectTrigger>
+                              <SelectContent className=" bg-card text-foreground">
+                                {Object.entries(statusConfig).map(([k, v]) => (
+                                  <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
+                                ))}
+                              </SelectContent>
                                 </Select>
                               </div>
                             </TableCell>
@@ -464,7 +464,7 @@ export default function PedidosPage() {
                 <p className="text-sm text-muted-foreground mb-1">Estado del pedido</p>
                 <Select value={detailOrder.status} onValueChange={(v: any) => updateStatus(detailOrder.id, v)}>
                   <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue />
+                    <SelectValue>{(value) => !value ? "Seleccionar" : statusConfig[value]?.label || value}</SelectValue>
                   </SelectTrigger>
                   <SelectContent className=" bg-card text-foreground">
                     {Object.entries(statusConfig).map(([k, v]) => (
@@ -509,7 +509,7 @@ export default function PedidosPage() {
               <Label>Tienda</Label>
               <Select value={form.storeId} onValueChange={(v) => setForm({ ...form, storeId: v === "__none" ? "" : v || "" })}>
                 <SelectTrigger className="bg-muted border-border text-foreground">
-                  <SelectValue placeholder="Seleccionar tienda" />
+                  <SelectValue placeholder="Seleccionar tienda">{(value) => !value ? "Seleccionar tienda" : value === "__none" ? "Sin tienda" : stores.find(s => s.id === value)?.name || value}</SelectValue>
                 </SelectTrigger>
                 <SelectContent className=" bg-card text-foreground">
                   <SelectItem value="__none">Sin tienda</SelectItem>

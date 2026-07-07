@@ -190,7 +190,7 @@ export default function FinanzasPage() {
           <h2 className="text-lg font-semibold text-foreground font-heading flex-1">Transacciones</h2>
           <Select value={tipoFilter} onValueChange={(v) => setTipoFilter(v || "")}>
             <SelectTrigger className="w-36 bg-muted border-border text-foreground">
-              <SelectValue placeholder="Filtrar" />
+              <SelectValue placeholder="Filtrar">{(value) => !value ? "Filtrar" : value === "all" ? "Todas" : value === "income" ? "Ingresos" : "Egresos"}</SelectValue>
             </SelectTrigger>
             <SelectContent className=" bg-card text-foreground">
               <SelectItem value="all">Todas</SelectItem>
@@ -243,7 +243,7 @@ export default function FinanzasPage() {
               <Label>Tipo</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v || "income" })}>
                 <SelectTrigger className="bg-muted border-border text-foreground">
-                  <SelectValue />
+                  <SelectValue>{(value) => !value ? "Seleccionar" : value === "income" ? "Ingreso" : "Egreso"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent className=" bg-card text-foreground">
                   <SelectItem value="income">Ingreso</SelectItem>

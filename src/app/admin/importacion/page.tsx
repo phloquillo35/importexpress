@@ -179,7 +179,7 @@ export default function ImportacionPage() {
                     <TableCell className="text-right">
                       <Select onValueChange={(v: any) => updateStatus(b.id, v || "pending")}>
                         <SelectTrigger className="w-28 h-7 text-xs bg-muted border-border text-foreground">
-                          <SelectValue placeholder="Cambiar" />
+                          <SelectValue placeholder="Cambiar">{(value) => !value ? "Cambiar" : statusConfig[value]?.label || value}</SelectValue>
                         </SelectTrigger>
                         <SelectContent className=" bg-popover text-popover-foreground">
                           {Object.entries(statusConfig).map(([k, v]) => (
@@ -204,7 +204,7 @@ export default function ImportacionPage() {
               <Label>Tienda</Label>
               <Select value={form.storeId} onValueChange={(v) => setForm({ ...form, storeId: v || "" })}>
                 <SelectTrigger className="bg-muted border-border text-foreground">
-                  <SelectValue placeholder="Seleccionar" />
+                  <SelectValue placeholder="Seleccionar">{(value) => !value ? "Seleccionar" : value === "none" ? "Sin tienda" : stores.find(s => s.id === value)?.name || value}</SelectValue>
                 </SelectTrigger>
                 <SelectContent className=" bg-popover text-popover-foreground">
                   <SelectItem value="none">Sin tienda</SelectItem>
