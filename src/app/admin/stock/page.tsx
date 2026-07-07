@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { Search, Upload, FileSpreadsheet, Package, Plus, Minus } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Search, Package, Plus, Minus } from "lucide-react"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
-import { formatUSD } from "@/lib/utils"
+import { cn, formatUSD } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -43,13 +42,6 @@ export default function AdminStockPage() {
   const [adjustQty, setAdjustQty] = useState("")
   const [adjustOp, setAdjustOp] = useState<"add" | "set">("set")
   const [saving, setSaving] = useState(false)
-  const [importResult, setImportResult] = useState<{
-    created: number
-    updated: number
-    errors: number
-  } | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [dragging, setDragging] = useState(false)
 
   async function loadStock() {
     try {
@@ -111,38 +103,6 @@ export default function AdminStockPage() {
     }
   }
 
-  async function handleImportFile(file: File) {
-    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-      toast.error("Solo se aceptan archivos .xlsx o .xls")
-      return
-    }
-
-    const formData = new FormData()
-    formData.append("file", file)
-
-    try {
-      const res = await fetch("/api/stock/import", {
-        method: "POST",
-        body: formData,
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-
-      setImportResult(data.summary)
-      toast.success(`Importación completada: ${data.summary.created} creados, ${data.summary.updated} actualizados`)
-      loadStock()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al importar")
-    }
-  }
-
-  function handleFileDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleImportFile(file)
-  }
-
   function getStockColor(product: StockProduct) {
     if (product.stock <= product.minStock) return "text-red-400"
     if (product.stock <= product.minStock * 2) return "text-yellow-400"
@@ -162,8 +122,7 @@ export default function AdminStockPage() {
         <p className="text-muted-foreground text-sm mt-1">Gestioná el inventario de productos</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -233,66 +192,6 @@ export default function AdminStockPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
-        </div>
-
-        <div>
-          <div
-            onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={handleFileDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={cn(
-              "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
-              dragging
-                ? "border-[#22C55E] bg-primary/5"
-                : "border-border hover:border-zinc-500 bg-card"
-            )}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) handleImportFile(file)
-                e.target.value = ""
-              }}
-            />
-            <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground font-medium mb-1">Importar Excel</p>
-            <p className="text-xs text-muted-foreground mb-3">Arrastrá o hacé clic para subir</p>
-            <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              .xlsx / .xls
-            </div>
-          </div>
-
-          {importResult && (
-            <div className="mt-4 bg-card border border-border rounded-xl p-4 space-y-2">
-              <h3 className="text-sm font-medium text-foreground">Resultado</h3>
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-[#22C55E]">{importResult.created} creados</span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-[#F59E0B]">{importResult.updated} actualizados</span>
-                {importResult.errors > 0 && (
-                  <>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-red-400">{importResult.errors} errores</span>
-                  </>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setImportResult(null)}
-                className="text-xs text-muted-foreground hover:text-muted-foreground"
-              >
-                Cerrar
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
