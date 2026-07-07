@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, Package, AlertCircle, ArrowRight } from "lucide-react"
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, ChevronDown, Package, AlertCircle, ArrowRight } from "lucide-react"
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -39,6 +39,7 @@ function ProductosContent() {
   const [error, setError] = useState(false)
   const [search, setSearch] = useState(searchParams.get("search") || "")
   const [showFilters, setShowFilters] = useState(false)
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
 
   const currentPage = parseInt(searchParams.get("page") || "1")
   const currentCategory = searchParams.get("categoria") || ""
@@ -77,6 +78,15 @@ function ProductosContent() {
       .then((data) => setCategories(Array.isArray(data) ? data : []))
       .catch(() => {})
   }, [])
+
+  function toggleParent(id: string) {
+    setExpandedParents(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   function updateParams(updates: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -150,30 +160,41 @@ function ProductosContent() {
                 </button>
                 {categories.filter(c => !c.parent).map((parent) => {
                   const children = categories.filter(c => c.parent?.id === parent.id)
+                  const isExpanded = expandedParents.has(parent.id)
                   return (
                     <div key={parent.id}>
-                      <button
-                        onClick={() => { updateParams({ categoria: parent.slug }); setShowFilters(false) }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                          currentCategory === parent.slug
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {parent.name}
-                        <span className="text-xs text-muted-foreground ml-2">({parent._count.products})</span>
-                      </button>
-                      {children.map((child) => (
+                      <div className="flex items-center gap-0">
+                        {children.length > 0 && (
+                          <button
+                            onClick={() => toggleParent(parent.id)}
+                            className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                          >
+                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { updateParams({ categoria: parent.slug }); setShowFilters(false) }}
+                          className={`flex-1 text-left px-2 py-2 rounded-lg text-sm transition-colors ${
+                            currentCategory === parent.slug
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {parent.name}
+                          <span className="text-xs text-muted-foreground ml-2">({parent._count.products})</span>
+                        </button>
+                      </div>
+                      {isExpanded && children.map((child) => (
                         <button
                           key={child.id}
                           onClick={() => { updateParams({ categoria: child.slug }); setShowFilters(false) }}
-                          className={`w-full text-left pl-7 pr-3 py-1.5 rounded-lg text-sm transition-colors ${
+                          className={`w-full text-left pl-8 pr-3 py-1.5 rounded-lg text-sm transition-colors ${
                             currentCategory === child.slug
                               ? "bg-primary/5 text-primary font-medium"
                               : "text-muted-foreground/70 hover:text-foreground hover:bg-muted"
                           }`}
                         >
-                          └ {child.name}
+                          {child.name}
                           <span className="text-xs text-muted-foreground ml-2">({child._count.products})</span>
                         </button>
                       ))}
