@@ -17,7 +17,7 @@ export async function GET(
     const bulk = await prisma.bulk.findUnique({
       where: { id },
       include: {
-        distributor: { select: { id: true, name: true } },
+        store: { select: { id: true, name: true } },
         orderItems: {
           include: {
             order: { select: { id: true, clientName: true, clientSurname: true, clientEmail: true } },
@@ -103,7 +103,7 @@ export async function PUT(
       where: { id },
       data,
       include: {
-        distributor: { select: { id: true, name: true } },
+        store: { select: { id: true, name: true } },
         orderItems: {
           include: {
             order: { select: { id: true, clientName: true, clientSurname: true, clientEmail: true } },

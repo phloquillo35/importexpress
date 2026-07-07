@@ -98,7 +98,7 @@ export async function PUT(
     if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
     if (body.hasFinancing !== undefined) data.hasFinancing = body.hasFinancing
     if (body.categoryId !== undefined) data.categoryId = body.categoryId || null
-    if (body.distributorId !== undefined) data.distributorId = body.distributorId || null
+    if (body.storeId !== undefined) data.storeId = body.storeId || null
 
     const costUSDT = body.costUSDT ?? existing.costUSDT ?? existing.priceUSD
     const yoniEnabled = body.yoniEnabled ?? existing.yoniEnabled

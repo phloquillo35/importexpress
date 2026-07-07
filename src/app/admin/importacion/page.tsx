@@ -40,7 +40,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 interface Batch {
   id: string
   date: string
-  distributor: { id: string; name: string } | null
+  store: { id: string; name: string } | null
   products: { productId: string; name?: string; quantity: number }[]
   totalCostUSD: number
   status: string
@@ -52,7 +52,7 @@ interface Product {
   name: string
 }
 
-interface Distributor {
+interface StoreType {
   id: string
   name: string
 }
@@ -63,10 +63,10 @@ export default function ImportacionPage() {
   const [statusFilter, setStatusFilter] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
-  const [distributors, setDistributors] = useState<Distributor[]>([])
+  const [stores, setStores] = useState<StoreType[]>([])
   const [searchProd, setSearchProd] = useState("")
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number }[]>([])
-  const [form, setForm] = useState({ distributorId: "", totalCostUSD: "", notes: "" })
+  const [form, setForm] = useState({ storeId: "", totalCostUSD: "", notes: "" })
   const [saving, setSaving] = useState(false)
 
   const fetchBatches = useCallback(async () => {
@@ -83,7 +83,7 @@ export default function ImportacionPage() {
   useEffect(() => { fetchBatches() }, [fetchBatches])
   useEffect(() => {
     fetch("/api/productos?limit=200").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
-    fetch("/api/distribuidores").then(r => r.json()).then(d => setDistributors(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar distribuidores"))
+    fetch("/api/tiendas").then(r => r.json()).then(d => setStores(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar tiendas"))
   }, [])
 
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchProd.toLowerCase()))
@@ -105,39 +105,29 @@ export default function ImportacionPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          distributorId: form.distributorId || null,
-          products: cart.map(c => ({ productId: c.productId, name: c.name, quantity: c.quantity })),
-          totalCostUSD: parseFloat(form.totalCostUSD) || 0,
+          storeId: form.storeId || null,
+          totalCostUSD: totalCost || 0,
           notes: form.notes || null,
+          products: cart.map(c => ({ productId: c.productId, quantity: c.quantity })),
         }),
       })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Error al crear lote")
-      }
+      if (!res.ok) throw new Error()
       toast.success("Lote creado")
       setDialogOpen(false)
       setCart([])
-      setForm({ distributorId: "", totalCostUSD: "", notes: "" })
+      setForm({ storeId: "", totalCostUSD: "", notes: "" })
       fetchBatches()
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al crear lote") }
+    } catch { toast.error("Error al guardar") }
     finally { setSaving(false) }
   }
 
-  async function updateStatus(batchId: string, newStatus: string) {
+  async function updateStatus(id: string, status: string) {
     try {
-      const res = await fetch(`/api/importacion/${batchId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Error al actualizar")
-      }
-      toast.success(newStatus === "received" ? "Stock actualizado automáticamente" : "Estado actualizado")
+      const res = await fetch(`/api/importacion/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })
+      if (!res.ok) throw new Error()
+      toast.success("Estado actualizado")
       fetchBatches()
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al actualizar") }
+    } catch { toast.error("Error al actualizar") }
   }
 
   return (
@@ -145,25 +135,18 @@ export default function ImportacionPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Importación</h1>
-          <p className="text-muted-foreground text-sm mt-1">Lotes de importación</p>
+          <p className="text-muted-foreground text-sm mt-1">Gestioná los lotes de importación</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button onClick={() => { setCart([]); setForm({ storeId: "", totalCostUSD: "", notes: "" }); setDialogOpen(true) }} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" /> Nuevo lote
         </Button>
       </div>
 
       <div className="flex gap-2">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
-          <SelectTrigger className="w-40 bg-muted border-border text-foreground">
-            <SelectValue placeholder="Filtrar" />
-          </SelectTrigger>
-          <SelectContent className=" bg-popover text-popover-foreground">
-            <SelectItem value="all">Todos</SelectItem>
-            {Object.entries(statusConfig).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Button variant={statusFilter === "" ? "default" : "outline"} size="sm" onClick={() => setStatusFilter("")} className="text-xs">Todos</Button>
+        {Object.entries(statusConfig).map(([k, v]) => (
+          <Button key={k} variant={statusFilter === k ? "default" : "outline"} size="sm" onClick={() => setStatusFilter(k)} className="text-xs">{v.label}</Button>
+        ))}
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -171,9 +154,9 @@ export default function ImportacionPage() {
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground">Fecha</TableHead>
-              <TableHead className="text-muted-foreground">Distribuidor</TableHead>
+              <TableHead className="text-muted-foreground">Tienda</TableHead>
               <TableHead className="text-muted-foreground text-right">Productos</TableHead>
-              <TableHead className="text-muted-foreground text-right">Costo</TableHead>
+              <TableHead className="text-muted-foreground text-right">Costo total</TableHead>
               <TableHead className="text-muted-foreground text-center">Estado</TableHead>
               <TableHead className="text-muted-foreground text-right">Acción</TableHead>
             </TableRow>
@@ -189,7 +172,7 @@ export default function ImportacionPage() {
                 return (
                   <TableRow key={b.id} className="border-border hover:bg-muted">
                     <TableCell className="text-muted-foreground">{formatDate(b.date)}</TableCell>
-                    <TableCell className="text-muted-foreground">{b.distributor?.name || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{b.store?.name || "—"}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{Array.isArray(b.products) ? b.products.length : 0}</TableCell>
                     <TableCell className="text-right text-foreground">{formatUSD(b.totalCostUSD)}</TableCell>
                     <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
@@ -218,14 +201,14 @@ export default function ImportacionPage() {
           <DialogHeader><DialogTitle>Nuevo lote de importación</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Distribuidor</Label>
-              <Select value={form.distributorId} onValueChange={(v) => setForm({ ...form, distributorId: v || "" })}>
+              <Label>Tienda</Label>
+              <Select value={form.storeId} onValueChange={(v) => setForm({ ...form, storeId: v || "" })}>
                 <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
                 <SelectContent className=" bg-popover text-popover-foreground">
-                  <SelectItem value="none">Sin distribuidor</SelectItem>
-                  {distributors.map((d) => (<SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>))}
+                  <SelectItem value="none">Sin tienda</SelectItem>
+                  {stores.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
@@ -233,35 +216,47 @@ export default function ImportacionPage() {
               <Label>Productos</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar..." className="pl-9 bg-muted border-border text-foreground" />
+                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} className="bg-muted border-border text-foreground pl-9" placeholder="Buscar productos..." />
               </div>
-              <div className="max-h-32 overflow-y-auto space-y-1">
-                {filteredProducts.slice(0, 8).map((p) => (
-                  <button key={p.id} type="button" onClick={() => addProduct(p)} className="w-full text-left px-3 py-1.5 rounded text-sm text-muted-foreground hover:bg-muted">{p.name}</button>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-lg divide-y divide-border">
+                {filteredProducts.slice(0, 30).map((p) => (
+                  <button key={p.id} type="button" onClick={() => addProduct(p)} className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">{p.name}</button>
                 ))}
+                {filteredProducts.length === 0 && <p className="text-xs text-muted-foreground px-3 py-2">Sin resultados</p>}
               </div>
             </div>
             {cart.length > 0 && (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                {cart.map((item) => (
-                  <div key={item.productId} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
-                    <button type="button" onClick={() => setCart(cart.filter(c => c.productId !== item.productId))} className="text-red-400 text-xs">Quitar</button>
-                  </div>
-                ))}
+              <div className="space-y-2 border border-border rounded-lg p-3">
+                <Label className="text-sm font-medium">Productos seleccionados</Label>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {cart.map((c, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <span className="text-foreground truncate flex-1">{c.name}</span>
+                      <div className="flex items-center gap-2 ml-2">
+                        <button type="button" onClick={() => {
+                          if (c.quantity <= 1) setCart(cart.filter((_, i) => i !== idx))
+                          else setCart(cart.map((item, i) => i === idx ? { ...item, quantity: item.quantity - 1 } : item))
+                        }} className="w-6 h-6 rounded-full bg-muted text-muted-foreground hover:text-foreground text-xs flex items-center justify-center">−</button>
+                        <span className="text-foreground font-medium w-6 text-center">{c.quantity}</span>
+                        <button type="button" onClick={() => setCart(cart.map((item, i) => i === idx ? { ...item, quantity: item.quantity + 1 } : item))} className="w-6 h-6 rounded-full bg-muted text-muted-foreground hover:text-foreground text-xs flex items-center justify-center">+</button>
+                        <button type="button" onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-300 text-xs ml-1">✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             <div className="space-y-2">
-              <Label>Costo total USD</Label>
-              <Input type="number" step="0.01" value={form.totalCostUSD} onChange={(e) => setForm({ ...form, totalCostUSD: e.target.value })} className="bg-muted border-border text-foreground" />
+              <Label>Costo total (USD)</Label>
+              <Input type="number" step="0.01" value={form.totalCostUSD} onChange={(e) => setForm({ ...form, totalCostUSD: e.target.value })} className="bg-muted border-border text-foreground" placeholder="0.00" />
             </div>
             <div className="space-y-2">
               <Label>Notas</Label>
-              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-muted border-border text-foreground" />
+              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-muted border-border text-foreground" placeholder="Opcional" />
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear lote"}</Button>
+              <Button type="submit" disabled={saving || cart.length === 0} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear lote"}</Button>
             </div>
           </form>
         </DialogContent>

@@ -13,7 +13,7 @@ export async function GET(
     const { id } = await params
     const bulk = await prisma.bulk.findUnique({
       where: { id },
-      include: { distributor: { select: { id: true, name: true } } },
+      include: { store: { select: { id: true, name: true } } },
     })
     if (!bulk) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
     return Response.json({
@@ -66,7 +66,7 @@ export async function PUT(
     const updated = await prisma.bulk.update({
       where: { id },
       data,
-      include: { distributor: { select: { id: true, name: true } } },
+      include: { store: { select: { id: true, name: true } } },
     })
 
     return Response.json({

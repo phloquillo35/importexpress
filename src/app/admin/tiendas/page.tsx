@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Truck, Plus, Pencil, Trash2 } from "lucide-react"
+import { Store, Plus, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { formatDate } from "@/lib/utils"
 import {
@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-interface Distributor {
+interface StoreType {
   id: string
   name: string
   contact: string | null
@@ -32,19 +32,19 @@ interface Distributor {
   createdAt: string
 }
 
-export default function DistribuidoresPage() {
-  const [distributors, setDistributors] = useState<Distributor[]>([])
+export default function TiendasPage() {
+  const [stores, setStores] = useState<StoreType[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editing, setEditing] = useState<Distributor | null>(null)
+  const [editing, setEditing] = useState<StoreType | null>(null)
   const [form, setForm] = useState({ name: "", contact: "", website: "", notes: "" })
   const [saving, setSaving] = useState(false)
 
   async function load() {
     try {
-      const res = await fetch("/api/distribuidores")
+      const res = await fetch("/api/tiendas")
       const data = await res.json()
-      setDistributors(Array.isArray(data) ? data : [])
+      setStores(Array.isArray(data) ? data : [])
     } catch { toast.error("Error al cargar") }
     finally { setLoading(false) }
   }
@@ -57,9 +57,9 @@ export default function DistribuidoresPage() {
     setDialogOpen(true)
   }
 
-  function openEdit(d: Distributor) {
-    setEditing(d)
-    setForm({ name: d.name, contact: d.contact || "", website: d.website || "", notes: d.notes || "" })
+  function openEdit(s: StoreType) {
+    setEditing(s)
+    setForm({ name: s.name, contact: s.contact || "", website: s.website || "", notes: s.notes || "" })
     setDialogOpen(true)
   }
 
@@ -69,13 +69,13 @@ export default function DistribuidoresPage() {
     setSaving(true)
     try {
       if (editing) {
-        const res = await fetch(`/api/distribuidores/${editing.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
+        const res = await fetch(`/api/tiendas/${editing.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
         if (!res.ok) throw new Error()
-        toast.success("Distribuidor actualizado")
+        toast.success("Tienda actualizada")
       } else {
-        const res = await fetch("/api/distribuidores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
+        const res = await fetch("/api/tiendas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
         if (!res.ok) throw new Error()
-        toast.success("Distribuidor creado")
+        toast.success("Tienda creada")
       }
       setDialogOpen(false)
       load()
@@ -83,12 +83,12 @@ export default function DistribuidoresPage() {
     finally { setSaving(false) }
   }
 
-  async function handleDelete(d: Distributor) {
-    if (!confirm(`¿Eliminar "${d.name}"?`)) return
+  async function handleDelete(s: StoreType) {
+    if (!confirm(`¿Eliminar "${s.name}"?`)) return
     try {
-      const res = await fetch(`/api/distribuidores/${d.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/tiendas/${s.id}`, { method: "DELETE" })
       if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
-      toast.success("Distribuidor eliminado")
+      toast.success("Tienda eliminada")
       load()
     } catch (err) { toast.error(err instanceof Error ? err.message : "Error al eliminar") }
   }
@@ -97,11 +97,11 @@ export default function DistribuidoresPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground font-heading">Distribuidores</h1>
-          <p className="text-muted-foreground text-sm mt-1">{distributors.length} distribuidores</p>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Tiendas</h1>
+          <p className="text-muted-foreground text-sm mt-1">{stores.length} tiendas</p>
         </div>
         <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" /> Nuevo distribuidor
+          <Plus className="w-4 h-4 mr-2" /> Nueva tienda
         </Button>
       </div>
 
@@ -112,26 +112,26 @@ export default function DistribuidoresPage() {
               <TableHead className="text-muted-foreground">Nombre</TableHead>
               <TableHead className="text-muted-foreground hidden md:table-cell">Contacto</TableHead>
               <TableHead className="text-muted-foreground hidden lg:table-cell">Web</TableHead>
-              <TableHead className="text-muted-foreground hidden sm:table-cell">Creado</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Creada</TableHead>
               <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
-            ) : distributors.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12"><Truck className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin distribuidores</p></TableCell></TableRow>
+            ) : stores.length === 0 ? (
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12"><Store className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin tiendas</p></TableCell></TableRow>
             ) : (
-              distributors.map((d) => (
-                <TableRow key={d.id} className="border-border hover:bg-muted">
-                  <TableCell className="font-medium text-foreground">{d.name}</TableCell>
-                  <TableCell className="text-muted-foreground hidden md:table-cell">{d.contact || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground hidden lg:table-cell">{d.website || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{formatDate(d.createdAt)}</TableCell>
+              stores.map((s) => (
+                <TableRow key={s.id} className="border-border hover:bg-muted">
+                  <TableCell className="font-medium text-foreground">{s.name}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{s.contact || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground hidden lg:table-cell">{s.website || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{formatDate(s.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(d)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(d)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(s)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(s)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -143,7 +143,7 @@ export default function DistribuidoresPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="bg-popover border-border text-foreground">
-          <DialogHeader><DialogTitle>{editing ? "Editar distribuidor" : "Nuevo distribuidor"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? "Editar tienda" : "Nueva tienda"}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Nombre</Label>

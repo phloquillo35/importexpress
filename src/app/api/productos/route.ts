@@ -145,9 +145,9 @@ export async function POST(request: Request) {
         isAvailable: body.isAvailable ?? true,
         isFeatured: body.isFeatured ?? false,
         categoryId: body.categoryId || null,
-        distributorId: body.distributorId || null,
+        storeId: body.storeId || null,
       },
-      include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } }, distributor: { select: { name: true } } },
+      include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } }, store: { select: { name: true } } },
     })
 
     return Response.json(product, { status: 201 })

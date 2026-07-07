@@ -35,7 +35,7 @@ interface ProductFormData {
   isAvailable: boolean
   isFeatured: boolean
   categoryId: string
-  distributorId: string
+  storeId: string
 }
 
 interface Category {
@@ -45,7 +45,7 @@ interface Category {
   children: { id: string; name: string }[]
 }
 
-interface Distributor {
+interface StoreType {
   id: string
   name: string
 }
@@ -65,7 +65,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedParentId, setSelectedParentId] = useState("")
   const [selectedSubcatId, setSelectedSubcatId] = useState("")
-  const [distributors, setDistributors] = useState<Distributor[]>([])
+  const [stores, setStores] = useState<StoreType[]>([])
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(
@@ -111,7 +111,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       isAvailable: true,
       isFeatured: false,
       categoryId: "",
-      distributorId: "",
+      storeId: "",
       ...defaultValues,
     },
   })
@@ -141,9 +141,9 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       })
       .catch(() => {})
 
-    fetch("/api/distribuidores")
+    fetch("/api/tiendas")
       .then((r) => r.json())
-      .then((data) => setDistributors(Array.isArray(data) ? data : []))
+      .then((data) => setStores(Array.isArray(data) ? data : []))
       .catch(() => {})
 
     fetch("/api/configuracion")
@@ -259,7 +259,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       isAvailable: data.isAvailable ?? true,
       isFeatured: data.isFeatured ?? false,
       categoryId: data.categoryId || null,
-      distributorId: data.distributorId || null,
+      storeId: data.storeId || null,
       finalPriceUSD: pricing.finalPriceUSD,
       finalPriceARS: pricing.finalPriceARS,
       exchangeRate,
@@ -432,7 +432,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       </div>
 
       <div className="bg-card border border-border rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-foreground font-heading">Categoría y distribuidor</h2>
+        <h2 className="text-lg font-semibold text-foreground font-heading">Categoría y tienda</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -495,20 +495,20 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
             )
           })()}
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Distribuidor</Label>
-            <Select onValueChange={(v) => { if (v) setValue("distributorId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.distributorId || "__none"}>
+            <Label className="text-muted-foreground">Tienda</Label>
+            <Select onValueChange={(v) => { if (v) setValue("storeId", v === "__none" ? "" : v) }} defaultValue={defaultValues?.storeId || "__none"}>
               <SelectTrigger className="bg-muted border-border text-foreground">
-                <SelectValue placeholder="Seleccionar distribuidor">
+                <SelectValue placeholder="Seleccionar tienda">
                   {(value) =>
-                    !value || value === "__none" ? "Sin distribuidor" :
-                    distributors.find(d => d.id === value)?.name || "Sin distribuidor"
+                    !value || value === "__none" ? "Sin tienda" :
+                    stores.find(s => s.id === value)?.name || "Sin tienda"
                   }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className=" bg-popover text-popover-foreground">
-                <SelectItem value="__none">Sin distribuidor</SelectItem>
-                {distributors.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                <SelectItem value="__none">Sin tienda</SelectItem>
+                {stores.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

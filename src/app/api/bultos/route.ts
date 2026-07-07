@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const bulks = await prisma.bulk.findMany({
       where,
       include: {
-        distributor: { select: { id: true, name: true } },
+        store: { select: { id: true, name: true } },
         orderItems: {
           include: {
             order: { select: { id: true, clientName: true, clientSurname: true } },
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { type, courier, distributorId, orderItemIds, products, notes } = body
+    const { type, courier, storeId, orderItemIds, products, notes } = body
 
     if (!type || !courier) {
       return Response.json({ error: "type y courier son requeridos" }, { status: 400 })
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         id: genId(),
         type,
         courier,
-        distributorId: distributorId || null,
+        storeId: storeId || null,
         products: products || [],
         notes: notes || null,
         orderItems: orderItemIds?.length

@@ -31,7 +31,9 @@ model Category {
   updatedAt   DateTime   @updatedAt
 }
 
-model Distributor {
+model Store {
+  @@map("Distributor")
+
   id       String    @id
   name     String
   contact  String?
@@ -68,11 +70,11 @@ model Product {
   minStock      Int         @default(5)
   isAvailable   Boolean     @default(true)
   isFeatured    Boolean     @default(false)
-  categoryId    String?
-  distributorId String?
-  category      Category?      @relation(fields: [categoryId], references: [id])
-  distributor   Distributor?   @relation(fields: [distributorId], references: [id])
-  orderItems    OrderItem[]
+  categoryId String?
+  storeId    String?    @map("distributorId")
+  category   Category?  @relation(fields: [categoryId], references: [id])
+  store      Store?     @relation(fields: [storeId], references: [id])
+  orderItems OrderItem[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -84,9 +86,9 @@ model Order {
   clientPhone   String      @default("")
   clientEmail   String      @default("")
   clientContact String
-  distributorId String?
-  distributor   Distributor? @relation(fields: [distributorId], references: [id])
-  items         OrderItem[]
+  storeId   String?    @map("distributorId")
+  store     Store?     @relation(fields: [storeId], references: [id])
+  items     OrderItem[]
   totalUSD      Float
   totalARS      Float?
   status        String      @default("pending")
@@ -122,9 +124,9 @@ model Bulk {
   notes         String?
   products      Json
   orderItems    OrderItem[]
-  distributorId String?
-  distributor   Distributor? @relation(fields: [distributorId], references: [id])
-  createdAt     DateTime     @default(now())
+  storeId   String?    @map("distributorId")
+  store     Store?     @relation(fields: [storeId], references: [id])
+  createdAt DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
 

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const orders = await prisma.order.findMany({
       where,
       include: {
-        distributor: { select: { id: true, name: true } },
+        store: { select: { id: true, name: true } },
         items: {
           include: {
             product: {
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { clientName, clientSurname, clientPhone, clientEmail, distributorId, clientContact, items, totalUSD, totalARS, notes } = body
+    const { clientName, clientSurname, clientPhone, clientEmail, storeId, clientContact, items, totalUSD, totalARS, notes } = body
 
     if (!clientName || !items || !items.length) {
       return Response.json({ error: "clientName y items son requeridos" }, { status: 400 })
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         clientSurname: clientSurname || "",
         clientPhone: clientPhone || "",
         clientEmail: clientEmail || "",
-        distributorId: distributorId || null,
+        storeId: storeId || null,
         clientContact: clientContact || "",
         totalUSD: parseFloat(totalUSD) || 0,
         totalARS: totalARS ? parseFloat(totalARS) : null,
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         },
       },
       include: {
-        distributor: { select: { id: true, name: true } },
+        store: { select: { id: true, name: true } },
         items: {
           include: {
             product: {

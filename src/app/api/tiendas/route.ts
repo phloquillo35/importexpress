@@ -1,20 +1,20 @@
 import { prisma } from "@/lib/prisma"
 import { genId } from "@/lib/utils"
 import { requireAuth, requireRole } from "@/lib/auth"
-import { createDistributorSchema } from "@/lib/validators"
+import { createStoreSchema } from "@/lib/validators"
 
 export async function GET() {
   try {
     const session = await requireAuth()
     if (session instanceof Response) return session
 
-    const distributors = await prisma.distributor.findMany({
+    const stores = await prisma.store.findMany({
       orderBy: { name: "asc" },
     })
-    return Response.json(distributors)
+    return Response.json(stores)
   } catch (error) {
-    console.error("Error fetching distributors:", error)
-    return Response.json({ error: "Error al cargar distribuidores" }, { status: 500 })
+    console.error("Error fetching stores:", error)
+    return Response.json({ error: "Error al cargar tiendas" }, { status: 500 })
   }
 }
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     if (session instanceof Response) return session
 
     const body = await request.json()
-    const parsed = createDistributorSchema.safeParse(body)
+    const parsed = createStoreSchema.safeParse(body)
     if (!parsed.success) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "name es requerido" }, { status: 400 })
     }
 
-    const distributor = await prisma.distributor.create({
+    const store = await prisma.store.create({
       data: {
         id: genId(),
         name,
@@ -45,9 +45,9 @@ export async function POST(request: Request) {
       },
     })
 
-    return Response.json(distributor, { status: 201 })
+    return Response.json(store, { status: 201 })
   } catch (error) {
-    console.error("Error creating distributor:", error)
-    return Response.json({ error: "Error al crear distribuidor" }, { status: 500 })
+    console.error("Error creating store:", error)
+    return Response.json({ error: "Error al crear tienda" }, { status: 500 })
   }
 }

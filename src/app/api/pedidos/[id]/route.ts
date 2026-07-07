@@ -15,7 +15,7 @@ export async function GET(
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        distributor: { select: { id: true, name: true } },
+        store: { select: { id: true, name: true } },
         items: {
           include: {
             product: {
@@ -64,14 +64,14 @@ export async function PUT(
     if (body.clientSurname !== undefined) data.clientSurname = body.clientSurname
     if (body.clientPhone !== undefined) data.clientPhone = body.clientPhone
     if (body.clientEmail !== undefined) data.clientEmail = body.clientEmail
-    if (body.distributorId !== undefined) data.distributorId = body.distributorId
+    if (body.storeId !== undefined) data.storeId = body.storeId
     if (body.clientContact !== undefined) data.clientContact = body.clientContact
 
     const updated = await prisma.order.update({
       where: { id },
       data,
       include: {
-        distributor: { select: { id: true, name: true } },
+        store: { select: { id: true, name: true } },
         items: {
           include: {
             product: {
@@ -87,6 +87,7 @@ export async function PUT(
         },
       },
     })
+
     return Response.json(updated)
   } catch (error) {
     console.error("Error updating order:", error)

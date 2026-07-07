@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const bulks = await prisma.bulk.findMany({
       where,
-      include: { distributor: { select: { id: true, name: true } } },
+      include: { store: { select: { id: true, name: true } } },
       orderBy: { date: "desc" },
     })
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     if (session instanceof Response) return session
 
     const body = await request.json()
-    const { date, distributorId, products, totalCostUSD, status, notes } = body
+    const { date, storeId, products, totalCostUSD, status, notes } = body
 
     if (!products || !products.length) {
       return Response.json({ error: "products es requerido" }, { status: 400 })
@@ -47,13 +47,13 @@ export async function POST(request: Request) {
       data: {
         id: (await import("@/lib/utils")).genId(),
         date: date ? new Date(date) : new Date(),
-        distributorId: distributorId || null,
+        storeId: storeId || null,
         products: products,
         totalCostUSD: parseFloat(totalCostUSD) || 0,
         status: status || "pending",
         notes: notes || null,
       },
-      include: { distributor: { select: { id: true, name: true } } },
+      include: { store: { select: { id: true, name: true } } },
     })
 
     return Response.json({

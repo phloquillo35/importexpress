@@ -67,7 +67,7 @@ interface OrderItem {
   bulk: { courier: string; trackingCode: string | null; type: string } | null
 }
 
-interface Distributor {
+interface StoreType {
   id: string
   name: string
 }
@@ -78,7 +78,7 @@ interface Order {
   clientSurname: string
   clientPhone: string
   clientEmail: string
-  distributor: Distributor | null
+  store: StoreType | null
   clientContact: string
   totalUSD: number
   totalARS: number | null
@@ -127,8 +127,8 @@ export default function PedidosPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [searchProd, setSearchProd] = useState("")
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number }[]>([])
-  const [distributors, setDistributors] = useState<Distributor[]>([])
-  const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", distributorId: "", clientContact: "" })
+  const [stores, setStores] = useState<StoreType[]>([])
+  const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
   const [saving, setSaving] = useState(false)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
@@ -150,7 +150,7 @@ export default function PedidosPage() {
 
   useEffect(() => {
     fetch("/api/productos?limit=100").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
-    fetch("/api/distribuidores").then(r => r.json()).then(d => setDistributors(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar distribuidores"))
+    fetch("/api/tiendas").then(r => r.json()).then(d => setStores(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar tiendas"))
     fetch("/api/configuracion").then(r => r.json()).then(data => {
       setExchangeRate(Number(data.exchange_rate) || 1)
       setUsdtRate(Number(data.usdt_rate) || 1)
@@ -211,7 +211,7 @@ export default function PedidosPage() {
           clientSurname: form.clientSurname,
           clientPhone: form.clientPhone,
           clientEmail: form.clientEmail,
-          distributorId: form.distributorId || null,
+          storeId: form.storeId || null,
           clientContact: form.clientContact,
           items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
           totalUSD,
@@ -224,7 +224,7 @@ export default function PedidosPage() {
       toast.success("Pedido creado")
       setDialogOpen(false)
       setCart([])
-      setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", distributorId: "", clientContact: "" })
+      setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
       fetchOrders()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear pedido")
@@ -425,7 +425,7 @@ export default function PedidosPage() {
                 <div><p className="text-muted-foreground">Nombre</p><p className="text-foreground">{detailOrder.clientName} {detailOrder.clientSurname}</p></div>
                 <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{detailOrder.clientPhone || "—"}</p></div>
                 <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{detailOrder.clientEmail || "—"}</p></div>
-                <div><p className="text-muted-foreground">Distribuidor</p><p className="text-foreground">{detailOrder.distributor?.name || "—"}</p></div>
+                <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{detailOrder.store?.name || "—"}</p></div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-2">Productos</p>
@@ -497,15 +497,15 @@ export default function PedidosPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Distribuidor</Label>
-              <Select value={form.distributorId} onValueChange={(v) => setForm({ ...form, distributorId: v === "__none" ? "" : v || "" })}>
+              <Label>Tienda</Label>
+              <Select value={form.storeId} onValueChange={(v) => setForm({ ...form, storeId: v === "__none" ? "" : v || "" })}>
                 <SelectTrigger className="bg-muted border-border text-foreground">
-                  <SelectValue placeholder="Seleccionar distribuidor" />
+                  <SelectValue placeholder="Seleccionar tienda" />
                 </SelectTrigger>
                 <SelectContent className=" bg-card text-foreground">
-                  <SelectItem value="__none">Sin distribuidor</SelectItem>
-                  {distributors.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  <SelectItem value="__none">Sin tienda</SelectItem>
+                  {stores.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
