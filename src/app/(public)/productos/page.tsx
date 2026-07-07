@@ -26,6 +26,7 @@ interface Category {
   slug: string
   parent: { id: string; name: string; slug: string } | null
   _count: { products: number }
+  children: { id: string; name: string; slug: string; _count: { products: number } }[]
 }
 
 function ProductosContent() {
@@ -183,7 +184,7 @@ function ProductosContent() {
                           }`}
                         >
                           {parent.name}
-                          <span className="text-xs text-muted-foreground ml-2">({parent._count.products})</span>
+                          <span className="text-xs text-muted-foreground ml-2">({parent._count.products + parent.children.reduce((s, c) => s + c._count.products, 0)})</span>
                         </button>
                       </div>
                       {isExpanded && children.map((child) => (

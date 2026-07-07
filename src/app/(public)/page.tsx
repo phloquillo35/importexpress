@@ -13,6 +13,7 @@ interface Category {
   image: string | null
   parent: { id: string; name: string; slug: string } | null
   _count: { products: number }
+  children: { id: string; name: string; slug: string; _count: { products: number } }[]
 }
 
 interface Product {
@@ -183,7 +184,7 @@ export default function HomePage() {
                   <span className="text-sm font-medium text-foreground text-center">
                     {cat.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">{cat._count.products} productos</span>
+                  <span className="text-xs text-muted-foreground">{cat._count.products + cat.children.reduce((s, c) => s + c._count.products, 0)} productos</span>
                 </Link>
               ))}
             </div>
