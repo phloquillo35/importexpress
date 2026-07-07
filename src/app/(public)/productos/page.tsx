@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, Suspense } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, ChevronDown, Package, AlertCircle, ArrowRight } from "lucide-react"
 import { ProductCard } from "@/components/public/ProductCard"
@@ -41,36 +41,38 @@ function ProductosContent() {
   const [showFilters, setShowFilters] = useState(false)
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
 
+  const paramsKey = searchParams.toString()
   const currentPage = parseInt(searchParams.get("page") || "1")
-  const currentCategory = searchParams.get("categoria") || ""
-  const currentSearch = searchParams.get("search") || ""
-
-  const fetchProducts = useCallback(async () => {
-    setLoading(true)
-    setError(false)
-    try {
-      const params = new URLSearchParams()
-      if (currentSearch) params.set("search", currentSearch)
-      if (currentCategory) params.set("categoria", currentCategory)
-      params.set("page", String(currentPage))
-
-      const res = await fetch(`/api/productos?${params}`)
-      if (!res.ok) throw new Error("Error al cargar productos")
-      const data = await res.json()
-      setProducts(data.products || [])
-      setTotal(data.total || 0)
-      setTotalPages(data.totalPages || 0)
-    } catch (e) {
-      console.error(e)
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [currentSearch, currentCategory, currentPage])
 
   useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
+    async function load() {
+      setLoading(true)
+      setError(false)
+      try {
+        const sp = new URLSearchParams(paramsKey)
+        const apiParams = new URLSearchParams()
+        const s = sp.get("search") || ""
+        const c = sp.get("categoria") || ""
+        const p = parseInt(sp.get("page") || "1")
+        if (s) apiParams.set("search", s)
+        if (c) apiParams.set("categoria", c)
+        apiParams.set("page", String(p))
+
+        const res = await fetch(`/api/productos?${apiParams}`)
+        if (!res.ok) throw new Error("Error al cargar productos")
+        const data = await res.json()
+        setProducts(data.products || [])
+        setTotal(data.total || 0)
+        setTotalPages(data.totalPages || 0)
+      } catch (e) {
+        console.error(e)
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [paramsKey])
 
   useEffect(() => {
     fetch("/api/categorias")
@@ -151,7 +153,7 @@ function ProductosContent() {
                 <button
                   onClick={() => { updateParams({ categoria: undefined }); setShowFilters(false) }}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    !currentCategory
+                    !searchParams.get("categoria")
                       ? "bg-primary/10 text-primary font-medium"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
@@ -175,7 +177,7 @@ function ProductosContent() {
                         <button
                           onClick={() => { updateParams({ categoria: parent.slug }); setShowFilters(false) }}
                           className={`flex-1 text-left px-2 py-2 rounded-lg text-sm transition-colors ${
-                            currentCategory === parent.slug
+                            searchParams.get("categoria") === parent.slug
                               ? "bg-primary/10 text-primary font-medium"
                               : "text-muted-foreground hover:text-foreground hover:bg-muted"
                           }`}
@@ -189,7 +191,7 @@ function ProductosContent() {
                           key={child.id}
                           onClick={() => { updateParams({ categoria: child.slug }); setShowFilters(false) }}
                           className={`w-full text-left pl-8 pr-3 py-1.5 rounded-lg text-sm transition-colors ${
-                            currentCategory === child.slug
+                            searchParams.get("categoria") === child.slug
                               ? "bg-primary/5 text-primary font-medium"
                               : "text-muted-foreground/70 hover:text-foreground hover:bg-muted"
                           }`}
