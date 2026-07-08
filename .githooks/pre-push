@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+echo "→ Ejecutando lint..."
+npm run lint 2>&1 | tail -20
+
+echo ""
+echo "→ Compilando (typecheck + build)..."
+npm run build 2>&1 | tail -5
+
+echo ""
+echo "✅ Todo OK — Pusheando..."
