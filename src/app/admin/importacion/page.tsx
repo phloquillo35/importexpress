@@ -86,7 +86,25 @@ export default function ImportacionPage() {
     fetch("/api/tiendas").then(r => r.json()).then(d => setStores(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar tiendas"))
   }, [])
 
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchProd.toLowerCase()))
+  const filteredProducts = products.filter(p => {
+    const q = searchProd.toLowerCase().trim()
+    if (!q) return true
+    if (p.name.toLowerCase().includes(q)) return true
+    const catName = (p as any).category?.name
+    if (catName?.toLowerCase().includes(q)) return true
+    const num = parseFloat(q.replace(/[$,.]/g, ""))
+    const isNumeric = !isNaN(num)
+    if (isNumeric) {
+      if ((p as any).costUSDT === num) return true
+      if ((p as any).shippingCost === num) return true
+      if ((p as any).finalPriceUSD === num) return true
+      if ((p as any).finalPriceARS === num) return true
+      if ((p as any).stock === num) return true
+    }
+    if ((q === "disponible" || q === "si" || q === "sí") && (p as any).isAvailable) return true
+    if ((q === "no" || q === "oculto") && (p as any).isAvailable === false) return true
+    return false
+  })
 
   function addProduct(product: Product) {
     const existing = cart.find(c => c.productId === product.id)
@@ -216,7 +234,7 @@ export default function ImportacionPage() {
               <Label>Productos</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} className="bg-muted border-border text-foreground pl-9" placeholder="Buscar productos..." />
+                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} className="bg-muted border-border text-foreground pl-9" placeholder="Buscar por nombre, categoría, costos, stock, disponibilidad" />
               </div>
               <div className="max-h-40 overflow-y-auto border border-border rounded-lg divide-y divide-border">
                 {filteredProducts.slice(0, 30).map((p) => (

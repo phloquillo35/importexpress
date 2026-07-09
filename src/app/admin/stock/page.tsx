@@ -63,8 +63,21 @@ export default function AdminStockPage() {
     if (!search.trim()) {
       setFiltered(products)
     } else {
-      const q = search.toLowerCase()
-      setFiltered(products.filter((p) => p.name.toLowerCase().includes(q)))
+      const q = search.toLowerCase().trim()
+      const num = parseFloat(q.replace(/[$,.]/g, ""))
+      const isNumeric = !isNaN(num)
+      setFiltered(products.filter((p) => {
+        if (p.name.toLowerCase().includes(q)) return true
+        if (p.category?.name?.toLowerCase().includes(q)) return true
+        if (isNumeric) {
+          if (p.stock === num) return true
+          if (p.minStock === num) return true
+          if (p.priceUSD === num) return true
+        }
+        if ((q === "disponible" || q === "si" || q === "sí") && p.isAvailable) return true
+        if ((q === "no" || q === "oculto") && !p.isAvailable) return true
+        return false
+      }))
     }
   }, [search, products])
 
@@ -128,7 +141,7 @@ export default function AdminStockPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar producto..."
+              placeholder="Buscar por nombre, categoría, stock, mínimo, precio, disponibilidad"
               className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
             />
           </div>

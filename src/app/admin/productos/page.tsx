@@ -137,7 +137,7 @@ export default function AdminProductosPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar productos..."
+            placeholder="Buscar por nombre, categoría, costo USDT, envío ARS, final USD, final ARS, stock, disponibilidad"
             className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
           />
         </div>

@@ -198,9 +198,25 @@ export default function PedidosPage() {
     setCart(cart.filter(c => c.productId !== productId))
   }
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchProd.toLowerCase())
-  )
+  const filteredProducts = products.filter(p => {
+    const q = searchProd.toLowerCase().trim()
+    if (!q) return true
+    if (p.name.toLowerCase().includes(q)) return true
+    const catName = (p as any).category?.name
+    if (catName?.toLowerCase().includes(q)) return true
+    const num = parseFloat(q.replace(/[$,.]/g, ""))
+    const isNumeric = !isNaN(num)
+    if (isNumeric) {
+      if ((p as any).costUSDT === num) return true
+      if ((p as any).shippingCost === num) return true
+      if ((p as any).finalPriceUSD === num) return true
+      if ((p as any).finalPriceARS === num) return true
+      if ((p as any).stock === num) return true
+    }
+    if ((q === "disponible" || q === "si" || q === "sí") && (p as any).isAvailable) return true
+    if ((q === "no" || q === "oculto") && (p as any).isAvailable === false) return true
+    return false
+  })
 
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
 
@@ -523,7 +539,7 @@ export default function PedidosPage() {
               <Label>Productos</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar producto..." className="pl-9 bg-muted border-border text-foreground" />
+                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar por nombre, categoría, costos, stock, disponibilidad" className="pl-9 bg-muted border-border text-foreground" />
               </div>
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {filteredProducts.slice(0, 10).map((p) => (

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Ship, Plus, Search, Package } from "lucide-react"
+import { Ship, Plus, Search, Package, Eye } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD, formatDate, formatARS } from "@/lib/utils"
 import {
@@ -83,6 +83,8 @@ export default function BultosPage() {
   const [editForm, setEditForm] = useState({ trackingCode: "", totalCostARS: "", status: "pending" })
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [viewBulk, setViewBulk] = useState<Bulk | null>(null)
+  const [viewLoading, setViewLoading] = useState(false)
 
   const fetchBulks = useCallback(async () => {
     setLoading(true)
@@ -194,6 +196,20 @@ export default function BultosPage() {
     finally { setSaving(false) }
   }
 
+  async function openView(bulk: Bulk) {
+    setViewBulk(bulk)
+    setViewLoading(true)
+    try {
+      const res = await fetch(`/api/bultos/${bulk.id}`)
+      const data = await res.json()
+      setViewBulk(data)
+    } catch {
+      toast.error("Error al cargar bulto")
+    } finally {
+      setViewLoading(false)
+    }
+  }
+
   const filteredPending = form.type === "grande"
     ? pendingItems
     : pendingItems
@@ -258,9 +274,14 @@ export default function BultosPage() {
                     </TableCell>
                     <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(b)} className="text-muted-foreground hover:text-[#22C55E]">
-                        Editar
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openView(b)} className="text-muted-foreground hover:text-blue-400">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(b)} className="text-muted-foreground hover:text-[#22C55E]">
+                          Editar
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )
@@ -386,6 +407,94 @@ export default function BultosPage() {
                 </Button>
               </div>
             </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewBulk} onOpenChange={(o) => { if (!o) setViewBulk(null) }}>
+        <DialogContent className="bg-card text-foreground max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulto — {viewBulk?.type === "grande" ? "Grande" : "Chico"} — {viewBulk?.courier === "buspack" ? "Buspack" : "Correo Argentino"}</DialogTitle>
+          </DialogHeader>
+          {viewLoading ? (
+            <div className="text-center text-muted-foreground py-12">Cargando bulto...</div>
+          ) : !viewBulk ? (
+            <div className="text-center text-muted-foreground py-12">
+              <Ship className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>Bulto no encontrado</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Fecha</p>
+                  <p className="text-foreground">{formatDate(viewBulk.date)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Estado</p>
+                  <Badge className={`${statusConfig[viewBulk.status]?.className || ""} border-0`}>
+                    {statusConfig[viewBulk.status]?.label || viewBulk.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Código de seguimiento</p>
+                  <p className="text-foreground">{viewBulk.trackingCode || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Costo total ARS</p>
+                  <p className="text-foreground">{viewBulk.totalCostARS ? `$${viewBulk.totalCostARS.toLocaleString("es-AR")}` : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Costo total USD</p>
+                  <p className="text-foreground">${viewBulk.totalCostUSD.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Productos</p>
+                  <p className="text-foreground">{viewBulk.orderItems?.length || 0}</p>
+                </div>
+              </div>
+
+              {(viewBulk.orderItems?.length || 0) > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Productos en este bulto</p>
+                  <div className="max-h-60 overflow-y-auto border border-border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border hover:bg-transparent">
+                          <TableHead className="text-muted-foreground">Producto</TableHead>
+                          <TableHead className="text-muted-foreground">Cliente</TableHead>
+                          <TableHead className="text-muted-foreground">Tracking</TableHead>
+                          <TableHead className="text-muted-foreground text-center">Estado</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {viewBulk.orderItems.map((item) => (
+                          <TableRow key={item.id} className="border-border hover:bg-muted">
+                            <TableCell className="font-medium text-foreground">{item.product.name}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {item.order.clientName} {item.order.clientSurname}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-xs">{item.trackingCode || "—"}</TableCell>
+                            <TableCell className="text-center">
+                              <Badge className={`${statusConfig[item.shippingStatus]?.className || "bg-zinc-500/10 text-muted-foreground"} border-0 text-xs`}>
+                                {statusConfig[item.shippingStatus]?.label || item.shippingStatus}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+
+              {viewBulk.notes && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Notas</p>
+                  <p className="text-sm text-foreground bg-muted/30 rounded-lg p-3">{viewBulk.notes}</p>
+                </div>
+              )}
+            </div>
           )}
         </DialogContent>
       </Dialog>

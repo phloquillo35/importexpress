@@ -24,7 +24,33 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      where.name = { contains: search }
+      const searchNumber = parseFloat(search.replace(/[$,.]/g, ""))
+      const isNumeric = !isNaN(searchNumber)
+      const lowerSearch = search.toLowerCase()
+
+      const searchConditions: Record<string, unknown>[] = [
+        { name: { contains: search, mode: "insensitive" } },
+        { category: { name: { contains: search, mode: "insensitive" } } },
+      ]
+
+      if (lowerSearch === "disponible" || lowerSearch === "si" || lowerSearch === "sí") {
+        searchConditions.push({ isAvailable: true })
+      }
+      if (lowerSearch === "no" || lowerSearch === "oculto") {
+        searchConditions.push({ isAvailable: false })
+      }
+
+      if (isNumeric) {
+        searchConditions.push(
+          { costUSDT: { equals: searchNumber } },
+          { shippingCost: { equals: searchNumber } },
+          { finalPriceUSD: { equals: searchNumber } },
+          { finalPriceARS: { equals: searchNumber } },
+          { stock: { equals: searchNumber } },
+        )
+      }
+
+      where.OR = searchConditions
     }
 
     if (categoriaId) {
