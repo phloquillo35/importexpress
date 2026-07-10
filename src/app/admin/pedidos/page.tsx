@@ -166,26 +166,6 @@ export default function PedidosPage() {
     }).catch(() => {})
   }, [])
 
-  async function updateStatus(orderId: string, newStatus: string) {
-    try {
-      const res = await fetch(`/api/pedidos/${orderId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Error al actualizar estado")
-      }
-      const updated = await res.json()
-      setOrders(prev => prev.map(o => o.id === orderId ? updated : o))
-      toast.success("Estado actualizado")
-      if (detailOrder?.id === orderId) setDetailOrder({ ...detailOrder, status: newStatus })
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al actualizar estado")
-    }
-  }
-
   function addToCart(product: Product) {
     const existing = cart.find(c => c.productId === product.id)
     if (existing) {
@@ -396,21 +376,9 @@ export default function PedidosPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             {isFirst ? (
-                              <div className="flex items-center justify-center gap-1">
-                                <Badge className={`${cfg.className} border-0 text-[10px]`}>
-                                  {cfg.label}
-                                </Badge>
-                                <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
-                                  <SelectTrigger className="w-24 h-7 text-xs bg-muted border-border text-foreground">
-                                    <SelectValue placeholder="Cambiar">{(value) => !value ? "Cambiar" : statusConfig[value]?.label || value}</SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-card text-foreground">
-                                    {Object.entries(statusConfig).map(([k, v]) => (
-                                      <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                              <Badge className={`${cfg.className} border-0 text-[10px]`}>
+                                {cfg.label}
+                              </Badge>
                             ) : null}
                           </TableCell>
                         </TableRow>
@@ -466,16 +434,9 @@ export default function PedidosPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Estado del pedido</p>
-                <Select value={detailOrder.status} onValueChange={(v: any) => updateStatus(detailOrder.id, v)}>
-                  <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue>{(value) => !value ? "Seleccionar" : statusConfig[value]?.label || value}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className=" bg-card text-foreground">
-                    {Object.entries(statusConfig).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p><Badge className={`${(statusConfig[detailOrder.status] || statusConfig.pending).className} border-0`}>
+                  {(statusConfig[detailOrder.status] || statusConfig.pending).label}
+                </Badge></p>
               </div>
               {detailOrder.notes && (
                 <div><p className="text-sm text-muted-foreground">Notas</p><p className="text-muted-foreground">{detailOrder.notes}</p></div>
