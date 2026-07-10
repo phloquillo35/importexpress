@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { Package, Plus, Search, Settings2 } from "lucide-react"
+import { useEffect, useState, useCallback, Fragment } from "react"
+import { Package, Plus, Search, ChevronDown, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
@@ -29,24 +29,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 
-const statusConfig: Record<string, { label: string; className: string; dot: string }> = {
-  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400", dot: "bg-yellow-400" },
-  en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400", dot: "bg-blue-400" },
-  demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400", dot: "bg-orange-400" },
-  llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]", dot: "bg-[#22C55E]" },
-  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-muted-foreground", dot: "bg-zinc-400" },
-  cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400", dot: "bg-red-400" },
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const cfg = statusConfig[status] || statusConfig.pending
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
-      <span className={`text-xs ${cfg.className.split(" ").find(c => c.startsWith("text-"))}`}>{cfg.label}</span>
-    </span>
-  )
+const statusConfig: Record<string, { label: string; className: string }> = {
+  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400" },
+  en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400" },
+  demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400" },
+  llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]" },
+  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-muted-foreground" },
+  cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400" },
 }
 
 interface OrderItem {
@@ -150,9 +141,7 @@ export default function PedidosPage() {
   const [saving, setSaving] = useState(false)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
-  const [adjustDialogOpen, setAdjustDialogOpen] = useState(false)
-  const [adjustOrder, setAdjustOrder] = useState<Order | null>(null)
-  const [adjustStatus, setAdjustStatus] = useState("")
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -194,34 +183,6 @@ export default function PedidosPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar estado")
     }
-  }
-
-  function openAdjust(order: Order) {
-    setAdjustOrder(order)
-    setAdjustStatus(order.status)
-    setAdjustDialogOpen(true)
-  }
-
-  async function handleAdjustSave() {
-    if (!adjustOrder) return
-    setSaving(true)
-    try {
-      const res = await fetch(`/api/pedidos/${adjustOrder.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: adjustStatus }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Error al actualizar estado")
-      }
-      toast.success("Estado actualizado")
-      setAdjustDialogOpen(false)
-      setAdjustOrder(null)
-      fetchOrders()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al actualizar estado")
-    } finally { setSaving(false) }
   }
 
   function addToCart(product: Product) {
@@ -295,19 +256,18 @@ export default function PedidosPage() {
     } finally { setSaving(false) }
   }
 
-  function computeOrderPricing(order: Order) {
-    const items = order.items || []
-    return items.reduce((acc, item) => {
-      const p = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
-      acc.totalCostUSDT += p.costUSDT
-      acc.totalYoniUSDT += p.yoniUSDT
-      acc.totalShipping += p.shippingCost
-      acc.totalSubtotalARS += p.subtotalARS
-      acc.totalProfitARS += p.profitARS
-      acc.totalFinalARS += p.finalPriceARS
-      acc.totalFinalUSD += p.finalPriceUSD
-      return acc
-    }, { totalCostUSDT: 0, totalYoniUSDT: 0, totalShipping: 0, totalSubtotalARS: 0, totalProfitARS: 0, totalFinalARS: 0, totalFinalUSD: 0 })
+  function getItemStatusBadge(status: string) {
+    const cfg = statusConfig[status] || statusConfig.pending
+    return <Badge className={`${cfg.className} border-0 text-[10px]`}>{cfg.label}</Badge>
+  }
+
+  function toggleOrderExpand(orderId: string) {
+    setExpandedOrders(prev => {
+      const next = new Set(prev)
+      if (next.has(orderId)) next.delete(orderId)
+      else next.add(orderId)
+      return next
+    })
   }
 
   return (
@@ -323,9 +283,9 @@ export default function PedidosPage() {
       </div>
 
       <div className="flex gap-2">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v || "")}>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
           <SelectTrigger className="w-40 bg-muted border-border text-foreground">
-            <SelectValue placeholder="Filtrar estado">{(value) => !value ? "Filtrar estado" : statusConfig[value]?.label || value}</SelectValue>
+            <SelectValue placeholder="Filtrar estado">{(value) => !value ? "Filtrar estado" : value === "all" ? "Todos" : statusConfig[value]?.label || value}</SelectValue>
           </SelectTrigger>
           <SelectContent className=" bg-card text-foreground">
             <SelectItem value="all">Todos</SelectItem>
@@ -336,13 +296,14 @@ export default function PedidosPage() {
         </Select>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground w-8"></TableHead>
               <TableHead className="text-muted-foreground">Cliente</TableHead>
               <TableHead className="text-muted-foreground hidden sm:table-cell">Contacto</TableHead>
-              <TableHead className="text-muted-foreground">Productos</TableHead>
+              <TableHead className="text-muted-foreground">Producto</TableHead>
               <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
               <TableHead className="text-muted-foreground text-right">Logística</TableHead>
               <TableHead className="text-muted-foreground text-right hidden md:table-cell">Envío ARS</TableHead>
@@ -350,79 +311,129 @@ export default function PedidosPage() {
               <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Ganancia ARS</TableHead>
               <TableHead className="text-muted-foreground text-right">Final ARS</TableHead>
               <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Final USD</TableHead>
+              <TableHead className="text-muted-foreground text-center">Tracking</TableHead>
               <TableHead className="text-muted-foreground text-center">Estado</TableHead>
               <TableHead className="text-muted-foreground text-right">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
-                const pricing = computeOrderPricing(o)
-                const productNames = o.items.map(i => `${i.product.name}×${i.quantity}`)
-                const productSummary = productNames.length > 2
-                  ? `${productNames.slice(0, 2).join(", ")} y ${productNames.length - 2} más`
-                  : productNames.join(", ")
+                const cfg = statusConfig[o.status] || statusConfig.pending
+                const isExpanded = expandedOrders.has(o.id)
+                const hasMultipleItems = o.items.length > 1
+
                 return (
-                  <TableRow key={o.id} className="border-border hover:bg-muted">
-                    <TableCell
-                      className="font-medium text-foreground cursor-pointer"
-                      onClick={() => setDetailOrder(o)}
-                    >
-                      {o.clientName} {o.clientSurname}
-                    </TableCell>
-                    <TableCell
-                      className="text-muted-foreground text-sm hidden sm:table-cell cursor-pointer"
-                      onClick={() => setDetailOrder(o)}
-                    >
-                      {o.clientPhone || o.clientContact}
-                    </TableCell>
-                    <TableCell
-                      className="text-muted-foreground text-sm cursor-pointer"
-                      onClick={() => setDetailOrder(o)}
-                      title={productNames.join("\n")}
-                    >
-                      {productSummary}
-                    </TableCell>
-                    <TableCell className="text-right text-foreground text-sm">
-                      ${pricing.totalCostUSDT.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm">
-                      {pricing.totalYoniUSDT > 0 ? `$${pricing.totalYoniUSDT.toFixed(2)}` : "—"}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm hidden md:table-cell">
-                      ${pricing.totalShipping.toLocaleString("es-AR")}
-                    </TableCell>
-                    <TableCell className="text-right text-foreground text-sm hidden md:table-cell">
-                      ${pricing.totalSubtotalARS.toLocaleString("es-AR")}
-                    </TableCell>
-                    <TableCell className="text-right text-[#0071e3] text-sm hidden lg:table-cell">
-                      ${pricing.totalProfitARS.toLocaleString("es-AR")}
-                    </TableCell>
-                    <TableCell className="text-right text-[#22C55E] font-medium text-sm">
-                      ${pricing.totalFinalARS.toLocaleString("es-AR")}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm hidden lg:table-cell">
-                      ${pricing.totalFinalUSD.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <StatusBadge status={o.status} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openAdjust(o)}
-                        className="text-muted-foreground hover:text-[#22C55E] text-xs"
-                      >
-                        <Settings2 className="w-3.5 h-3.5 mr-1" />
-                        Ajustar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <Fragment key={o.id}>
+                    {o.items.map((item, itemIdx) => {
+                      const isFirst = itemIdx === 0
+                      const pricing = computeItemPricing(item, o.exchangeRate || exchangeRate, o.usdtRate || usdtRate)
+                      return (
+                        <TableRow
+                          key={item.id}
+                          className={`border-border hover:bg-muted ${isFirst ? "" : "border-t-0"}`}
+                        >
+                          {isFirst ? (
+                            <>
+                              <TableCell
+                                className="text-muted-foreground cursor-pointer"
+                                onClick={() => hasMultipleItems && toggleOrderExpand(o.id)}
+                              >
+                                {hasMultipleItems ? (
+                                  isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+                                ) : null}
+                              </TableCell>
+                              <TableCell
+                                className="font-medium text-foreground cursor-pointer"
+                                onClick={() => setDetailOrder(o)}
+                              >
+                                {o.clientName} {o.clientSurname}
+                              </TableCell>
+                              <TableCell
+                                className="text-muted-foreground text-sm hidden sm:table-cell cursor-pointer"
+                                onClick={() => setDetailOrder(o)}
+                              >
+                                {o.clientPhone || o.clientContact}
+                              </TableCell>
+                            </>
+                          ) : (
+                            <>
+                              <TableCell className="text-muted-foreground" />
+                              <TableCell />
+                              <TableCell className="hidden sm:table-cell" />
+                            </>
+                          )}
+
+                          <TableCell className="text-foreground text-sm">
+                            {item.product.name}
+                            <span className="text-muted-foreground ml-1">×{item.quantity}</span>
+                          </TableCell>
+                          <TableCell className="text-right text-foreground text-sm">
+                            ${pricing.costUSDT.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground text-sm">
+                            {item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground text-sm hidden md:table-cell">
+                            ${pricing.shippingCost.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-foreground text-sm hidden md:table-cell">
+                            ${pricing.subtotalARS.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-[#0071e3] text-sm hidden lg:table-cell">
+                            ${pricing.profitARS.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-[#22C55E] font-medium text-sm">
+                            ${pricing.finalPriceARS.toLocaleString("es-AR")}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground text-sm hidden lg:table-cell">
+                            ${pricing.finalPriceUSD.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-center text-xs text-muted-foreground">
+                            {item.trackingCode ? (
+                              <span className="text-blue-400">{item.trackingCode}</span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {getItemStatusBadge(item.shippingStatus)}
+                          </TableCell>
+
+                          {isFirst ? (
+                            <TableCell className="text-right">
+                              <div className="flex items-center gap-1">
+                                <Badge className={`${cfg.className} border-0 text-[10px] mr-1 hidden lg:inline-flex`}>
+                                  {cfg.label}
+                                </Badge>
+                                <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
+                                  <SelectTrigger className="w-24 h-7 text-xs bg-muted border-border text-foreground">
+                                <SelectValue placeholder="Cambiar">{(value) => !value ? "Cambiar" : statusConfig[value]?.label || value}</SelectValue>
+                              </SelectTrigger>
+                              <SelectContent className=" bg-card text-foreground">
+                                {Object.entries(statusConfig).map(([k, v]) => (
+                                  <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                                </Select>
+                              </div>
+                            </TableCell>
+                          ) : (
+                            <TableCell className="text-right" />
+                          )}
+                        </TableRow>
+                      )
+                    })}
+                    <TableRow className="border-border hover:bg-transparent">
+                      <TableCell colSpan={14} className="py-1 px-0">
+                        <div className="h-px bg-border/50" />
+                      </TableCell>
+                    </TableRow>
+                  </Fragment>
                 )
               })
             )}
@@ -456,7 +467,7 @@ export default function PedidosPage() {
                       {item.trackingCode && (
                         <span className="text-blue-400">📍 {item.trackingCode}</span>
                       )}
-                      <StatusBadge status={item.shippingStatus} />
+                      {getItemStatusBadge(item.shippingStatus)}
                     </div>
                   </div>
                 ))}
@@ -481,39 +492,6 @@ export default function PedidosPage() {
               {detailOrder.notes && (
                 <div><p className="text-sm text-muted-foreground">Notas</p><p className="text-muted-foreground">{detailOrder.notes}</p></div>
               )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={adjustDialogOpen} onOpenChange={(o) => { if (!o) { setAdjustDialogOpen(false); setAdjustOrder(null) } }}>
-        <DialogContent className="bg-card text-foreground max-w-sm">
-          <DialogHeader><DialogTitle>Ajustar pedido</DialogTitle></DialogHeader>
-          {adjustOrder && (
-            <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                <p><span className="text-foreground font-medium">{adjustOrder.clientName} {adjustOrder.clientSurname}</span></p>
-                <p className="text-xs mt-1">{adjustOrder.items.length} producto(s)</p>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Estado del pedido</Label>
-                <Select value={adjustStatus} onValueChange={(v) => { if (v) setAdjustStatus(v) }}>
-                  <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue>{(value) => !value ? "Seleccionar" : statusConfig[value]?.label || value}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="bg-card text-foreground">
-                    {Object.entries(statusConfig).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <Button type="button" variant="ghost" onClick={() => { setAdjustDialogOpen(false); setAdjustOrder(null) }} className="text-muted-foreground">Cancelar</Button>
-                <Button type="button" disabled={saving} onClick={handleAdjustSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  {saving ? "Guardando..." : "Guardar cambios"}
-                </Button>
-              </div>
             </div>
           )}
         </DialogContent>
