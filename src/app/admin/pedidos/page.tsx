@@ -177,8 +177,9 @@ export default function PedidosPage() {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error || "Error al actualizar estado")
       }
+      const updated = await res.json()
+      setOrders(prev => prev.map(o => o.id === orderId ? updated : o))
       toast.success("Estado actualizado")
-      fetchOrders()
       if (detailOrder?.id === orderId) setDetailOrder({ ...detailOrder, status: newStatus })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar estado")
@@ -337,35 +338,29 @@ export default function PedidosPage() {
                           className={`border-border hover:bg-muted ${isFirst ? "" : "border-t-0"}`}
                         >
                           {isFirst ? (
-                            <>
-                              <TableCell
-                                className="text-muted-foreground cursor-pointer"
-                                onClick={() => hasMultipleItems && toggleOrderExpand(o.id)}
-                              >
-                                {hasMultipleItems ? (
-                                  isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
-                                ) : null}
-                              </TableCell>
-                              <TableCell
-                                className="font-medium text-foreground cursor-pointer"
-                                onClick={() => setDetailOrder(o)}
-                              >
-                                {o.clientName} {o.clientSurname}
-                              </TableCell>
-                              <TableCell
-                                className="text-muted-foreground text-sm cursor-pointer"
-                                onClick={() => setDetailOrder(o)}
-                              >
-                                {o.clientPhone || o.clientContact}
-                              </TableCell>
-                            </>
+                            <TableCell
+                              className="text-muted-foreground cursor-pointer"
+                              onClick={() => hasMultipleItems && toggleOrderExpand(o.id)}
+                            >
+                              {hasMultipleItems ? (
+                                isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+                              ) : null}
+                            </TableCell>
                           ) : (
-                            <>
-                              <TableCell className="text-muted-foreground" />
-                              <TableCell />
-                              <TableCell />
-                            </>
+                            <TableCell className="text-muted-foreground" />
                           )}
+                          <TableCell
+                            className="font-medium text-foreground cursor-pointer"
+                            onClick={() => setDetailOrder(o)}
+                          >
+                            {o.clientName} {o.clientSurname}
+                          </TableCell>
+                          <TableCell
+                            className="text-muted-foreground text-sm cursor-pointer"
+                            onClick={() => setDetailOrder(o)}
+                          >
+                            {o.clientPhone || o.clientContact}
+                          </TableCell>
 
                           <TableCell className="text-foreground text-sm">
                             {item.product.name}
@@ -416,11 +411,7 @@ export default function PedidosPage() {
                                   </SelectContent>
                                 </Select>
                               </div>
-                            ) : (
-                              <Badge className={`${cfg.className} border-0 text-[10px]`}>
-                                {cfg.label}
-                              </Badge>
-                            )}
+                            ) : null}
                           </TableCell>
                         </TableRow>
                       )
