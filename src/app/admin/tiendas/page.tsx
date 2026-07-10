@@ -110,9 +110,9 @@ export default function TiendasPage() {
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground">Nombre</TableHead>
-              <TableHead className="text-muted-foreground hidden md:table-cell">Contacto</TableHead>
-              <TableHead className="text-muted-foreground hidden lg:table-cell">Web</TableHead>
-              <TableHead className="text-muted-foreground hidden sm:table-cell">Creada</TableHead>
+              <TableHead className="text-muted-foreground">Contacto</TableHead>
+              <TableHead className="text-muted-foreground">Web</TableHead>
+              <TableHead className="text-muted-foreground">Creada</TableHead>
               <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -125,9 +125,9 @@ export default function TiendasPage() {
               stores.map((s) => (
                 <TableRow key={s.id} className="border-border hover:bg-muted">
                   <TableCell className="font-medium text-foreground">{s.name}</TableCell>
-                  <TableCell className="text-muted-foreground hidden md:table-cell">{s.contact || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground hidden lg:table-cell">{s.website || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{formatDate(s.createdAt)}</TableCell>
+                  <TableCell className="text-muted-foreground">{s.contact || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{s.website || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{formatDate(s.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(s)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>

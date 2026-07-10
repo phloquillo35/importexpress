@@ -154,7 +154,7 @@ export default function AdminStockPage() {
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="text-muted-foreground">Producto</TableHead>
-                  <TableHead className="text-muted-foreground hidden sm:table-cell">Categoría</TableHead>
+                  <TableHead className="text-muted-foreground">Categoría</TableHead>
                   <TableHead className="text-muted-foreground text-right">Precio</TableHead>
                   <TableHead className="text-muted-foreground text-center">Stock</TableHead>
                   <TableHead className="text-muted-foreground text-center">Mínimo</TableHead>
@@ -179,7 +179,7 @@ export default function AdminStockPage() {
                   filtered.map((product) => (
                     <TableRow key={product.id} className="border-border hover:bg-muted">
                       <TableCell className="font-medium text-foreground">{product.name}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">
+                      <TableCell className="text-muted-foreground text-sm">
                         {product.category?.name || "—"}
                       </TableCell>
                       <TableCell className="text-right text-foreground">{formatUSD(product.priceUSD)}</TableCell>

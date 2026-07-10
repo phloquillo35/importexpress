@@ -283,11 +283,11 @@ export default function AdminCategoriasPage() {
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground">Nombre</TableHead>
-              <TableHead className="text-muted-foreground hidden md:table-cell">Slug</TableHead>
-              <TableHead className="text-muted-foreground hidden lg:table-cell">Descripción</TableHead>
-              <TableHead className="text-muted-foreground hidden sm:table-cell">Subcategorías</TableHead>
+              <TableHead className="text-muted-foreground">Slug</TableHead>
+              <TableHead className="text-muted-foreground">Descripción</TableHead>
+              <TableHead className="text-muted-foreground">Subcategorías</TableHead>
               <TableHead className="text-muted-foreground text-center">Productos</TableHead>
-              <TableHead className="text-muted-foreground hidden sm:table-cell">Creada</TableHead>
+              <TableHead className="text-muted-foreground">Creada</TableHead>
               <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -309,11 +309,11 @@ export default function AdminCategoriasPage() {
               categories.map((cat) => (
                 <TableRow key={cat.id} className="border-border hover:bg-muted">
                   <TableCell className="font-medium text-foreground">{cat.name}</TableCell>
-                  <TableCell className="text-muted-foreground hidden md:table-cell">{cat.slug}</TableCell>
-                  <TableCell className="text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">
+                  <TableCell className="text-muted-foreground">{cat.slug}</TableCell>
+                  <TableCell className="text-muted-foreground max-w-[200px] truncate">
                     {cat.description || "—"}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">
+                  <TableCell>
                     {cat.parent ? (
                       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                         ← {cat.parent.name}
@@ -331,7 +331,7 @@ export default function AdminCategoriasPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-center text-muted-foreground">{cat._count.products}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">
+                  <TableCell className="text-muted-foreground text-sm">
                     {formatDate(cat.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">

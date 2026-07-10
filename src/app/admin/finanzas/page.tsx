@@ -209,7 +209,7 @@ export default function FinanzasPage() {
               <TableHead className="text-muted-foreground">Concepto</TableHead>
               <TableHead className="text-muted-foreground">Tipo</TableHead>
               <TableHead className="text-muted-foreground text-right">Monto USD</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden sm:table-cell">Monto ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Monto ARS</TableHead>
               <TableHead className="text-muted-foreground text-right">Fecha</TableHead>
             </TableRow>
           </TableHeader>
@@ -228,7 +228,7 @@ export default function FinanzasPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right text-foreground">{formatUSD(t.amountUSD)}</TableCell>
-                  <TableCell className="text-right text-muted-foreground text-sm hidden sm:table-cell">
+                  <TableCell className="text-right text-muted-foreground text-sm">
                     {t.amountARS ? `$${t.amountARS.toLocaleString("es-AR")}` : "—"}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground text-sm">{formatDate(t.date)}</TableCell>

@@ -151,16 +151,16 @@ export default function AdminProductosPage() {
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground">Producto</TableHead>
-              <TableHead className="text-muted-foreground hidden md:table-cell">Categoría</TableHead>
+              <TableHead className="text-muted-foreground">Categoría</TableHead>
               <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
               <TableHead className="text-muted-foreground text-right">Logística</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden sm:table-cell">Envío ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden sm:table-cell">Subtotal ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Ganancia ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Envío ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Subtotal ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Ganancia ARS</TableHead>
               <TableHead className="text-muted-foreground text-right">Final ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Final USD</TableHead>
+              <TableHead className="text-muted-foreground text-right">Final USD</TableHead>
               <TableHead className="text-muted-foreground text-center">Stock</TableHead>
-              <TableHead className="text-muted-foreground text-center hidden sm:table-cell">Disp.</TableHead>
+              <TableHead className="text-muted-foreground text-center">Disp.</TableHead>
               <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -194,26 +194,26 @@ export default function AdminProductosPage() {
                 return (
                 <TableRow key={product.id} className="border-border hover:bg-muted">
                   <TableCell className="font-medium text-foreground">{product.name}</TableCell>
-                  <TableCell className="text-muted-foreground hidden md:table-cell">
+                  <TableCell className="text-muted-foreground">
                     {product.category?.name || "—"}
                   </TableCell>
                   <TableCell className="text-right text-foreground">${(product.costUSDT || 0).toFixed(2)}</TableCell>
                   <TableCell className="text-right text-muted-foreground">
                     {product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground hidden sm:table-cell">
+                  <TableCell className="text-right text-muted-foreground">
                     ${(product.shippingCost || 0).toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-foreground hidden sm:table-cell">
+                  <TableCell className="text-right text-foreground">
                     ${pricing.subtotalARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-[#0071e3] hidden lg:table-cell">
+                  <TableCell className="text-right text-[#0071e3]">
                     ${pricing.profitARS.toLocaleString("es-AR")}
                   </TableCell>
                   <TableCell className="text-right text-[#22C55E] font-medium">
                     ${pricing.finalPriceARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground hidden lg:table-cell">
+                  <TableCell className="text-right text-muted-foreground">
                     ${pricing.finalPriceUSD.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-center">
@@ -221,7 +221,7 @@ export default function AdminProductosPage() {
                       {product.stock}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">
+                  <TableCell className="text-center">
                     {product.isAvailable ? (
                       <Badge className="bg-[#22C55E]/10 text-[#22C55E] border-0">Sí</Badge>
                     ) : (

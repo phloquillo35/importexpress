@@ -296,21 +296,21 @@ export default function PedidosPage() {
         </Select>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground w-8"></TableHead>
               <TableHead className="text-muted-foreground">Cliente</TableHead>
-              <TableHead className="text-muted-foreground hidden sm:table-cell">Contacto</TableHead>
+              <TableHead className="text-muted-foreground">Contacto</TableHead>
               <TableHead className="text-muted-foreground">Producto</TableHead>
               <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
               <TableHead className="text-muted-foreground text-right">Logística</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden md:table-cell">Envío ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden md:table-cell">Subtotal ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Ganancia ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Envío ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Subtotal ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right">Ganancia ARS</TableHead>
               <TableHead className="text-muted-foreground text-right">Final ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right hidden lg:table-cell">Final USD</TableHead>
+              <TableHead className="text-muted-foreground text-right">Final USD</TableHead>
               <TableHead className="text-muted-foreground text-center">Tracking</TableHead>
               <TableHead className="text-muted-foreground text-center">Estado</TableHead>
               <TableHead className="text-muted-foreground text-right">Acción</TableHead>
@@ -354,7 +354,7 @@ export default function PedidosPage() {
                                 {o.clientName} {o.clientSurname}
                               </TableCell>
                               <TableCell
-                                className="text-muted-foreground text-sm hidden sm:table-cell cursor-pointer"
+                                className="text-muted-foreground text-sm cursor-pointer"
                                 onClick={() => setDetailOrder(o)}
                               >
                                 {o.clientPhone || o.clientContact}
@@ -364,7 +364,7 @@ export default function PedidosPage() {
                             <>
                               <TableCell className="text-muted-foreground" />
                               <TableCell />
-                              <TableCell className="hidden sm:table-cell" />
+                              <TableCell />
                             </>
                           )}
 
@@ -378,19 +378,19 @@ export default function PedidosPage() {
                           <TableCell className="text-right text-muted-foreground text-sm">
                             {item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
                           </TableCell>
-                          <TableCell className="text-right text-muted-foreground text-sm hidden md:table-cell">
+                          <TableCell className="text-right text-muted-foreground text-sm">
                             ${pricing.shippingCost.toLocaleString("es-AR")}
                           </TableCell>
-                          <TableCell className="text-right text-foreground text-sm hidden md:table-cell">
+                          <TableCell className="text-right text-foreground text-sm">
                             ${pricing.subtotalARS.toLocaleString("es-AR")}
                           </TableCell>
-                          <TableCell className="text-right text-[#0071e3] text-sm hidden lg:table-cell">
+                          <TableCell className="text-right text-[#0071e3] text-sm">
                             ${pricing.profitARS.toLocaleString("es-AR")}
                           </TableCell>
                           <TableCell className="text-right text-[#22C55E] font-medium text-sm">
                             ${pricing.finalPriceARS.toLocaleString("es-AR")}
                           </TableCell>
-                          <TableCell className="text-right text-muted-foreground text-sm hidden lg:table-cell">
+                          <TableCell className="text-right text-muted-foreground text-sm">
                             ${pricing.finalPriceUSD.toFixed(2)}
                           </TableCell>
                           <TableCell className="text-center text-xs text-muted-foreground">
@@ -407,7 +407,7 @@ export default function PedidosPage() {
                           {isFirst ? (
                             <TableCell className="text-right">
                               <div className="flex items-center gap-1">
-                                <Badge className={`${cfg.className} border-0 text-[10px] mr-1 hidden lg:inline-flex`}>
+                                <Badge className={`${cfg.className} border-0 text-[10px] mr-1`}>
                                   {cfg.label}
                                 </Badge>
                                 <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
