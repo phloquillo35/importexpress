@@ -55,6 +55,8 @@ export async function PUT(
     const existing = await prisma.bulk.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
 
+    console.log(`[BULK PUT] id=${id} body=${JSON.stringify(body)} existing.status=${existing.status} existing.trackingCode=${existing.trackingCode}`)
+
     const data: Record<string, unknown> = {}
 
     if (body.status) data.status = body.status
@@ -114,7 +116,15 @@ export async function PUT(
           where: { id: orderId },
           data: { status: computed },
         })
+        console.log(`[BULK PUT] order ${orderId} recalculated -> ${computed} from ${items.length} items`)
       }
+
+      const allBulksOnAffectedOrders = await prisma.orderItem.findMany({
+        where: { orderId: { in: affectedOrderIds.map(o => o.orderId) } },
+        select: { bulkId: true },
+        distinct: ["bulkId"],
+      })
+      console.log(`[BULK PUT] bulks on affected orders: ${allBulksOnAffectedOrders.map(b => b.bulkId).join(", ")}`)
     }
 
     if (body.totalCostARS && existing.type) {
@@ -192,6 +202,8 @@ export async function DELETE(
     const existing = await prisma.bulk.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
 
+    console.log(`[BULK DELETE] id=${id} tracking=${existing.trackingCode} status=${existing.status} type=${existing.type}`)
+
     const deletedItems = await prisma.orderItem.findMany({
       where: { bulkId: id },
       select: { orderId: true },
@@ -232,8 +244,10 @@ export async function DELETE(
         where: { id: orderId },
         data: { status: computed },
       })
+      console.log(`[BULK DELETE] order ${orderId} recalculated -> ${computed}`)
     }
 
+    console.log(`[BULK DELETE] deleted bulk ${id} success`)
     await prisma.bulk.delete({ where: { id } })
     return Response.json({ success: true })
   } catch (error) {

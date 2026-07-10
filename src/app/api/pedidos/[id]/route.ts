@@ -109,8 +109,17 @@ export async function DELETE(
     const existing = await prisma.order.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
 
+    console.log(`[PEDIDO DELETE] id=${id} client=${existing.clientName} ${existing.clientSurname} total=${existing.totalUSD} status=${existing.status}`)
+
+    const deletedItems = await prisma.orderItem.findMany({
+      where: { orderId: id },
+      select: { id: true, productId: true, quantity: true },
+    })
+    console.log(`[PEDIDO DELETE] deleting ${deletedItems.length} items: ${deletedItems.map(i => `${i.productId}x${i.quantity}`).join(", ")}`)
+
     await prisma.orderItem.deleteMany({ where: { orderId: id } })
     await prisma.order.delete({ where: { id } })
+    console.log(`[PEDIDO DELETE] order ${id} deleted successfully`)
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting order:", error)
