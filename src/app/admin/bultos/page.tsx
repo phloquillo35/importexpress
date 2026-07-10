@@ -28,15 +28,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400" },
-  en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400" },
-  demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400" },
-  llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]" },
-  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-muted-foreground" },
-  cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400" },
+
+const statusConfig: Record<string, { label: string; className: string; dot: string }> = {
+  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400", dot: "bg-yellow-400" },
+  en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400", dot: "bg-blue-400" },
+  demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400", dot: "bg-orange-400" },
+  llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]", dot: "bg-[#22C55E]" },
+  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-muted-foreground", dot: "bg-zinc-400" },
+  cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400", dot: "bg-red-400" },
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cfg = statusConfig[status] || statusConfig.pending
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
+      <span className={`text-xs ${cfg.className.split(" ").find(c => c.startsWith("text-"))}`}>{cfg.label}</span>
+    </span>
+  )
 }
 
 interface OrderItemBrief {
@@ -227,7 +237,7 @@ export default function BultosPage() {
       </div>
 
       <div className="flex gap-2">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v || "")}>
           <SelectTrigger className="w-40 bg-muted border-border text-foreground">
             <SelectValue placeholder="Filtrar estado">{(value) => !value ? "Filtrar estado" : statusConfig[value]?.label || value}</SelectValue>
           </SelectTrigger>
@@ -240,7 +250,7 @@ export default function BultosPage() {
         </Select>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -248,7 +258,7 @@ export default function BultosPage() {
               <TableHead className="text-muted-foreground">Tipo</TableHead>
               <TableHead className="text-muted-foreground">Courier</TableHead>
               <TableHead className="text-muted-foreground text-right">Productos</TableHead>
-              <TableHead className="text-muted-foreground text-right">Tracking</TableHead>
+              <TableHead className="text-muted-foreground text-right">Seguimiento</TableHead>
               <TableHead className="text-muted-foreground text-right">Costo total</TableHead>
               <TableHead className="text-muted-foreground text-center">Estado</TableHead>
               <TableHead className="text-muted-foreground text-right">Acción</TableHead>
@@ -272,7 +282,7 @@ export default function BultosPage() {
                     <TableCell className="text-right text-foreground">
                       {b.totalCostARS ? `$${b.totalCostARS.toLocaleString("es-AR")} ARS` : "—"}
                     </TableCell>
-                    <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
+                    <TableCell className="text-center"><StatusBadge status={b.status} /></TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => openView(b)} className="text-muted-foreground hover:text-blue-400">
@@ -432,9 +442,7 @@ export default function BultosPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Estado</p>
-                  <Badge className={`${statusConfig[viewBulk.status]?.className || ""} border-0`}>
-                    {statusConfig[viewBulk.status]?.label || viewBulk.status}
-                  </Badge>
+                  <StatusBadge status={viewBulk.status} />
                 </div>
                 <div>
                   <p className="text-muted-foreground">Código de seguimiento</p>
@@ -463,8 +471,7 @@ export default function BultosPage() {
                         <TableRow className="border-border hover:bg-transparent">
                           <TableHead className="text-muted-foreground">Producto</TableHead>
                           <TableHead className="text-muted-foreground">Cliente</TableHead>
-                          <TableHead className="text-muted-foreground">Tracking</TableHead>
-                          <TableHead className="text-muted-foreground text-center">Estado</TableHead>
+                          <TableHead className="text-muted-foreground">Seguimiento</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -475,11 +482,6 @@ export default function BultosPage() {
                               {item.order.clientName} {item.order.clientSurname}
                             </TableCell>
                             <TableCell className="text-muted-foreground text-xs">{item.trackingCode || "—"}</TableCell>
-                            <TableCell className="text-center">
-                              <Badge className={`${statusConfig[item.shippingStatus]?.className || "bg-zinc-500/10 text-muted-foreground"} border-0 text-xs`}>
-                                {statusConfig[item.shippingStatus]?.label || item.shippingStatus}
-                              </Badge>
-                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

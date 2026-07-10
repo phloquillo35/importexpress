@@ -41,6 +41,7 @@ export default function AdminStockPage() {
   const [adjustProduct, setAdjustProduct] = useState<StockProduct | null>(null)
   const [adjustQty, setAdjustQty] = useState("")
   const [adjustOp, setAdjustOp] = useState<"add" | "set">("set")
+  const [adjustField, setAdjustField] = useState<"stock" | "minStock">("stock")
   const [saving, setSaving] = useState(false)
 
   async function loadStock() {
@@ -85,6 +86,7 @@ export default function AdminStockPage() {
     setAdjustProduct(product)
     setAdjustQty(String(product.stock))
     setAdjustOp("set")
+    setAdjustField("stock")
   }
 
   async function handleAdjust(e: React.FormEvent) {
@@ -100,6 +102,7 @@ export default function AdminStockPage() {
           productId: adjustProduct.id,
           quantity: parseInt(adjustQty),
           operation: adjustOp,
+          field: adjustField,
         }),
       })
       if (!res.ok) {
@@ -146,7 +149,7 @@ export default function AdminStockPage() {
             />
           </div>
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
@@ -224,33 +227,33 @@ export default function AdminStockPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setAdjustOp("set")}
+                onClick={() => { setAdjustField("stock"); setAdjustOp("set"); setAdjustQty(String(adjustProduct?.stock ?? 0)) }}
                 className={cn(
                   "border-border",
-                  adjustOp === "set" ? "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]" : "text-muted-foreground"
+                  adjustField === "stock" && adjustOp === "set" ? "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]" : "text-muted-foreground"
                 )}
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
-                Establecer
+                Stock
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setAdjustOp("add")}
+                onClick={() => { setAdjustField("minStock"); setAdjustOp("set"); setAdjustQty(String(adjustProduct?.minStock ?? 0)) }}
                 className={cn(
                   "border-border",
-                  adjustOp === "add" ? "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]" : "text-muted-foreground"
+                  adjustField === "minStock" && adjustOp === "set" ? "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]" : "text-muted-foreground"
                 )}
               >
                 <Minus className="w-3.5 h-3.5 mr-1" />
-                Ajustar
+                Mínimo
               </Button>
             </div>
 
             <div className="space-y-2">
               <Label>
-                {adjustOp === "set" ? "Nuevo stock" : "Cantidad a agregar"}
+                {adjustField === "stock" ? "Valor total de stock" : "Valor mínimo de stock"}
               </Label>
               <Input
                 type="number"

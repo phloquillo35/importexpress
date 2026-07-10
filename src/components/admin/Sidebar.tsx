@@ -47,7 +47,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
+        "bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 h-full overflow-y-auto",
         collapsed ? "w-16" : "w-60"
       )}
     >

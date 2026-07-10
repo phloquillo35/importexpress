@@ -33,7 +33,11 @@ yarn-error.log*
 # env files
 .env
 .env.local
+.env.production
 .env.development
+
+# log files
+*.log
 
 # sqlite database
 /prisma/dev.db

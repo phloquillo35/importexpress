@@ -56,7 +56,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2.5 bg-white/5 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent transition-colors"
-              placeholder="admin@importexpress.com"
+              placeholder="tu@email.com"
               required
             />
           </div>

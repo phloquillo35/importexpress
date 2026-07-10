@@ -64,8 +64,11 @@ export default function ConfiguracionPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-6 h-6 border-2 border-[#22C55E] border-t-transparent rounded-full" />
+      <div className="max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground font-heading">Configuración</h1>
+          <p className="text-muted-foreground text-sm mt-1">Cargando...</p>
+        </div>
       </div>
     )
   }

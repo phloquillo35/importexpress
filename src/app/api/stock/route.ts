@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const session = await requireRole("admin")
     if (session instanceof Response) return session
 
-    const { productId, quantity, operation } = await request.json()
+    const { productId, quantity, operation, field } = await request.json()
 
     if (!productId || quantity === undefined) {
       return Response.json({ error: "productId y quantity son requeridos" }, { status: 400 })
@@ -47,16 +47,19 @@ export async function POST(request: Request) {
       return Response.json({ error: "quantity debe ser un número" }, { status: 400 })
     }
 
-    let newStock: number
+    const targetField = field || "stock"
+
+    let newValue: number
     if (operation === "set") {
-      newStock = Math.max(0, qty)
+      newValue = Math.max(0, qty)
     } else {
-      newStock = Math.max(0, product.stock + qty)
+      const current = targetField === "stock" ? product.stock : product.minStock
+      newValue = Math.max(0, current + qty)
     }
 
     const updated = await prisma.product.update({
       where: { id: productId },
-      data: { stock: newStock },
+      data: { [targetField]: newValue },
       select: { id: true, name: true, stock: true, minStock: true },
     })
 

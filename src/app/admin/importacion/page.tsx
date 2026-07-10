@@ -28,13 +28,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400" },
-  in_transit: { label: "En tránsito", className: "bg-blue-500/10 text-blue-400" },
-  received: { label: "Recibido", className: "bg-[#22C55E]/10 text-[#22C55E]" },
-  cancelled: { label: "Cancelado", className: "bg-red-500/10 text-red-400" },
+
+const statusConfig: Record<string, { label: string; className: string; dot: string }> = {
+  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400", dot: "bg-yellow-400" },
+  in_transit: { label: "En tránsito", className: "bg-blue-500/10 text-blue-400", dot: "bg-blue-400" },
+  received: { label: "Recibido", className: "bg-[#22C55E]/10 text-[#22C55E]", dot: "bg-[#22C55E]" },
+  cancelled: { label: "Cancelado", className: "bg-red-500/10 text-red-400", dot: "bg-red-400" },
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cfg = statusConfig[status] || statusConfig.pending
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
+      <span className={`text-xs ${cfg.className.split(" ").find(c => c.startsWith("text-"))}`}>{cfg.label}</span>
+    </span>
+  )
 }
 
 interface Batch {
@@ -167,7 +177,7 @@ export default function ImportacionPage() {
         ))}
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -193,7 +203,7 @@ export default function ImportacionPage() {
                     <TableCell className="text-muted-foreground">{b.store?.name || "—"}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{Array.isArray(b.products) ? b.products.length : 0}</TableCell>
                     <TableCell className="text-right text-foreground">{formatUSD(b.totalCostUSD)}</TableCell>
-                    <TableCell className="text-center"><Badge className={`${cfg.className} border-0`}>{cfg.label}</Badge></TableCell>
+                    <TableCell className="text-center"><StatusBadge status={b.status} /></TableCell>
                     <TableCell className="text-right">
                       <Select onValueChange={(v: any) => updateStatus(b.id, v || "pending")}>
                         <SelectTrigger className="w-28 h-7 text-xs bg-muted border-border text-foreground">

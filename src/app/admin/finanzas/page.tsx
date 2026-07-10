@@ -119,7 +119,11 @@ export default function FinanzasPage() {
       const res = await fetch("/api/transacciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          amountUSD: parseFloat(form.amountUSD) || 0,
+          amountARS: form.amountARS ? parseFloat(form.amountARS) : undefined,
+        }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -185,12 +189,12 @@ export default function FinanzasPage() {
         )}
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-x-auto">
         <div className="p-4 border-b border-border flex items-center gap-3">
           <h2 className="text-lg font-semibold text-foreground font-heading flex-1">Transacciones</h2>
-          <Select value={tipoFilter} onValueChange={(v) => setTipoFilter(v || "")}>
+          <Select value={tipoFilter} onValueChange={(v) => setTipoFilter(v === "all" ? "" : v || "")}>
             <SelectTrigger className="w-36 bg-muted border-border text-foreground">
-              <SelectValue placeholder="Filtrar">{(value) => !value ? "Filtrar" : value === "all" ? "Todas" : value === "income" ? "Ingresos" : "Egresos"}</SelectValue>
+              <SelectValue placeholder="Filtrar">{(value) => !value ? "Filtrar" : value === "income" ? "Ingresos" : "Egresos"}</SelectValue>
             </SelectTrigger>
             <SelectContent className=" bg-card text-foreground">
               <SelectItem value="all">Todas</SelectItem>

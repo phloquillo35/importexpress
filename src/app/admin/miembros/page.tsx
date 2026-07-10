@@ -119,14 +119,6 @@ export default function MiembrosPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-6 h-6 border-2 border-[#22C55E] border-t-transparent rounded-full" />
-      </div>
-    )
-  }
-
   return (
     <div>
       <div className="mb-6">
@@ -209,7 +201,7 @@ export default function MiembrosPage() {
         </form>
       </div>
 
-      <div className="bg-card border border-border rounded-xl space-y-0 overflow-hidden">
+      <div className="bg-card border border-border rounded-xl space-y-0 overflow-x-auto">
         <div className="p-6 pb-0">
           <div className="flex items-center gap-3">
             <Users className="w-5 h-5 text-muted-foreground" />
@@ -217,7 +209,11 @@ export default function MiembrosPage() {
           </div>
         </div>
 
-        {admins.length === 0 ? (
+        {loading ? (
+          <div className="p-6">
+            <p className="text-muted-foreground text-sm">Cargando...</p>
+          </div>
+        ) : admins.length === 0 ? (
           <div className="p-6">
             <p className="text-muted-foreground text-sm">No hay miembros registrados</p>
           </div>
