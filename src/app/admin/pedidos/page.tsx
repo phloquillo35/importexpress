@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, Fragment } from "react"
-import { Package, Plus, Search, ChevronDown, ChevronRight } from "lucide-react"
+import { Package, Plus, Search, ChevronDown, ChevronRight, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
@@ -142,6 +142,8 @@ export default function PedidosPage() {
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -242,6 +244,23 @@ export default function PedidosPage() {
     return <Badge className={`${cfg.className} border-0 text-[10px]`}>{cfg.label}</Badge>
   }
 
+  async function handleDeleteOrder() {
+    if (!deleteTarget) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/pedidos/${deleteTarget.id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al eliminar pedido")
+      }
+      toast.success("Pedido eliminado")
+      setDeleteDialogOpen(false)
+      setDeleteTarget(null)
+      fetchOrders()
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al eliminar pedido") }
+    finally { setSaving(false) }
+  }
+
   function toggleOrderExpand(orderId: string) {
     setExpandedOrders(prev => {
       const next = new Set(prev)
@@ -294,13 +313,14 @@ export default function PedidosPage() {
               <TableHead className="text-muted-foreground text-right">Final USD</TableHead>
               <TableHead className="text-muted-foreground text-center">Tracking</TableHead>
               <TableHead className="text-muted-foreground text-center">Estado</TableHead>
+              <TableHead className="text-muted-foreground text-right">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
                 const cfg = statusConfig[o.status] || statusConfig.pending
@@ -381,11 +401,18 @@ export default function PedidosPage() {
                               </Badge>
                             ) : null}
                           </TableCell>
+                          <TableCell className="text-right">
+                            {isFirst ? (
+                              <Button variant="ghost" size="icon" onClick={() => { setDeleteTarget(o); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            ) : null}
+                          </TableCell>
                         </TableRow>
                       )
                     })}
                     <TableRow className="border-border hover:bg-transparent">
-                      <TableCell colSpan={13} className="py-1 px-0">
+                      <TableCell colSpan={14} className="py-1 px-0">
                         <div className="h-px bg-border/50" />
                       </TableCell>
                     </TableRow>
@@ -517,6 +544,28 @@ export default function PedidosPage() {
               <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear pedido"}</Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={(o) => { if (!o) { setDeleteDialogOpen(false); setDeleteTarget(null) } }}>
+        <DialogContent className="bg-card text-foreground max-w-sm">
+          <DialogHeader><DialogTitle>Eliminar pedido</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            ¿Eliminar este pedido? Todos sus productos se eliminarán permanentemente.
+          </p>
+          {deleteTarget && (
+            <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 space-y-1">
+              <p><span className="text-foreground">Cliente:</span> {deleteTarget.clientName} {deleteTarget.clientSurname}</p>
+              <p><span className="text-foreground">Total:</span> ${deleteTarget.totalUSD.toFixed(2)} USD</p>
+              <p><span className="text-foreground">Productos:</span> {deleteTarget.items.length}</p>
+            </div>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => { setDeleteDialogOpen(false); setDeleteTarget(null) }} className="text-muted-foreground">Cancelar</Button>
+            <Button type="button" disabled={saving} onClick={handleDeleteOrder} className="bg-red-500 hover:bg-red-600 text-white">
+              {saving ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

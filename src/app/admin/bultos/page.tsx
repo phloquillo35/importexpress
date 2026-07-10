@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Ship, Plus, Search, Package, Eye } from "lucide-react"
+import { Ship, Plus, Search, Package, Eye, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD, formatDate, formatARS } from "@/lib/utils"
 import {
@@ -95,6 +95,8 @@ export default function BultosPage() {
   const [saving, setSaving] = useState(false)
   const [viewBulk, setViewBulk] = useState<Bulk | null>(null)
   const [viewLoading, setViewLoading] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Bulk | null>(null)
 
   const fetchBulks = useCallback(async () => {
     setLoading(true)
@@ -206,6 +208,23 @@ export default function BultosPage() {
     finally { setSaving(false) }
   }
 
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/bultos/${deleteTarget.id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al eliminar bulto")
+      }
+      toast.success("Bulto eliminado")
+      setDeleteDialogOpen(false)
+      setDeleteTarget(null)
+      fetchBulks()
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al eliminar bulto") }
+    finally { setSaving(false) }
+  }
+
   async function openView(bulk: Bulk) {
     setViewBulk(bulk)
     setViewLoading(true)
@@ -290,6 +309,9 @@ export default function BultosPage() {
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => openEdit(b)} className="text-muted-foreground hover:text-[#22C55E]">
                           Editar
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => { setDeleteTarget(b); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -498,6 +520,29 @@ export default function BultosPage() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={(o) => { if (!o) { setDeleteDialogOpen(false); setDeleteTarget(null) } }}>
+        <DialogContent className="bg-card text-foreground max-w-sm">
+          <DialogHeader><DialogTitle>Eliminar bulto</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            ¿Eliminar este bulto? Los productos se desvincularán y volverán a estado pendiente.
+          </p>
+          {deleteTarget && (
+            <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 space-y-1">
+              <p><span className="text-foreground">Tipo:</span> {deleteTarget.type === "grande" ? "Grande" : "Chico"}</p>
+              <p><span className="text-foreground">Courier:</span> {deleteTarget.courier === "buspack" ? "Buspack" : "Correo Argentino"}</p>
+              {deleteTarget.trackingCode && <p><span className="text-foreground">Tracking:</span> {deleteTarget.trackingCode}</p>}
+              <p><span className="text-foreground">Productos:</span> {deleteTarget.orderItems?.length || 0}</p>
+            </div>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => { setDeleteDialogOpen(false); setDeleteTarget(null) }} className="text-muted-foreground">Cancelar</Button>
+            <Button type="button" disabled={saving} onClick={handleDelete} className="bg-red-500 hover:bg-red-600 text-white">
+              {saving ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

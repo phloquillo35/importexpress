@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  turbopack: {
+    ignoreIssue: [
+      {
+        path: "**/src/app/api/uploads/**",
+        title: "Encountered unexpected file in NFT list",
+      },
+    ],
+  },
   async headers() {
     return [
       {
