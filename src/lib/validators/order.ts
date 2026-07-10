@@ -4,7 +4,7 @@ export const createOrderSchema = z.object({
   clientName: z.string().min(1),
   clientSurname: z.string().optional(),
   clientPhone: z.string().optional(),
-  clientEmail: z.string().email().optional(),
+  clientEmail: z.string().optional(),
   storeName: z.string().optional(),
   clientContact: z.string().optional(),
   items: z.array(z.object({
@@ -23,7 +23,7 @@ export const updateOrderSchema = z.object({
   clientName: z.string().optional(),
   clientSurname: z.string().optional(),
   clientPhone: z.string().optional(),
-  clientEmail: z.string().email().optional(),
+  clientEmail: z.string().optional(),
   storeName: z.string().optional(),
   clientContact: z.string().optional(),
 })

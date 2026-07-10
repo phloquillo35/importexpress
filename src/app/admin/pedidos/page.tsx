@@ -172,8 +172,10 @@ export default function PedidosPage() {
     const existing = cart.find(c => c.productId === product.id)
     if (existing) {
       setCart(cart.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c))
+      toast.success(`${product.name} — cantidad: ${existing.quantity + 1}`)
     } else {
       setCart([...cart, { productId: product.id, name: product.name, quantity: 1, priceUSD: product.priceUSD }])
+      toast.success(`${product.name} agregado`)
     }
   }
 
