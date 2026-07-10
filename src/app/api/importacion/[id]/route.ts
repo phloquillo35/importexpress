@@ -91,10 +91,47 @@ export async function DELETE(
     const existing = await prisma.bulk.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
 
+    const deletedItems = await prisma.orderItem.findMany({
+      where: { bulkId: id },
+      select: { orderId: true },
+      distinct: ["orderId"],
+    })
+
     await prisma.orderItem.updateMany({
       where: { bulkId: id },
       data: { bulkId: null, trackingCode: null, shippingStatus: "pending", bulkType: null },
     })
+
+    const statusPriority: Record<string, number> = {
+      demorado: 0,
+      cancelado: 1,
+      pending: 2,
+      en_camino: 3,
+      llego: 4,
+      entregado: 5,
+    }
+
+    for (const { orderId } of deletedItems) {
+      const items = await prisma.orderItem.findMany({
+        where: { orderId },
+        select: { shippingStatus: true },
+      })
+
+      let computed = "entregado"
+      let minPrio = statusPriority[computed]
+      for (const item of items) {
+        const prio = statusPriority[item.shippingStatus] ?? 99
+        if (prio < minPrio) {
+          minPrio = prio
+          computed = item.shippingStatus
+        }
+      }
+
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { status: computed },
+      })
+    }
 
     await prisma.bulk.delete({ where: { id } })
     return Response.json({ success: true })

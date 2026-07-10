@@ -401,30 +401,30 @@ export default function PedidosPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-center">
-                            {getItemStatusBadge(item.shippingStatus)}
-                          </TableCell>
-
-                          {isFirst ? (
-                            <TableCell className="text-right">
-                              <div className="flex items-center gap-1">
-                                <Badge className={`${cfg.className} border-0 text-[10px] mr-1`}>
+                            {isFirst ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <Badge className={`${cfg.className} border-0 text-[10px]`}>
                                   {cfg.label}
                                 </Badge>
                                 <Select onValueChange={(v: any) => { updateStatus(o.id, v) }}>
                                   <SelectTrigger className="w-24 h-7 text-xs bg-muted border-border text-foreground">
-                                <SelectValue placeholder="Cambiar">{(value) => !value ? "Cambiar" : statusConfig[value]?.label || value}</SelectValue>
-                              </SelectTrigger>
-                              <SelectContent className=" bg-card text-foreground">
-                                {Object.entries(statusConfig).map(([k, v]) => (
-                                  <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
-                                ))}
-                              </SelectContent>
+                                    <SelectValue placeholder="Cambiar">{(value) => !value ? "Cambiar" : statusConfig[value]?.label || value}</SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-card text-foreground">
+                                    {Object.entries(statusConfig).map(([k, v]) => (
+                                      <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
                                 </Select>
                               </div>
-                            </TableCell>
-                          ) : (
-                            <TableCell className="text-right" />
-                          )}
+                            ) : (
+                              <Badge className={`${cfg.className} border-0 text-[10px]`}>
+                                {cfg.label}
+                              </Badge>
+                            )}
+                          </TableCell>
+
+                          <TableCell className="text-right" />
                         </TableRow>
                       )
                     })}

@@ -58,7 +58,13 @@ export async function PUT(
     if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
 
     const data: Record<string, unknown> = {}
-    if (body.status) data.status = body.status
+    if (body.status) {
+      data.status = body.status
+      await prisma.orderItem.updateMany({
+        where: { orderId: id },
+        data: { shippingStatus: body.status },
+      })
+    }
     if (body.notes !== undefined) data.notes = body.notes
     if (body.clientName) data.clientName = body.clientName
     if (body.clientSurname !== undefined) data.clientSurname = body.clientSurname
