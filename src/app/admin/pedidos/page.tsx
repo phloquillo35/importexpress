@@ -313,14 +313,13 @@ export default function PedidosPage() {
               <TableHead className="text-muted-foreground text-right">Final USD</TableHead>
               <TableHead className="text-muted-foreground text-center">Tracking</TableHead>
               <TableHead className="text-muted-foreground text-center">Estado</TableHead>
-              <TableHead className="text-muted-foreground text-right">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
                 const cfg = statusConfig[o.status] || statusConfig.pending
@@ -423,13 +422,11 @@ export default function PedidosPage() {
                               </Badge>
                             )}
                           </TableCell>
-
-                          <TableCell className="text-right" />
                         </TableRow>
                       )
                     })}
                     <TableRow className="border-border hover:bg-transparent">
-                      <TableCell colSpan={14} className="py-1 px-0">
+                      <TableCell colSpan={13} className="py-1 px-0">
                         <div className="h-px bg-border/50" />
                       </TableCell>
                     </TableRow>
