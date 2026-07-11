@@ -161,7 +161,9 @@ export default function BultosPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Error al crear bulto")
+        console.error("[BULTO CREATE] error response", err)
+        const msg = err.details ? `${err.error}: ${err.details.map((d: {path: string[], message: string}) => `${d.path.join(".")} ${d.message}`).join(", ")}` : err.error
+        throw new Error(msg || "Error al crear bulto")
       }
       toast.success("Bulto creado")
       setDialogOpen(false)
@@ -198,7 +200,8 @@ export default function BultosPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Error al actualizar bulto")
+        const msg = err.details ? `${err.error}: ${err.details.map((d: {path: string[], message: string}) => `${d.path.join(".")} ${d.message}`).join(", ")}` : err.error
+        throw new Error(msg || "Error al actualizar bulto")
       }
       toast.success("Bulto actualizado")
       setEditDialogOpen(false)
@@ -256,10 +259,10 @@ export default function BultosPage() {
       </div>
 
       <div className="flex gap-2">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v || "")}>
-          <SelectTrigger className="w-40 bg-muted border-border text-foreground">
-            <SelectValue placeholder="Filtrar estado">{(value) => !value ? "Filtrar estado" : statusConfig[value]?.label || value}</SelectValue>
-          </SelectTrigger>
+                        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v || "")}>
+                          <SelectTrigger className="w-40 bg-muted border-border text-foreground">
+                            <SelectValue placeholder="Filtrar estado">{statusFilter ? (statusConfig[statusFilter]?.label || statusFilter) : "Filtrar estado"}</SelectValue>
+                          </SelectTrigger>
           <SelectContent className=" bg-card text-foreground">
             <SelectItem value="all">Todos</SelectItem>
             {Object.entries(statusConfig).map(([k, v]) => (
@@ -331,9 +334,9 @@ export default function BultosPage() {
               <div className="space-y-2">
                 <Label>Courier</Label>
                 <Select value={form.courier} onValueChange={(v) => { if (v) setForm({ ...form, courier: v, type: v === "buspack" ? "grande" : "chico" }) }}>
-                  <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue>{(value) => !value ? "Seleccionar" : value === "buspack" ? "Buspack" : "Correo Argentino"}</SelectValue>
-                  </SelectTrigger>
+                                  <SelectTrigger className="bg-muted border-border text-foreground">
+                                    <SelectValue placeholder="Seleccionar">{form.courier === "buspack" ? "Buspack" : "Correo Argentino"}</SelectValue>
+                                  </SelectTrigger>
                   <SelectContent className=" bg-card text-foreground">
                     <SelectItem value="buspack">Buspack</SelectItem>
                     <SelectItem value="correo_argentino">Correo Argentino</SelectItem>
@@ -408,9 +411,9 @@ export default function BultosPage() {
               <div className="space-y-2">
                 <Label>Estado</Label>
                 <Select value={editForm.status} onValueChange={(v) => { if (v) setEditForm({ ...editForm, status: v }) }}>
-                  <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue>{(value) => !value ? "Seleccionar" : statusConfig[value]?.label || value}</SelectValue>
-                  </SelectTrigger>
+                                  <SelectTrigger className="bg-muted border-border text-foreground">
+                                    <SelectValue placeholder="Seleccionar">{editForm.status ? (statusConfig[editForm.status]?.label || editForm.status) : "Seleccionar"}</SelectValue>
+                                  </SelectTrigger>
                   <SelectContent className=" bg-card text-foreground">
                     {Object.entries(statusConfig).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v.label}</SelectItem>
