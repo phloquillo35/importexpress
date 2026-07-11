@@ -167,9 +167,9 @@ export default function PedidosPage() {
   }, [])
 
   const statusPriority: Record<string, number> = {
-    demorado: 0,
+    pending: 0,
     en_camino: 1,
-    pending: 2,
+    demorado: 2,
     llego: 3,
     entregado: 4,
     cancelado: 5,
