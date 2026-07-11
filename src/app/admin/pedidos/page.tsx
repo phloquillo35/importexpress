@@ -102,6 +102,7 @@ interface Order {
   clientContact: string
   paymentStatus: string
   amountPaidUSD: number
+  amountPaidARS: number | null
   totalUSD: number
   totalARS: number | null
   status: string
@@ -160,6 +161,7 @@ export default function PedidosPage() {
   const [productDetail, setProductDetail] = useState<{ item: OrderItem; order: Order } | null>(null)
   const [editPaymentStatus, setEditPaymentStatus] = useState("pending")
   const [editAmount, setEditAmount] = useState(0)
+  const [editAmountARS, setEditAmountARS] = useState(0)
   const [savingPay, setSavingPay] = useState(false)
 
   const fetchOrders = useCallback(async () => {
@@ -178,6 +180,7 @@ export default function PedidosPage() {
     if (productDetail) {
       setEditPaymentStatus(productDetail.order.paymentStatus)
       setEditAmount(productDetail.order.amountPaidUSD)
+      setEditAmountARS(productDetail.order.amountPaidARS ?? 0)
     }
   }, [productDetail])
 
@@ -191,6 +194,7 @@ export default function PedidosPage() {
         body: JSON.stringify({
           paymentStatus: editPaymentStatus,
           amountPaidUSD: editAmount,
+          amountPaidARS: editAmountARS || null,
         }),
       })
       if (!res.ok) throw new Error("Error al guardar pago")
@@ -401,7 +405,11 @@ export default function PedidosPage() {
                 const pricing = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
                 const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.pending
                 return (
-                  <TableRow key={item.id} className="border-border hover:bg-muted">
+                  <TableRow
+                    key={item.id}
+                    className="border-border hover:bg-muted cursor-pointer"
+                    onClick={() => setProductDetail({ item, order })}
+                  >
                     <TableCell className="text-center text-xs text-muted-foreground font-mono">
                       #{order.internalNumber}
                     </TableCell>
@@ -414,10 +422,7 @@ export default function PedidosPage() {
                     <TableCell className="text-muted-foreground text-sm">
                       {order.clientPhone || order.clientContact}
                     </TableCell>
-                    <TableCell
-                      className="text-foreground text-sm cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => setProductDetail({ item, order })}
-                    >
+                    <TableCell className="text-foreground text-sm">
                       {item.product.name}
                       <span className="text-muted-foreground ml-1">×{item.quantity}</span>
                     </TableCell>
@@ -453,7 +458,7 @@ export default function PedidosPage() {
                       {getItemStatusBadge(item.shippingStatus)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => { setDeleteTarget(order); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setDeleteTarget(order); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
@@ -522,7 +527,7 @@ export default function PedidosPage() {
                 <div className="border-t border-border pt-4 space-y-3">
                   <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
                   <div className="flex items-end gap-3">
-                    <div className="flex-1 space-y-1.5">
+                    <div className="w-36 space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Estado</Label>
                       <Select value={editPaymentStatus} onValueChange={(v) => v && setEditPaymentStatus(v)}>
                         <SelectTrigger className="bg-muted border-border text-foreground">
@@ -543,6 +548,17 @@ export default function PedidosPage() {
                         step={0.01}
                         value={editAmount}
                         onChange={(e) => setEditAmount(Number(e.target.value))}
+                        className="bg-muted border-border text-foreground"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Monto ARS</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={100}
+                        value={editAmountARS}
+                        onChange={(e) => setEditAmountARS(Number(e.target.value))}
                         className="bg-muted border-border text-foreground"
                       />
                     </div>

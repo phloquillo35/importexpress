@@ -89,6 +89,7 @@ model Order {
   clientContact   String
   paymentStatus   String   @default("pending")
   amountPaidUSD   Float    @default(0)
+  amountPaidARS   Float?
   storeId    String?    @map("distributorId")
   store     Store?     @relation(fields: [storeId], references: [id])
   items     OrderItem[]

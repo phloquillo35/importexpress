@@ -71,6 +71,7 @@ export async function PUT(
     if (body.clientContact !== undefined) data.clientContact = body.clientContact
     if (body.paymentStatus !== undefined) data.paymentStatus = body.paymentStatus
     if (body.amountPaidUSD !== undefined) data.amountPaidUSD = body.amountPaidUSD
+    if (body.amountPaidARS !== undefined) data.amountPaidARS = body.amountPaidARS
 
     const updated = await prisma.order.update({
       where: { id },
@@ -105,6 +106,7 @@ export async function PUT(
             type: "income",
             concept,
             amountUSD: body.amountPaidUSD,
+            amountARS: body.amountPaidARS || null,
             date: new Date(),
           },
         })
