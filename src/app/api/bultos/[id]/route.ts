@@ -49,6 +49,7 @@ export async function PUT(
     const body = await request.json()
     const parsed = updateBulkSchema.safeParse(body)
     if (!parsed.success) {
+      console.error("[BULK PUT] validation error", JSON.stringify(parsed.error.issues))
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
