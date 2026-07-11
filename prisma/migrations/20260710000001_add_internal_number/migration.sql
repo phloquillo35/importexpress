@@ -7,8 +7,17 @@ ALTER TABLE "Order" ADD COLUMN "internalNumber" INTEGER;
 ALTER TABLE "Bulk" ADD COLUMN "internalNumber" INTEGER;
 
 -- Backfill existing rows
-UPDATE "Order" SET "internalNumber" = nextval('"Order_internalNumber_seq"') ORDER BY "createdAt";
-UPDATE "Bulk" SET "internalNumber" = nextval('"Bulk_internalNumber_seq"') ORDER BY "date";
+UPDATE "Order" SET "internalNumber" = s.num FROM (
+  SELECT id, nextval('"Order_internalNumber_seq"') as num
+  FROM "Order"
+  ORDER BY "createdAt"
+) s WHERE "Order".id = s.id;
+
+UPDATE "Bulk" SET "internalNumber" = s.num FROM (
+  SELECT id, nextval('"Bulk_internalNumber_seq"') as num
+  FROM "Bulk"
+  ORDER BY "date"
+) s WHERE "Bulk".id = s.id;
 
 -- Make required + set default
 ALTER TABLE "Order" ALTER COLUMN "internalNumber" SET NOT NULL;

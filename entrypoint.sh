@@ -38,6 +38,9 @@ else
   rm -f /data/prisma/.migrated-to-pg
 fi
 
+echo "→ Limpiando migrations fallidas previas..."
+./node_modules/.bin/prisma migrate resolve --rolled-back 20260710000001_add_internal_number 2>&1 || true
+
 echo "→ Aplicando migraciones pendientes..."
 ./node_modules/.bin/prisma migrate deploy 2>&1 || echo "⚠️ Error en migrate deploy, continuando..."
 
