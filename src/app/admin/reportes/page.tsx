@@ -102,14 +102,14 @@ export default function ReportesPage() {
         )}
       </div>
 
-      <div className="bg-amber-900/20 border border-amber-800/40 rounded-xl p-4">
+      <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-300/80">
-            <p className="font-medium text-amber-300 mb-1">Configuración de email requerida</p>
+          <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-muted-foreground">
+            <p className="font-medium text-foreground mb-1">Configuración de email requerida</p>
             <p>
               Para que funcione el envío de reportes, primero configurá los datos SMTP en
-              {" "}<a href="/admin/configuracion" className="text-amber-300 underline hover:text-amber-200 inline-flex items-center gap-1">
+              {" "}<a href="/admin/configuracion" className="text-primary underline hover:text-primary/80 inline-flex items-center gap-1">
                 <Settings className="w-3.5 h-3.5" /> Admin → Configuración
               </a>.
             </p>
