@@ -206,6 +206,7 @@ export default function PedidosPage() {
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
 
   async function handleCreateOrder() {
+    alert("DEBUG 1: handleCreateOrder se ejecuto")
     console.log("[CREATE ORDER] called", { clientName: form.clientName, cartLen: cart.length, cart, totalUSD })
     if (!form.clientName || cart.length === 0) {
       toast.error("Completá nombre del cliente y agregá productos")
@@ -224,12 +225,14 @@ export default function PedidosPage() {
         items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
         totalUSD,
       })
+      alert("DEBUG 2: body preparado, voy a hacer fetch")
       console.log("[CREATE ORDER] sending", body)
       const res = await fetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body,
       })
+      alert(`DEBUG 3: fetch respondio status=${res.status}`)
       console.log("[CREATE ORDER] response", { status: res.status, ok: res.ok })
       if (!res.ok) {
         const text = await res.text()
@@ -238,6 +241,7 @@ export default function PedidosPage() {
         try { errData = JSON.parse(text) } catch {}
         throw new Error(String(errData.error || `Error ${res.status}: ${text.slice(0, 200)}`))
       }
+      alert("DEBUG 4: pedido creado exitosamente")
       toast.success("Pedido creado")
       setDialogOpen(false)
       setCart([])
