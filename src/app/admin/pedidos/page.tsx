@@ -298,7 +298,7 @@ export default function PedidosPage() {
       <div className="flex gap-2">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
           <SelectTrigger className="w-40 bg-muted border-border text-foreground">
-            <SelectValue placeholder="Filtrar estado">{(value) => !value ? "Filtrar estado" : value === "all" ? "Todos" : statusConfig[value]?.label || value}</SelectValue>
+                          <SelectValue placeholder="Filtrar estado">{!statusFilter || statusFilter === "all" ? "Filtrar estado" : statusConfig[statusFilter]?.label || statusFilter}</SelectValue>
           </SelectTrigger>
           <SelectContent className=" bg-card text-foreground">
             <SelectItem value="all">Todos</SelectItem>
@@ -336,7 +336,6 @@ export default function PedidosPage() {
               <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
-                const cfg = statusConfig[o.status] || statusConfig.pending
                 const isExpanded = expandedOrders.has(o.id)
                 const hasMultipleItems = o.items.length > 1
 
@@ -408,11 +407,7 @@ export default function PedidosPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-center">
-                            {isFirst ? (
-                              <Badge className={`${cfg.className} border-0 text-[10px]`}>
-                                {cfg.label}
-                              </Badge>
-                            ) : null}
+                            {getItemStatusBadge(item.shippingStatus)}
                           </TableCell>
                           <TableCell className="text-right">
                             {isFirst ? (
