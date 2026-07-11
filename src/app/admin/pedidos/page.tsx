@@ -207,29 +207,37 @@ export default function PedidosPage() {
 
   async function handleCreateOrder(e: React.FormEvent) {
     e.preventDefault()
+    console.log("[CREATE ORDER] called", { clientName: form.clientName, cartLen: cart.length, cart, totalUSD })
     if (!form.clientName || cart.length === 0) {
       toast.error("Completá nombre del cliente y agregá productos")
+      console.log("[CREATE ORDER] validation failed", { clientName: form.clientName, cartLen: cart.length })
       return
     }
     setSaving(true)
     try {
+      const body = JSON.stringify({
+        clientName: form.clientName,
+        clientSurname: form.clientSurname,
+        clientPhone: form.clientPhone,
+        clientEmail: form.clientEmail,
+        storeId: form.storeId || null,
+        clientContact: form.clientContact,
+        items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
+        totalUSD,
+      })
+      console.log("[CREATE ORDER] sending", body)
       const res = await fetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientName: form.clientName,
-          clientSurname: form.clientSurname,
-          clientPhone: form.clientPhone,
-          clientEmail: form.clientEmail,
-          storeId: form.storeId || null,
-          clientContact: form.clientContact,
-          items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
-          totalUSD,
-        }),
+        body,
       })
+      console.log("[CREATE ORDER] response", { status: res.status, ok: res.ok })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Error al crear pedido")
+        const text = await res.text()
+        console.error("[CREATE ORDER] error response", text)
+        let errData: Record<string, unknown> = {}
+        try { errData = JSON.parse(text) } catch {}
+        throw new Error(String(errData.error || `Error ${res.status}: ${text.slice(0, 200)}`))
       }
       toast.success("Pedido creado")
       setDialogOpen(false)
@@ -237,6 +245,7 @@ export default function PedidosPage() {
       setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
       fetchOrders()
     } catch (err) {
+      console.error("[CREATE ORDER] catch", err)
       toast.error(err instanceof Error ? err.message : "Error al crear pedido")
     } finally { setSaving(false) }
   }
