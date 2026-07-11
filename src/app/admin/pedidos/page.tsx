@@ -185,7 +185,11 @@ export default function PedidosPage() {
     const filtered = statusFilter
       ? items.filter(({ item }) => item.shippingStatus === statusFilter)
       : items
-    filtered.sort((a, b) => (statusPriority[a.item.shippingStatus] ?? 99) - (statusPriority[b.item.shippingStatus] ?? 99))
+    filtered.sort((a, b) => {
+      const s = (statusPriority[a.item.shippingStatus] ?? 99) - (statusPriority[b.item.shippingStatus] ?? 99)
+      if (s !== 0) return s
+      return a.order.internalNumber - b.order.internalNumber
+    })
     return filtered
   }, [orders, statusFilter])
 
