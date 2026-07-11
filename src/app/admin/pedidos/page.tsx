@@ -31,6 +31,12 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 
+const courierLabel: Record<string, string> = {
+  buspack: "📦 Buspack",
+  correo_argentino: "📬 Correo Arg.",
+  andreani: "📭 Andreani",
+}
+
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400" },
   en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400" },
@@ -439,7 +445,7 @@ export default function PedidosPage() {
                     </div>
                     <div className="flex items-center gap-2 mt-1.5 text-xs">
                       <span className="text-muted-foreground">
-                        {item.bulkType === "grande" ? "📦 Buspack" : item.bulkType === "chico" ? "📬 Correo Arg." : "—"}
+                        {item.bulk ? courierLabel[item.bulk.courier] || item.bulk.courier : "—"}
                       </span>
                       {item.trackingCode && (
                         <span className="text-blue-400">📍 {item.trackingCode}</span>

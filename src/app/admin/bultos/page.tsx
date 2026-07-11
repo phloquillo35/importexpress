@@ -30,6 +30,12 @@ import {
 } from "@/components/ui/dialog"
 
 
+const courierLabel: Record<string, string> = {
+  buspack: "Buspack",
+  correo_argentino: "Correo Argentino",
+  andreani: "Andreani",
+}
+
 const statusConfig: Record<string, { label: string; className: string; dot: string }> = {
   pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400", dot: "bg-yellow-400" },
   en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400", dot: "bg-blue-400" },
@@ -301,7 +307,7 @@ export default function BultosPage() {
                     <TableCell className="text-center text-xs text-muted-foreground font-mono">#{b.internalNumber}</TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(b.date)}</TableCell>
                     <TableCell className="text-muted-foreground capitalize">{b.type === "grande" ? "Grande" : "Chico"}</TableCell>
-                    <TableCell className="text-muted-foreground capitalize">{b.courier === "buspack" ? "Buspack" : "Correo Argentino"}</TableCell>
+                    <TableCell className="text-muted-foreground capitalize">{courierLabel[b.courier] || b.courier}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{b.orderItems?.length || 0}</TableCell>
                     <TableCell className="text-right text-muted-foreground text-xs">{b.trackingCode || "—"}</TableCell>
                     <TableCell className="text-right text-foreground">
@@ -336,19 +342,28 @@ export default function BultosPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Courier</Label>
-                <Select value={form.courier} onValueChange={(v) => { if (v) setForm({ ...form, courier: v, type: v === "buspack" ? "grande" : "chico" }) }}>
-                                  <SelectTrigger className="bg-muted border-border text-foreground">
-                                    <SelectValue placeholder="Seleccionar">{form.courier === "buspack" ? "Buspack" : "Correo Argentino"}</SelectValue>
-                                  </SelectTrigger>
+                <Select value={form.courier} onValueChange={(v) => { if (v) setForm({ ...form, courier: v }) }}>
+                  <SelectTrigger className="bg-muted border-border text-foreground">
+                    <SelectValue placeholder="Seleccionar">{form.courier ? courierLabel[form.courier] : "Seleccionar"}</SelectValue>
+                  </SelectTrigger>
                   <SelectContent className=" bg-card text-foreground">
                     <SelectItem value="buspack">Buspack</SelectItem>
                     <SelectItem value="correo_argentino">Correo Argentino</SelectItem>
+                    <SelectItem value="andreani">Andreani</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Tipo</Label>
-                <Input value={form.type === "grande" ? "Grande" : "Chico"} disabled className="bg-muted border-border text-foreground/70" />
+                <Select value={form.type} onValueChange={(v) => { if (v) setForm({ ...form, type: v }) }}>
+                  <SelectTrigger className="bg-muted border-border text-foreground">
+                    <SelectValue placeholder="Seleccionar">{form.type === "grande" ? "Grande" : "Chico"}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className=" bg-card text-foreground">
+                    <SelectItem value="grande">Grande</SelectItem>
+                    <SelectItem value="chico">Chico</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-2">
@@ -390,7 +405,7 @@ export default function BultosPage() {
             <form onSubmit={handleEditSave} className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><p className="text-muted-foreground">Tipo</p><p className="text-foreground capitalize">{selectedBulk.type === "grande" ? "Grande" : "Chico"}</p></div>
-                <div><p className="text-muted-foreground">Courier</p><p className="text-foreground capitalize">{selectedBulk.courier === "buspack" ? "Buspack" : "Correo Argentino"}</p></div>
+                <div><p className="text-muted-foreground">Courier</p><p className="text-foreground capitalize">{courierLabel[selectedBulk.courier] || selectedBulk.courier}</p></div>
               </div>
               <div className="space-y-2">
                 <Label>Código de seguimiento</Label>
@@ -452,7 +467,7 @@ export default function BultosPage() {
       <Dialog open={!!viewBulk} onOpenChange={(o) => { if (!o) setViewBulk(null) }}>
         <DialogContent className="bg-card text-foreground max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Bulto — {viewBulk?.type === "grande" ? "Grande" : "Chico"} — {viewBulk?.courier === "buspack" ? "Buspack" : "Correo Argentino"}</DialogTitle>
+            <DialogTitle>Bulto — {viewBulk?.type === "grande" ? "Grande" : "Chico"} — {courierLabel[viewBulk?.courier || ""] || viewBulk?.courier}</DialogTitle>
           </DialogHeader>
           {viewLoading ? (
             <div className="text-center text-muted-foreground py-12">Cargando bulto...</div>
@@ -542,7 +557,7 @@ export default function BultosPage() {
           {deleteTarget && (
             <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 space-y-1">
               <p><span className="text-foreground">Tipo:</span> {deleteTarget.type === "grande" ? "Grande" : "Chico"}</p>
-              <p><span className="text-foreground">Courier:</span> {deleteTarget.courier === "buspack" ? "Buspack" : "Correo Argentino"}</p>
+              <p><span className="text-foreground">Courier:</span> {courierLabel[deleteTarget.courier] || deleteTarget.courier}</p>
               {deleteTarget.trackingCode && <p><span className="text-foreground">Tracking:</span> {deleteTarget.trackingCode}</p>}
               <p><span className="text-foreground">Productos:</span> {deleteTarget.orderItems?.length || 0}</p>
             </div>

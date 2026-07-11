@@ -2,7 +2,7 @@ import { z } from "zod"
 
 export const createBulkSchema = z.object({
   type: z.enum(["grande", "chico"]).optional(),
-  courier: z.enum(["buspack", "correo_argentino"]).optional(),
+  courier: z.enum(["buspack", "correo_argentino", "andreani"]).optional(),
   trackingCode: z.string().optional().nullable(),
   totalCostUSD: z.number().optional().nullable(),
   totalCostARS: z.number().optional().nullable(),
