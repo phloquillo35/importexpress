@@ -66,6 +66,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const parsed = createOrderSchema.safeParse(body)
     if (!parsed.success) {
+      console.error("[PEDIDO POST] validation error", JSON.stringify(parsed.error.issues))
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 

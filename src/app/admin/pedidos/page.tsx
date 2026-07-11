@@ -206,7 +206,6 @@ export default function PedidosPage() {
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
 
   async function handleCreateOrder() {
-    alert("DEBUG 1: handleCreateOrder se ejecuto")
     console.log("[CREATE ORDER] called", { clientName: form.clientName, cartLen: cart.length, cart, totalUSD })
     if (!form.clientName || cart.length === 0) {
       toast.error("Completá nombre del cliente y agregá productos")
@@ -215,7 +214,7 @@ export default function PedidosPage() {
     }
     setSaving(true)
     try {
-      const body = JSON.stringify({
+      const bodyObj = {
         clientName: form.clientName,
         clientSurname: form.clientSurname,
         clientPhone: form.clientPhone,
@@ -224,24 +223,24 @@ export default function PedidosPage() {
         clientContact: form.clientContact,
         items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
         totalUSD,
-      })
-      alert("DEBUG 2: body preparado, voy a hacer fetch")
-      console.log("[CREATE ORDER] sending", body)
+      }
+      const body = JSON.stringify(bodyObj)
+      console.log("[CREATE ORDER] sending body keys types", Object.fromEntries(Object.entries(bodyObj).map(([k, v]) => [k, typeof v])))
+      console.log("[CREATE ORDER] items types", bodyObj.items.map(i => ({ productId: typeof i.productId, quantity: typeof i.quantity, priceUSD: typeof i.priceUSD })))
       const res = await fetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body,
       })
-      alert(`DEBUG 3: fetch respondio status=${res.status}`)
       console.log("[CREATE ORDER] response", { status: res.status, ok: res.ok })
+      const text = await res.text()
+      console.log("[CREATE ORDER] response body", text)
       if (!res.ok) {
-        const text = await res.text()
-        console.error("[CREATE ORDER] error response", text)
         let errData: Record<string, unknown> = {}
         try { errData = JSON.parse(text) } catch {}
-        throw new Error(String(errData.error || `Error ${res.status}: ${text.slice(0, 200)}`))
+        console.error("[CREATE ORDER] validation error", errData)
+        throw new Error(String(errData.error || `Error ${res.status}: ${text.slice(0, 300)}`))
       }
-      alert("DEBUG 4: pedido creado exitosamente")
       toast.success("Pedido creado")
       setDialogOpen(false)
       setCart([])
