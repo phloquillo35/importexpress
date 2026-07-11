@@ -304,7 +304,7 @@ function KpiCard({ icon, label, value, color, bg }: {
   bg: string
 }) {
   return (
-    <div className="bg-white border border-border rounded-xl p-4 lg:p-5">
+    <div className="bg-card border border-border rounded-xl p-4 lg:p-5">
       <div className="flex items-center gap-3">
         <div className={`p-2.5 rounded-lg ${bg}`}>
           <div className={color}>{icon}</div>
