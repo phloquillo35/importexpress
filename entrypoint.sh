@@ -26,16 +26,20 @@ if echo "$DATABASE_URL" | grep -q "^file:"; then
         console.log('⚠️ No se pudo optimizar:', e.message);
       }
       " 2>&1 || true
+
+      echo "→ Migrando datos de SQLite a PostgreSQL si corresponde..."
+      rm -f /data/prisma/.migrated-to-pg
+      node /app/scripts/migrate-to-pg.mjs 2>&1 || true
     fi
   fi
+else
+  echo "→ Limpiando datos SQLite stale (PostgreSQL detectado)..."
+  rm -f /data/prisma/dev.db
+  rm -f /data/prisma/.migrated-to-pg
 fi
 
 echo "→ Aplicando migraciones pendientes..."
 ./node_modules/.bin/prisma migrate deploy 2>&1 || echo "⚠️ Error en migrate deploy, continuando..."
-
-echo "→ Migrando datos de SQLite a PostgreSQL si corresponde..."
-rm -f /data/prisma/.migrated-to-pg
-node /app/scripts/migrate-to-pg.mjs 2>&1 || true
 
 echo "→ Starting application..."
 export HOSTNAME=0.0.0.0
