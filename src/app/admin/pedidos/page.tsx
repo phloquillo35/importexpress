@@ -46,6 +46,12 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400" },
 }
 
+const paymentConfig: Record<string, { label: string; className: string }> = {
+  pending: { label: "Debe", className: "text-orange-400" },
+  deposit: { label: "Seña", className: "text-yellow-400" },
+  paid: { label: "Pagado", className: "text-[#22C55E]" },
+}
+
 interface OrderItem {
   id: string
   quantity: number
@@ -94,6 +100,8 @@ interface Order {
   clientEmail: string
   store: StoreType | null
   clientContact: string
+  paymentStatus: string
+  amountPaidUSD: number
   totalUSD: number
   totalARS: number | null
   status: string
@@ -139,7 +147,6 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [detailOrder, setDetailOrder] = useState<Order | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [searchProd, setSearchProd] = useState("")
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number }[]>([])
@@ -150,6 +157,10 @@ export default function PedidosPage() {
   const [usdtRate, setUsdtRate] = useState(1)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
+  const [productDetail, setProductDetail] = useState<{ item: OrderItem; order: Order } | null>(null)
+  const [editPaymentStatus, setEditPaymentStatus] = useState("pending")
+  const [editAmount, setEditAmount] = useState(0)
+  const [savingPay, setSavingPay] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -162,6 +173,34 @@ export default function PedidosPage() {
   }, [])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
+
+  useEffect(() => {
+    if (productDetail) {
+      setEditPaymentStatus(productDetail.order.paymentStatus)
+      setEditAmount(productDetail.order.amountPaidUSD)
+    }
+  }, [productDetail])
+
+  async function handleSavePayment() {
+    if (!productDetail) return
+    setSavingPay(true)
+    try {
+      const res = await fetch(`/api/pedidos/${productDetail.order.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentStatus: editPaymentStatus,
+          amountPaidUSD: editAmount,
+        }),
+      })
+      if (!res.ok) throw new Error("Error al guardar pago")
+      toast.success("Pago actualizado")
+      setProductDetail(null)
+      fetchOrders()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar pago")
+    } finally { setSavingPay(false) }
+  }
 
   useEffect(() => {
     fetch("/api/productos?limit=100").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
@@ -337,6 +376,7 @@ export default function PedidosPage() {
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground w-16 text-center">#</TableHead>
               <TableHead className="text-muted-foreground">Cliente</TableHead>
+              <TableHead className="text-muted-foreground">Fecha</TableHead>
               <TableHead className="text-muted-foreground">Contacto</TableHead>
               <TableHead className="text-muted-foreground">Producto</TableHead>
               <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
@@ -353,30 +393,31 @@ export default function PedidosPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={15} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : flatItems.length === 0 ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={15} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               flatItems.map(({ item, order }) => {
                 const pricing = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
+                const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.pending
                 return (
                   <TableRow key={item.id} className="border-border hover:bg-muted">
                     <TableCell className="text-center text-xs text-muted-foreground font-mono">
                       #{order.internalNumber}
                     </TableCell>
-                    <TableCell
-                      className="font-medium text-foreground cursor-pointer"
-                      onClick={() => setDetailOrder(order)}
-                    >
+                    <TableCell className={`font-medium cursor-default ${payCfg.className}`}>
                       {order.clientName} {order.clientSurname}
                     </TableCell>
-                    <TableCell
-                      className="text-muted-foreground text-sm cursor-pointer"
-                      onClick={() => setDetailOrder(order)}
-                    >
+                    <TableCell className="text-muted-foreground text-xs">
+                      {new Date(order.createdAt).toLocaleDateString("es-AR")}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
                       {order.clientPhone || order.clientContact}
                     </TableCell>
-                    <TableCell className="text-foreground text-sm">
+                    <TableCell
+                      className="text-foreground text-sm cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => setProductDetail({ item, order })}
+                    >
                       {item.product.name}
                       <span className="text-muted-foreground ml-1">×{item.quantity}</span>
                     </TableCell>
@@ -424,52 +465,108 @@ export default function PedidosPage() {
         </Table>
       </div>
 
-      <Dialog open={!!detailOrder} onOpenChange={(o) => { if (!o) setDetailOrder(null) }}>
-        <DialogContent className=" bg-card text-foreground max-w-lg">
-          <DialogHeader><DialogTitle>Detalle del pedido</DialogTitle></DialogHeader>
-          {detailOrder && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><p className="text-muted-foreground">Pedido</p><p className="text-foreground font-mono">#{detailOrder.internalNumber} — {detailOrder.clientName} {detailOrder.clientSurname}</p></div>
-                <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{detailOrder.clientPhone || "—"}</p></div>
-                <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{detailOrder.clientEmail || "—"}</p></div>
-                <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{detailOrder.store?.name || "—"}</p></div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Productos</p>
-                {detailOrder.items.map((item) => (
-                  <div key={item.id} className="border border-border rounded-lg p-3 mb-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
-                      <span className="text-foreground">{formatUSD(item.priceUSD * item.quantity)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1.5 text-xs">
-                      <span className="text-muted-foreground">
-                        {item.bulk ? courierLabel[item.bulk.courier] || item.bulk.courier : "—"}
-                      </span>
-                      {item.trackingCode && (
-                        <span className="text-blue-400">📍 {item.trackingCode}</span>
-                      )}
-                      {getItemStatusBadge(item.shippingStatus)}
-                    </div>
+      <Dialog open={!!productDetail} onOpenChange={(o) => { if (!o) setProductDetail(null) }}>
+        <DialogContent className="bg-card text-foreground max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Detalle del producto</DialogTitle></DialogHeader>
+          {productDetail && (() => {
+            const { item, order } = productDetail
+            const pricing = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
+            const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.pending
+
+            return (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-lg font-semibold text-foreground">
+                      #{order.internalNumber} — <span className={payCfg.className}>{order.clientName} {order.clientSurname}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString("es-AR", { dateStyle: "long" })}</p>
                   </div>
-                ))}
+                  <Badge className={`${(statusConfig[order.status] || statusConfig.pending).className} border-0`}>
+                    {(statusConfig[order.status] || statusConfig.pending).label}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{order.clientPhone || "—"}</p></div>
+                  <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{order.clientEmail || "—"}</p></div>
+                  <div><p className="text-muted-foreground">Contacto</p><p className="text-foreground">{order.clientContact || "—"}</p></div>
+                  <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{order.store?.name || "—"}</p></div>
+                </div>
+
+                <div className="border border-border rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-foreground">{item.product.name} × {item.quantity}</span>
+                    <span className="text-foreground">{formatUSD(item.priceUSD * item.quantity)}</span>
+                  </div>
+                  {item.bulk && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{courierLabel[item.bulk.courier] || item.bulk.courier}</span>
+                      {item.bulk.trackingCode && <span className="text-blue-400">📍 {item.bulk.trackingCode}</span>}
+                    </div>
+                  )}
+                  {item.bulkType && <p className="text-xs text-muted-foreground">Tipo bulto: {item.bulkType}</p>}
+                  {getItemStatusBadge(item.shippingStatus)}
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Costo USDT</span><span className="text-foreground">${pricing.costUSDT.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Logística (yoni)</span><span className="text-foreground">{item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Envío ARS</span><span className="text-foreground">${pricing.shippingCost.toLocaleString("es-AR")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal ARS</span><span className="text-foreground">${pricing.subtotalARS.toLocaleString("es-AR")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Ganancia ARS</span><span className="text-[#0071e3]">${pricing.profitARS.toLocaleString("es-AR")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Final ARS</span><span className="text-[#22C55E] font-medium">${pricing.finalPriceARS.toLocaleString("es-AR")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Final USD</span><span className="text-foreground">${pricing.finalPriceUSD.toFixed(2)}</span></div>
+                </div>
+
+                <div className="border-t border-border pt-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Estado</Label>
+                      <Select value={editPaymentStatus} onValueChange={(v) => v && setEditPaymentStatus(v)}>
+                        <SelectTrigger className="bg-muted border-border text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card text-foreground">
+                          <SelectItem value="pending">Debe</SelectItem>
+                          <SelectItem value="deposit">Seña</SelectItem>
+                          <SelectItem value="paid">Pagado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Monto USD</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(Number(e.target.value))}
+                        className="bg-muted border-border text-foreground"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      disabled={savingPay}
+                      onClick={handleSavePayment}
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    >
+                      {savingPay ? "Guardando..." : "Guardar"}
+                    </Button>
+                  </div>
+                </div>
+
+                {order.notes && (
+                  <div className="border-t border-border pt-3">
+                    <p className="text-xs text-muted-foreground mb-1">Notas</p>
+                    <p className="text-sm text-foreground">{order.notes}</p>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between border-t border-border pt-2">
-                <span className="font-medium text-foreground">Total</span>
-                <span className="font-bold text-[#F59E0B]">{formatUSD(detailOrder.totalUSD)}</span>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Estado del pedido</p>
-                <p><Badge className={`${(statusConfig[detailOrder.status] || statusConfig.pending).className} border-0`}>
-                  {(statusConfig[detailOrder.status] || statusConfig.pending).label}
-                </Badge></p>
-              </div>
-              {detailOrder.notes && (
-                <div><p className="text-sm text-muted-foreground">Notas</p><p className="text-muted-foreground">{detailOrder.notes}</p></div>
-              )}
-            </div>
-          )}
+            )
+          })()}
         </DialogContent>
       </Dialog>
 

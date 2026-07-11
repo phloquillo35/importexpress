@@ -13,6 +13,7 @@ async function getDashboardData(periodDays: number = 30) {
       recentTransactions,
       recentOrders,
       categories,
+      pendingOrders,
     ] = await Promise.all([
       prisma.product.count(),
       prisma.product.findMany({ select: { id: true, name: true, stock: true, minStock: true, slug: true } }),
@@ -20,6 +21,7 @@ async function getDashboardData(periodDays: number = 30) {
       prisma.transaction.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } }),
       prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
       prisma.category.findMany({ include: { _count: { select: { products: true } } } }),
+      prisma.order.findMany({ where: { paymentStatus: { not: "paid" } }, select: { totalUSD: true, amountPaidUSD: true } }),
     ])
 
     const incomeAgg = await prisma.transaction.aggregate({
@@ -34,6 +36,9 @@ async function getDashboardData(periodDays: number = 30) {
 
     const lowStockProducts = allProducts.filter((p) => p.stock <= p.minStock)
 
+    const pendingPaymentsCount = pendingOrders.length
+    const totalPendingUSD = pendingOrders.reduce((sum, o) => sum + Math.max(0, o.totalUSD - o.amountPaidUSD), 0)
+
     return {
       totalProducts,
       lowStockProducts,
@@ -47,6 +52,8 @@ async function getDashboardData(periodDays: number = 30) {
         name: c.name,
         count: c._count.products,
       })),
+      pendingPaymentsCount,
+      totalPendingUSD,
     }
   } catch {
     return {
@@ -59,6 +66,8 @@ async function getDashboardData(periodDays: number = 30) {
       expenseUSD: 0,
       recentTransactions: [],
       categories: [],
+      pendingPaymentsCount: 0,
+      totalPendingUSD: 0,
     }
   }
 }

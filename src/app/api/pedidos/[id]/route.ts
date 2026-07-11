@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { updateOrderSchema } from "@/lib/validators"
+import { genId } from "@/lib/utils"
 
 export async function GET(
   request: NextRequest,
@@ -68,6 +69,8 @@ export async function PUT(
     if (body.clientEmail !== undefined) data.clientEmail = body.clientEmail
     if (body.storeId !== undefined) data.storeId = body.storeId
     if (body.clientContact !== undefined) data.clientContact = body.clientContact
+    if (body.paymentStatus !== undefined) data.paymentStatus = body.paymentStatus
+    if (body.amountPaidUSD !== undefined) data.amountPaidUSD = body.amountPaidUSD
 
     const updated = await prisma.order.update({
       where: { id },
@@ -89,6 +92,24 @@ export async function PUT(
         },
       },
     })
+
+    if (body.paymentStatus && body.amountPaidUSD && body.amountPaidUSD > 0) {
+      const prevStatus = existing.paymentStatus
+      const prevAmount = existing.amountPaidUSD
+      const changed = body.paymentStatus !== prevStatus || body.amountPaidUSD !== prevAmount
+      if (changed) {
+        const concept = `Pago pedido #${existing.internalNumber} — ${existing.clientName}${body.paymentStatus === "deposit" ? " (seña)" : ""}`
+        await prisma.transaction.create({
+          data: {
+            id: genId(),
+            type: "income",
+            concept,
+            amountUSD: body.amountPaidUSD,
+            date: new Date(),
+          },
+        })
+      }
+    }
 
     return Response.json(updated)
   } catch (error) {

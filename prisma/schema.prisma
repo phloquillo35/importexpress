@@ -81,13 +81,15 @@ model Product {
 
 model Order {
   id            String      @id
-  internalNumber Int        @unique @default(autoincrement())
-  clientName    String
-  clientSurname String      @default("")
-  clientPhone   String      @default("")
-  clientEmail   String      @default("")
-  clientContact String
-  storeId   String?    @map("distributorId")
+  internalNumber  Int      @unique @default(autoincrement())
+  clientName      String
+  clientSurname   String   @default("")
+  clientPhone     String   @default("")
+  clientEmail     String   @default("")
+  clientContact   String
+  paymentStatus   String   @default("pending")
+  amountPaidUSD   Float    @default(0)
+  storeId    String?    @map("distributorId")
   store     Store?     @relation(fields: [storeId], references: [id])
   items     OrderItem[]
   totalUSD      Float

@@ -27,6 +27,8 @@ interface DashboardData {
   expenseUSD: number
   recentTransactions: { id: string; concept: string; amountUSD: number; type: string; date: Date }[]
   categories: { name: string; count: number }[]
+  pendingPaymentsCount: number
+  totalPendingUSD: number
 }
 
 const COLORS = ["#F59E0B", "#8B5CF6", "#22C55E", "#3B82F6", "#EF4444", "#EC4899", "#14B8A6", "#F97316"]
@@ -100,6 +102,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         <KpiCard icon={<AlertTriangle className="w-5 h-5" />} label="Stock Bajo" value={data.lowStockProducts.length} color="text-red-400" bg="bg-red-500/10" />
         <KpiCard icon={<DollarSign className="w-5 h-5" />} label="Ingresos del Período" value={formatUSD(data.incomeUSD)} color="text-[#22C55E]" bg="bg-[#0071e3]/10" />
         <KpiCard icon={<TrendingDown className="w-5 h-5" />} label="Egresos del Período" value={formatUSD(data.expenseUSD)} color="text-red-400" bg="bg-red-500/10" />
+        <KpiCard icon={<DollarSign className="w-5 h-5" />} label="Cuentas por cobrar" value={formatUSD(data.totalPendingUSD)} color="text-orange-400" bg="bg-orange-500/10" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

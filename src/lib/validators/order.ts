@@ -26,4 +26,6 @@ export const updateOrderSchema = z.object({
   clientEmail: z.string().optional(),
   storeName: z.string().optional(),
   clientContact: z.string().optional(),
+  paymentStatus: z.enum(["pending", "deposit", "paid"]).optional(),
+  amountPaidUSD: z.number().min(0).optional(),
 })
