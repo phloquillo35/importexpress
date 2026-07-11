@@ -10,11 +10,11 @@ export function genId(): string {
   return randomUUID()
 }
 
-export function formatUSD(price: number): string {
+export function formatUSD(price: number | null | undefined): string {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
     currency: "USD",
-  }).format(price)
+  }).format(price ?? 0)
 }
 
 export function formatARS(price: number): string {

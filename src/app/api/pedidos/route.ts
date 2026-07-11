@@ -114,7 +114,7 @@ export async function POST(request: Request) {
               id: genId(),
               productId: item.productId,
               quantity: item.quantity,
-              priceUSD: item.priceUSD,
+              priceUSD: item.priceUSD ?? 0,
               costUSDT: product?.costUSDT ?? null,
               yoniEnabled: product?.yoniEnabled ?? false,
               yoniType: product?.yoniType ?? "percentage",

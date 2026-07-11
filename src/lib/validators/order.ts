@@ -10,7 +10,7 @@ export const createOrderSchema = z.object({
   items: z.array(z.object({
     productId: z.string(),
     quantity: z.number().int().positive(),
-    priceUSD: z.number().optional(),
+    priceUSD: z.number().optional().nullable(),
   })),
   totalUSD: z.number().optional(),
   notes: z.string().optional(),
