@@ -81,6 +81,7 @@ interface StoreType {
 
 interface Order {
   id: string
+  internalNumber: number
   clientName: string
   clientSurname: string
   clientPhone: string
@@ -314,6 +315,7 @@ export default function PedidosPage() {
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground w-8"></TableHead>
+              <TableHead className="text-muted-foreground w-16 text-center">#</TableHead>
               <TableHead className="text-muted-foreground">Cliente</TableHead>
               <TableHead className="text-muted-foreground">Contacto</TableHead>
               <TableHead className="text-muted-foreground">Producto</TableHead>
@@ -331,9 +333,9 @@ export default function PedidosPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={15} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={15} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
               orders.map((o) => {
                 const isExpanded = expandedOrders.has(o.id)
@@ -361,6 +363,9 @@ export default function PedidosPage() {
                           ) : (
                             <TableCell className="text-muted-foreground" />
                           )}
+                          <TableCell className="text-center text-xs text-muted-foreground font-mono">
+                            #{o.internalNumber}
+                          </TableCell>
                           <TableCell
                             className="font-medium text-foreground cursor-pointer"
                             onClick={() => setDetailOrder(o)}
@@ -420,7 +425,7 @@ export default function PedidosPage() {
                       )
                     })}
                     <TableRow className="border-border hover:bg-transparent">
-                      <TableCell colSpan={14} className="py-1 px-0">
+                      <TableCell colSpan={15} className="py-1 px-0">
                         <div className="h-px bg-border/50" />
                       </TableCell>
                     </TableRow>
@@ -438,7 +443,7 @@ export default function PedidosPage() {
           {detailOrder && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><p className="text-muted-foreground">Nombre</p><p className="text-foreground">{detailOrder.clientName} {detailOrder.clientSurname}</p></div>
+                <div><p className="text-muted-foreground">Pedido</p><p className="text-foreground font-mono">#{detailOrder.internalNumber} — {detailOrder.clientName} {detailOrder.clientSurname}</p></div>
                 <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{detailOrder.clientPhone || "—"}</p></div>
                 <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{detailOrder.clientEmail || "—"}</p></div>
                 <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{detailOrder.store?.name || "—"}</p></div>

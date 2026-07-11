@@ -81,6 +81,7 @@ model Product {
 
 model Order {
   id            String      @id
+  internalNumber Int        @unique @default(autoincrement())
   clientName    String
   clientSurname String      @default("")
   clientPhone   String      @default("")
@@ -123,6 +124,7 @@ model OrderItem {
 
 model Bulk {
   id            String      @id
+  internalNumber Int        @unique @default(autoincrement())
   type          String      @default("grande")
   courier       String      @default("buspack")
   trackingCode  String?

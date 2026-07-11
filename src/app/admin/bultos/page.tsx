@@ -60,6 +60,7 @@ interface OrderItemBrief {
 
 interface Bulk {
   id: string
+  internalNumber: number
   type: string
   courier: string
   trackingCode: string | null
@@ -276,6 +277,7 @@ export default function BultosPage() {
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="text-muted-foreground w-16 text-center">#</TableHead>
               <TableHead className="text-muted-foreground">Fecha</TableHead>
               <TableHead className="text-muted-foreground">Tipo</TableHead>
               <TableHead className="text-muted-foreground">Courier</TableHead>
@@ -288,14 +290,15 @@ export default function BultosPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : bulks.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12"><Ship className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin bultos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-12"><Ship className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin bultos</p></TableCell></TableRow>
             ) : (
               bulks.map((b) => {
                 const cfg = statusConfig[b.status] || statusConfig.pending
                 return (
                   <TableRow key={b.id} className="border-border hover:bg-muted">
+                    <TableCell className="text-center text-xs text-muted-foreground font-mono">#{b.internalNumber}</TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(b.date)}</TableCell>
                     <TableCell className="text-muted-foreground capitalize">{b.type === "grande" ? "Grande" : "Chico"}</TableCell>
                     <TableCell className="text-muted-foreground capitalize">{b.courier === "buspack" ? "Buspack" : "Correo Argentino"}</TableCell>
@@ -462,12 +465,16 @@ export default function BultosPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Fecha</p>
-                  <p className="text-foreground">{formatDate(viewBulk.date)}</p>
+                  <p className="text-muted-foreground">Bulto</p>
+                  <p className="text-foreground font-mono">#{viewBulk.internalNumber}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Estado</p>
                   <StatusBadge status={viewBulk.status} />
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Fecha</p>
+                  <p className="text-foreground">{formatDate(viewBulk.date)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Código de seguimiento</p>
