@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback, Fragment } from "react"
-import { Package, Plus, Search, ChevronDown, ChevronRight, Trash2 } from "lucide-react"
+import { useEffect, useState, useCallback, useMemo } from "react"
+import { Package, Plus, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
@@ -142,21 +142,18 @@ export default function PedidosPage() {
   const [saving, setSaving] = useState(false)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
-  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
 
   const fetchOrders = useCallback(async () => {
     try {
-      const params = new URLSearchParams()
-      if (statusFilter) params.set("status", statusFilter)
-      const res = await fetch(`/api/pedidos?${params}`)
+      const res = await fetch("/api/pedidos")
       const data = await res.json()
       setOrders(Array.isArray(data) ? data : [])
     } catch {
       toast.error("Error al cargar pedidos")
     } finally { setLoading(false) }
-  }, [statusFilter])
+  }, [])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
@@ -168,6 +165,29 @@ export default function PedidosPage() {
       setUsdtRate(Number(data.usdt_rate) || 1)
     }).catch(() => {})
   }, [])
+
+  const statusPriority: Record<string, number> = {
+    demorado: 0,
+    en_camino: 1,
+    pending: 2,
+    llego: 3,
+    entregado: 4,
+    cancelado: 5,
+  }
+
+  const flatItems = useMemo(() => {
+    const items: { item: OrderItem; order: Order }[] = []
+    for (const order of orders) {
+      for (const item of order.items) {
+        items.push({ item, order })
+      }
+    }
+    const filtered = statusFilter
+      ? items.filter(({ item }) => item.shippingStatus === statusFilter)
+      : items
+    filtered.sort((a, b) => (statusPriority[a.item.shippingStatus] ?? 99) - (statusPriority[b.item.shippingStatus] ?? 99))
+    return filtered
+  }, [orders, statusFilter])
 
   function addToCart(product: Product) {
     const existing = cart.find(c => c.productId === product.id)
@@ -275,21 +295,12 @@ export default function PedidosPage() {
     finally { setSaving(false) }
   }
 
-  function toggleOrderExpand(orderId: string) {
-    setExpandedOrders(prev => {
-      const next = new Set(prev)
-      if (next.has(orderId)) next.delete(orderId)
-      else next.add(orderId)
-      return next
-    })
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Pedidos</h1>
-          <p className="text-muted-foreground text-sm mt-1">{orders.length} pedidos</p>
+          <p className="text-muted-foreground text-sm mt-1">{flatItems.length} productos</p>
         </div>
         <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
@@ -297,24 +308,23 @@ export default function PedidosPage() {
       </div>
 
       <div className="flex gap-2">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "")}>
-          <SelectTrigger className="w-40 bg-muted border-border text-foreground">
-                          <SelectValue placeholder="Filtrar estado">{!statusFilter || statusFilter === "all" ? "Filtrar estado" : statusConfig[statusFilter]?.label || statusFilter}</SelectValue>
-          </SelectTrigger>
-          <SelectContent className=" bg-card text-foreground">
-            <SelectItem value="all">Todos</SelectItem>
-            {Object.entries(statusConfig).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v || "")}>
+            <SelectTrigger className="w-40 bg-muted border-border text-foreground">
+              <SelectValue placeholder="Filtrar estado">{!statusFilter ? "Filtrar estado" : statusConfig[statusFilter]?.label || statusFilter}</SelectValue>
+            </SelectTrigger>
+            <SelectContent className=" bg-card text-foreground">
+              <SelectItem value="all">Todos</SelectItem>
+              {Object.entries(statusConfig).map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
-              <TableHead className="text-muted-foreground w-8"></TableHead>
               <TableHead className="text-muted-foreground w-16 text-center">#</TableHead>
               <TableHead className="text-muted-foreground">Cliente</TableHead>
               <TableHead className="text-muted-foreground">Contacto</TableHead>
@@ -333,103 +343,70 @@ export default function PedidosPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={15} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
-            ) : orders.length === 0 ? (
-              <TableRow><TableCell colSpan={15} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+            ) : flatItems.length === 0 ? (
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-12"><Package className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin pedidos</p></TableCell></TableRow>
             ) : (
-              orders.map((o) => {
-                const isExpanded = expandedOrders.has(o.id)
-                const hasMultipleItems = o.items.length > 1
-
+              flatItems.map(({ item, order }) => {
+                const pricing = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
                 return (
-                  <Fragment key={o.id}>
-                    {o.items.map((item, itemIdx) => {
-                      const isFirst = itemIdx === 0
-                      const pricing = computeItemPricing(item, o.exchangeRate || exchangeRate, o.usdtRate || usdtRate)
-                      return (
-                        <TableRow
-                          key={item.id}
-                          className={`border-border hover:bg-muted ${isFirst ? "" : "border-t-0"}`}
-                        >
-                          {isFirst ? (
-                            <TableCell
-                              className="text-muted-foreground cursor-pointer"
-                              onClick={() => hasMultipleItems && toggleOrderExpand(o.id)}
-                            >
-                              {hasMultipleItems ? (
-                                isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
-                              ) : null}
-                            </TableCell>
-                          ) : (
-                            <TableCell className="text-muted-foreground" />
-                          )}
-                          <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                            #{o.internalNumber}
-                          </TableCell>
-                          <TableCell
-                            className="font-medium text-foreground cursor-pointer"
-                            onClick={() => setDetailOrder(o)}
-                          >
-                            {o.clientName} {o.clientSurname}
-                          </TableCell>
-                          <TableCell
-                            className="text-muted-foreground text-sm cursor-pointer"
-                            onClick={() => setDetailOrder(o)}
-                          >
-                            {o.clientPhone || o.clientContact}
-                          </TableCell>
-
-                          <TableCell className="text-foreground text-sm">
-                            {item.product.name}
-                            <span className="text-muted-foreground ml-1">×{item.quantity}</span>
-                          </TableCell>
-                          <TableCell className="text-right text-foreground text-sm">
-                            ${pricing.costUSDT.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right text-muted-foreground text-sm">
-                            {item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
-                          </TableCell>
-                          <TableCell className="text-right text-muted-foreground text-sm">
-                            ${pricing.shippingCost.toLocaleString("es-AR")}
-                          </TableCell>
-                          <TableCell className="text-right text-foreground text-sm">
-                            ${pricing.subtotalARS.toLocaleString("es-AR")}
-                          </TableCell>
-                          <TableCell className="text-right text-[#0071e3] text-sm">
-                            ${pricing.profitARS.toLocaleString("es-AR")}
-                          </TableCell>
-                          <TableCell className="text-right text-[#22C55E] font-medium text-sm">
-                            ${pricing.finalPriceARS.toLocaleString("es-AR")}
-                          </TableCell>
-                          <TableCell className="text-right text-muted-foreground text-sm">
-                            ${pricing.finalPriceUSD.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-center text-xs text-muted-foreground">
-                            {item.trackingCode ? (
-                              <span className="text-blue-400">{item.trackingCode}</span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {getItemStatusBadge(item.shippingStatus)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {isFirst ? (
-                              <Button variant="ghost" size="icon" onClick={() => { setDeleteTarget(o); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            ) : null}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                    <TableRow className="border-border hover:bg-transparent">
-                      <TableCell colSpan={15} className="py-1 px-0">
-                        <div className="h-px bg-border/50" />
-                      </TableCell>
-                    </TableRow>
-                  </Fragment>
+                  <TableRow key={item.id} className="border-border hover:bg-muted">
+                    <TableCell className="text-center text-xs text-muted-foreground font-mono">
+                      #{order.internalNumber}
+                    </TableCell>
+                    <TableCell
+                      className="font-medium text-foreground cursor-pointer"
+                      onClick={() => setDetailOrder(order)}
+                    >
+                      {order.clientName} {order.clientSurname}
+                    </TableCell>
+                    <TableCell
+                      className="text-muted-foreground text-sm cursor-pointer"
+                      onClick={() => setDetailOrder(order)}
+                    >
+                      {order.clientPhone || order.clientContact}
+                    </TableCell>
+                    <TableCell className="text-foreground text-sm">
+                      {item.product.name}
+                      <span className="text-muted-foreground ml-1">×{item.quantity}</span>
+                    </TableCell>
+                    <TableCell className="text-right text-foreground text-sm">
+                      ${pricing.costUSDT.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground text-sm">
+                      {item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground text-sm">
+                      ${pricing.shippingCost.toLocaleString("es-AR")}
+                    </TableCell>
+                    <TableCell className="text-right text-foreground text-sm">
+                      ${pricing.subtotalARS.toLocaleString("es-AR")}
+                    </TableCell>
+                    <TableCell className="text-right text-[#0071e3] text-sm">
+                      ${pricing.profitARS.toLocaleString("es-AR")}
+                    </TableCell>
+                    <TableCell className="text-right text-[#22C55E] font-medium text-sm">
+                      ${pricing.finalPriceARS.toLocaleString("es-AR")}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground text-sm">
+                      ${pricing.finalPriceUSD.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-center text-xs text-muted-foreground">
+                      {item.trackingCode ? (
+                        <span className="text-blue-400">{item.trackingCode}</span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {getItemStatusBadge(item.shippingStatus)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => { setDeleteTarget(order); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 )
               })
             )}
