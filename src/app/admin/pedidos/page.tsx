@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, Fragment, useRef } from "react"
+import { useEffect, useState, useCallback, Fragment } from "react"
 import { Package, Plus, Search, ChevronDown, ChevronRight, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD } from "@/lib/utils"
@@ -144,7 +144,6 @@ export default function PedidosPage() {
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
-  const formRef = useRef<HTMLFormElement>(null)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -206,8 +205,7 @@ export default function PedidosPage() {
 
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
 
-  async function handleCreateOrder(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleCreateOrder() {
     console.log("[CREATE ORDER] called", { clientName: form.clientName, cartLen: cart.length, cart, totalUSD })
     if (!form.clientName || cart.length === 0) {
       toast.error("Completá nombre del cliente y agregá productos")
@@ -488,7 +486,7 @@ export default function PedidosPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className=" bg-card text-foreground max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nuevo pedido</DialogTitle></DialogHeader>
-          <form ref={formRef} onSubmit={handleCreateOrder} className="space-y-4">
+          <form className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nombre</Label>
@@ -553,7 +551,7 @@ export default function PedidosPage() {
             )}
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
-                <Button type="button" disabled={saving} onClick={() => formRef.current?.requestSubmit()} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear pedido"}</Button>
+                <Button type="button" disabled={saving} onClick={handleCreateOrder} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear pedido"}</Button>
             </div>
           </form>
         </DialogContent>
