@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { updateOrderSchema, registerPaymentSchema } from "@/lib/validators"
 import { genId } from "@/lib/utils"
+import { computeOrderTotalARS } from "@/lib/pricing"
 
 export async function GET(
   request: NextRequest,
@@ -37,7 +38,10 @@ export async function GET(
       },
     })
     if (!order) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
-    return Response.json(order)
+    return Response.json({
+      ...order,
+      totalARS: order.totalARS ?? computeOrderTotalARS(order),
+    })
   } catch (error) {
     console.error("Error fetching order:", error)
     return Response.json({ error: "Error al cargar pedido" }, { status: 500 })

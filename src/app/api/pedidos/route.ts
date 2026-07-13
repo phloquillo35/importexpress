@@ -3,7 +3,7 @@ import { NextRequest } from "next/server"
 import { genId } from "@/lib/utils"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { createOrderSchema } from "@/lib/validators"
-import { calculateFinalPrice, type PricingInput } from "@/lib/pricing"
+import { calculateFinalPrice, computeOrderTotalARS, type PricingInput } from "@/lib/pricing"
 
 const statusOrder: Record<string, number> = {
   pending: 0,
@@ -52,7 +52,12 @@ export async function GET(request: NextRequest) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
 
-    return Response.json(sorted)
+    const enriched = sorted.map((order) => ({
+      ...order,
+      totalARS: order.totalARS ?? computeOrderTotalARS(order),
+    }))
+
+    return Response.json(enriched)
   } catch (error) {
     console.error("Error fetching orders:", error)
     return Response.json({ error: "Error al cargar pedidos" }, { status: 500 })
