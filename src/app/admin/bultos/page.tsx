@@ -60,8 +60,10 @@ interface OrderItemBrief {
   trackingCode: string | null
   shippingStatus: string
   bulkType: string | null
+  productName?: string | null
+  productSlug?: string | null
   order: { id: string; clientName: string; clientSurname: string }
-  product: { id: string; name: string; slug: string }
+  product?: { id: string; name: string; slug: string }
 }
 
 interface Bulk {
@@ -84,7 +86,9 @@ interface PendingOrderItem {
   id: string
   quantity: number
   priceUSD: number
-  product: { id: string; name: string }
+  productName?: string | null
+  productSlug?: string | null
+  product?: { id: string; name: string }
   order: { id: string; clientName: string; clientSurname: string }
 }
 
@@ -131,6 +135,8 @@ export default function BultosPage() {
                 id: item.id,
                 quantity: item.quantity,
                 priceUSD: item.priceUSD,
+                productName: item.productName,
+                productSlug: item.productSlug,
                 product: item.product,
                 order: { id: order.id, clientName: order.clientName, clientSurname: order.clientSurname },
               })
@@ -377,7 +383,7 @@ export default function BultosPage() {
                       onChange={() => toggleItem(item.id)}
                       className="w-4 h-4 rounded border-zinc-600 bg-muted text-[#22C55E]"
                     />
-                    <span className="text-sm text-muted-foreground flex-1">{item.product.name}</span>
+                    <span className="text-sm text-muted-foreground flex-1">{item.productName ?? item.product?.name ?? "Producto eliminado"}</span>
                     <span className="text-xs text-muted-foreground">
                       {item.order.clientName} {item.order.clientSurname}
                     </span>
@@ -444,7 +450,7 @@ export default function BultosPage() {
                   <p className="text-sm text-muted-foreground mb-2">Productos en este bulto</p>
                   {selectedBulk.orderItems.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
-                      <span className="text-muted-foreground">{item.product.name}</span>
+                      <span className="text-muted-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</span>
                       <span className="text-muted-foreground text-xs">
                         {item.order.clientName} {item.order.clientSurname}
                         {item.trackingCode && ` | ${item.trackingCode}`}
@@ -524,7 +530,7 @@ export default function BultosPage() {
                       <TableBody>
                         {viewBulk.orderItems.map((item) => (
                           <TableRow key={item.id} className="border-border hover:bg-muted">
-                            <TableCell className="font-medium text-foreground">{item.product.name}</TableCell>
+                            <TableCell className="font-medium text-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</TableCell>
                             <TableCell className="text-muted-foreground">
                               {item.order.clientName} {item.order.clientSurname}
                             </TableCell>

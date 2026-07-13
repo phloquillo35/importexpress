@@ -132,12 +132,12 @@ export async function PUT(
       const itemCount = await prisma.orderItem.count({ where: { bulkId: id } })
       if (itemCount > 0) {
         const shippingPerItem = parseFloat(body.totalCostARS) / itemCount
-        const items = await prisma.orderItem.findMany({
-          where: { bulkId: id },
+        const items = await prisma.orderItem.findMany({ where: { bulkId: id, productId: { not: null } },
           include: { product: true },
         })
 
         for (const item of items) {
+          if (!item.productId || !item.product) continue
           const currentShipping = item.product.shippingCost || 0
           await prisma.product.update({
             where: { id: item.productId },

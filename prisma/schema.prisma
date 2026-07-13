@@ -107,7 +107,9 @@ model Order {
 model OrderItem {
   id             String  @id
   orderId        String
-  productId      String
+  productId      String?
+  productName    String?
+  productSlug    String?
   quantity       Int
   priceUSD       Float
   bulkId         String?
@@ -121,9 +123,9 @@ model OrderItem {
   shippingCost   Float   @default(0)
   profitType     String  @default("percentage")
   profitValue    Float   @default(0)
-  order          Order   @relation(fields: [orderId], references: [id])
-  product        Product @relation(fields: [productId], references: [id])
-  bulk           Bulk?   @relation(fields: [bulkId], references: [id])
+  order          Order    @relation(fields: [orderId], references: [id])
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  bulk           Bulk?    @relation(fields: [bulkId], references: [id])
 }
 
 model Bulk {

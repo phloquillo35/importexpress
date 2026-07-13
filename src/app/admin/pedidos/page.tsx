@@ -66,7 +66,9 @@ interface OrderItem {
   shippingCost: number
   profitType: string
   profitValue: number
-  product: {
+  productName: string | null
+  productSlug: string | null
+  product?: {
     name: string
     slug: string
     images: string[]
@@ -131,20 +133,20 @@ interface Product {
 
 function computeItemPricing(item: OrderItem, exchangeRate: number, usdtRate: number) {
   const perUnit = calculateFinalPrice({
-    costUSDT: item.costUSDT ?? item.product.costUSDT ?? 0,
-    yoniEnabled: item.yoniEnabled ?? item.product.yoniEnabled,
-    yoniType: (item.yoniType ?? item.product.yoniType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
-    yoniValue: item.yoniValue ?? item.product.yoniValue ?? 0,
-    shippingCost: item.shippingCost ?? item.product.shippingCost ?? 0,
-    profitType: (item.profitType ?? item.product.profitType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
-    profitValue: item.profitValue ?? item.product.profitValue ?? 0,
+    costUSDT: item.costUSDT ?? 0,
+    yoniEnabled: item.yoniEnabled ?? false,
+    yoniType: (item.yoniType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
+    yoniValue: item.yoniValue ?? 0,
+    shippingCost: item.shippingCost ?? 0,
+    profitType: (item.profitType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
+    profitValue: item.profitValue ?? 0,
     exchangeRate,
     usdtRate,
   })
   return {
-    costUSDT: (item.costUSDT ?? item.product.costUSDT ?? 0) * item.quantity,
+    costUSDT: (item.costUSDT ?? 0) * item.quantity,
     yoniUSDT: Math.round(perUnit.yoniUSDT * item.quantity * 100) / 100,
-    shippingCost: (item.shippingCost ?? item.product.shippingCost ?? 0) * item.quantity,
+    shippingCost: (item.shippingCost ?? 0) * item.quantity,
     subtotalARS: Math.round(perUnit.subtotalARS * item.quantity),
     profitARS: Math.round(perUnit.profitARS * item.quantity),
     finalPriceARS: Math.round(perUnit.finalPriceARS * item.quantity),
@@ -432,14 +434,14 @@ export default function PedidosPage() {
                       {order.clientPhone || order.clientContact}
                     </TableCell>
                     <TableCell className="text-foreground text-sm">
-                      {item.product.name}
+                      {item.productName ?? item.product?.name ?? "Producto eliminado"}
                       <span className="text-muted-foreground ml-1">×{item.quantity}</span>
                     </TableCell>
                     <TableCell className="text-right text-foreground text-sm">
                       ${pricing.costUSDT.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground text-sm">
-                      {item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
+                      {item.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground text-sm">
                       ${pricing.shippingCost.toLocaleString("es-AR")}
@@ -519,7 +521,7 @@ export default function PedidosPage() {
                   {allPricing.map(({ item: i, pricing: p }) => (
                     <div key={i.id} className="p-3 space-y-1.5">
                       <div className="flex justify-between text-sm">
-                        <span className="font-medium text-foreground">{i.product.name} × {i.quantity}</span>
+                        <span className="font-medium text-foreground">{i.productName ?? i.product?.name ?? "Producto eliminado"} × {i.quantity}</span>
                         <span className="text-foreground">{formatUSD(i.priceUSD * i.quantity)}</span>
                       </div>
                       {i.bulk && (
@@ -532,7 +534,7 @@ export default function PedidosPage() {
                       {getItemStatusBadge(i.shippingStatus)}
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs text-muted-foreground border-t border-border/50">
                         <span>Costo USDT: <span className="text-foreground">${p.costUSDT.toFixed(2)}</span></span>
-                        <span>Logística: <span className="text-foreground">{i.product.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
+                        <span>Logística: <span className="text-foreground">{i.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
                         <span>Envío ARS: <span className="text-foreground">${p.shippingCost.toLocaleString("es-AR")}</span></span>
                         <span>Subtotal ARS: <span className="text-foreground">${p.subtotalARS.toLocaleString("es-AR")}</span></span>
                         <span>Ganancia ARS: <span className="text-[#0071e3]">${p.profitARS.toLocaleString("es-AR")}</span></span>

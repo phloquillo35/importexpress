@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
       select: {
-        id: true, costUSDT: true, yoniEnabled: true, yoniType: true, yoniValue: true,
+        id: true, name: true, slug: true, costUSDT: true, yoniEnabled: true, yoniType: true, yoniValue: true,
         shippingCost: true, profitType: true, profitValue: true,
       },
     })
@@ -110,6 +110,7 @@ export async function POST(request: Request) {
       id: string; productId: string; quantity: number; priceUSD: number
       costUSDT: number | null; yoniEnabled: boolean; yoniType: string; yoniValue: number
       shippingCost: number; profitType: string; profitValue: number
+      productName: string | null; productSlug: string | null
     }> = items.map((item: { productId: string; quantity: number; priceUSD: number }) => {
       const product = productMap.get(item.productId)
       return {
@@ -124,6 +125,8 @@ export async function POST(request: Request) {
         shippingCost: product?.shippingCost ?? 0,
         profitType: product?.profitType ?? "percentage",
         profitValue: product?.profitValue ?? 0,
+        productName: product?.name ?? null,
+        productSlug: product?.slug ?? null,
       }
     })
 

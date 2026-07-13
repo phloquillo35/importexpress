@@ -73,15 +73,6 @@ export function computeOrderTotalARS(
       shippingCost: number | null
       profitType: string | null
       profitValue: number | null
-      product: {
-        costUSDT: number | null
-        yoniEnabled: boolean | null
-        yoniType: string | null
-        yoniValue: number | null
-        shippingCost: number | null
-        profitType: string | null
-        profitValue: number | null
-      }
     }>
   },
   defaults?: { exchangeRate: number; usdtRate: number },
@@ -91,13 +82,13 @@ export function computeOrderTotalARS(
   let total = 0
   for (const item of order.items) {
     const pricing = calculateFinalPrice({
-      costUSDT: item.costUSDT ?? item.product.costUSDT ?? 0,
-      yoniEnabled: item.yoniEnabled ?? item.product.yoniEnabled ?? false,
-      yoniType: (item.yoniType ?? item.product.yoniType ?? "percentage") as PricingInput["yoniType"],
-      yoniValue: item.yoniValue ?? item.product.yoniValue ?? 0,
-      shippingCost: item.shippingCost ?? item.product.shippingCost ?? 0,
-      profitType: (item.profitType ?? item.product.profitType ?? "percentage") as PricingInput["profitType"],
-      profitValue: item.profitValue ?? item.product.profitValue ?? 0,
+      costUSDT: item.costUSDT ?? 0,
+      yoniEnabled: item.yoniEnabled ?? false,
+      yoniType: (item.yoniType ?? "percentage") as PricingInput["yoniType"],
+      yoniValue: item.yoniValue ?? 0,
+      shippingCost: item.shippingCost ?? 0,
+      profitType: (item.profitType ?? "percentage") as PricingInput["profitType"],
+      profitValue: item.profitValue ?? 0,
       exchangeRate,
       usdtRate,
     })
