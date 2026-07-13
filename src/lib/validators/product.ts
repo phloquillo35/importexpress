@@ -22,7 +22,10 @@ export const createProductSchema = z.object({
   isAvailable: z.boolean().optional().default(true),
   isFeatured: z.boolean().optional().default(false),
   categoryId: z.string().optional().nullable(),
-  distributorId: z.string().optional().nullable(),
+  storeId: z.string().optional().nullable(),
+  finalPriceUSD: z.number().optional(),
+  finalPriceARS: z.number().optional(),
+  exchangeRate: z.number().optional(),
 })
 
 export const updateProductSchema = createProductSchema.partial()

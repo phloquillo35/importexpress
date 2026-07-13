@@ -105,13 +105,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { name, costUSDT, yoniEnabled, yoniType, yoniValue, hasFinancing, shippingCost, profitType, profitValue } = body
+    const data = parsed.data
 
-    if (!name) {
+    if (!data.name) {
       return Response.json({ error: "name es requerido" }, { status: 400 })
     }
 
-    let productSlug = body.slug || slugify(name)
+    const productSlug = data.slug || slugify(data.name)
 
     const existing = await prisma.product.findUnique({ where: { slug: productSlug } })
     if (existing) {
@@ -125,22 +125,22 @@ export async function POST(request: Request) {
     const exchangeRate = parseFloat(exchangeRateSetting?.value || "1")
     const usdtRate = parseFloat(usdtRateSetting?.value || exchangeRateSetting?.value || "1")
 
-    const usdt = parseFloat(costUSDT) || 0
-    const yoni = yoniEnabled ?? false
-    const yT = (yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage"
-    const yV = parseFloat(yoniValue) || 25
-    const ship = parseFloat(shippingCost) || 0
-    const pType = (profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage"
-    const pValue = parseFloat(profitValue) || 0
+    const costUSDT = data.costUSDT || 0
+    const yoniEnabled = data.yoniEnabled
+    const yoniType = data.yoniType || "percentage"
+    const yoniValue = data.yoniValue ?? 25
+    const shippingCost = data.shippingCost ?? 0
+    const profitType = data.profitType || "percentage"
+    const profitValue = data.profitValue ?? 0
 
     const pricing = calculateFinalPrice({
-      costUSDT: usdt,
-      yoniEnabled: yoni,
-      yoniType: yT,
-      yoniValue: yV,
-      shippingCost: ship,
-      profitType: pType,
-      profitValue: pValue,
+      costUSDT,
+      yoniEnabled,
+      yoniType: yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
+      yoniValue,
+      shippingCost,
+      profitType: profitType as "percentage" | "fixed_usdt" | "fixed_ars",
+      profitValue,
       exchangeRate,
       usdtRate,
     })
@@ -148,30 +148,30 @@ export async function POST(request: Request) {
     const product = await prisma.product.create({
       data: {
         id: genId(),
-        name,
+        name: data.name,
         slug: productSlug,
-        description: body.description || null,
-        specs: body.specs || null,
-        images: body.images || null,
+        description: data.description || null,
+        specs: data.specs || null,
+        images: data.images || undefined,
         priceUSD: pricing.finalPriceUSD,
         priceARS: pricing.finalPriceARS,
-        costUSD: body.costUSD ? parseFloat(body.costUSD) : null,
-        costUSDT: usdt || null,
-        yoniEnabled: yoni,
-        yoniType: yT,
-        yoniValue: yV,
-        hasFinancing: hasFinancing ?? false,
-        shippingCost: ship,
-        profitType: pType,
-        profitValue: pValue,
+        costUSD: data.costUSD ?? null,
+        costUSDT: costUSDT || null,
+        yoniEnabled,
+        yoniType,
+        yoniValue,
+        hasFinancing: data.hasFinancing ?? false,
+        shippingCost,
+        profitType,
+        profitValue,
         finalPriceUSD: pricing.finalPriceUSD,
         finalPriceARS: pricing.finalPriceARS,
-        stock: parseInt(body.stock) || 0,
-        minStock: parseInt(body.minStock) || 5,
-        isAvailable: body.isAvailable ?? true,
-        isFeatured: body.isFeatured ?? false,
-        categoryId: body.categoryId || null,
-        storeId: body.storeId || null,
+        stock: data.stock ?? 0,
+        minStock: data.minStock ?? 5,
+        isAvailable: data.isAvailable ?? true,
+        isFeatured: data.isFeatured ?? false,
+        categoryId: data.categoryId || null,
+        storeId: data.storeId || null,
       },
       include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } }, store: { select: { name: true } } },
     })

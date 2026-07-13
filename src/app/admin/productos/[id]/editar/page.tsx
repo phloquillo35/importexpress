@@ -67,7 +67,7 @@ export default function EditarProductoPage() {
     isAvailable: product.isAvailable as boolean,
     isFeatured: product.isFeatured as boolean,
     categoryId: (product.categoryId as string) || "",
-    distributorId: (product.distributorId as string) || "",
+    storeId: (product.storeId as string) || "",
     images,
     specs,
   }

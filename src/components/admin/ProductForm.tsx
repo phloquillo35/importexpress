@@ -365,7 +365,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-muted-foreground">Tipo de ganancia</Label>
-            <Select onValueChange={(v) => { if (v) setValue("profitType", v) }} defaultValue={defaultValues?.profitType || "percentage"}>
+            <Select value={profitType} onValueChange={(v) => { if (v) setValue("profitType", v) }}>
               <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue placeholder="Seleccionar">
                   {(value) =>

@@ -69,44 +69,45 @@ export async function PUT(
       return Response.json({ error: "Producto no encontrado" }, { status: 404 })
     }
 
+    const input = parsed.data
     const data: Record<string, unknown> = {}
 
-    if (body.name) data.name = body.name
-    if (body.slug) {
-      const slugExists = await prisma.product.findUnique({ where: { slug: body.slug } })
+    if (input.name) data.name = input.name
+    if (input.slug) {
+      const slugExists = await prisma.product.findUnique({ where: { slug: input.slug } })
       if (slugExists && slugExists.id !== existing.id) {
         return Response.json({ error: "Ya existe un producto con ese slug" }, { status: 409 })
       }
-      data.slug = body.slug
+      data.slug = input.slug
     }
-    if (body.description !== undefined) data.description = body.description
-    if (body.specs !== undefined) data.specs = body.specs
-    if (body.images !== undefined) data.images = body.images
-    if (body.priceUSD !== undefined) data.priceUSD = parseFloat(body.priceUSD)
-    if (body.priceARS !== undefined) data.priceARS = body.priceARS ? parseFloat(body.priceARS) : null
-    if (body.costUSD !== undefined) data.costUSD = body.costUSD ? parseFloat(body.costUSD) : null
-    if (body.costUSDT !== undefined) data.costUSDT = body.costUSDT ? parseFloat(body.costUSDT) : null
-    if (body.yoniEnabled !== undefined) data.yoniEnabled = body.yoniEnabled
-    if (body.yoniType !== undefined) data.yoniType = body.yoniType
-    if (body.yoniValue !== undefined) data.yoniValue = parseFloat(body.yoniValue)
-    if (body.shippingCost !== undefined) data.shippingCost = parseFloat(body.shippingCost)
-    if (body.profitType !== undefined) data.profitType = body.profitType
-    if (body.profitValue !== undefined) data.profitValue = parseFloat(body.profitValue)
-    if (body.stock !== undefined) data.stock = parseInt(body.stock)
-    if (body.minStock !== undefined) data.minStock = parseInt(body.minStock)
-    if (body.isAvailable !== undefined) data.isAvailable = body.isAvailable
-    if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
-    if (body.hasFinancing !== undefined) data.hasFinancing = body.hasFinancing
-    if (body.categoryId !== undefined) data.categoryId = body.categoryId || null
-    if (body.storeId !== undefined) data.storeId = body.storeId || null
+    if (input.description !== undefined) data.description = input.description
+    if (input.specs !== undefined) data.specs = input.specs
+    if (input.images !== undefined) data.images = input.images
+    if (input.priceUSD !== undefined) data.priceUSD = input.priceUSD
+    if (input.priceARS !== undefined) data.priceARS = input.priceARS
+    if (input.costUSD !== undefined) data.costUSD = input.costUSD
+    if (input.costUSDT !== undefined) data.costUSDT = input.costUSDT
+    if (input.yoniEnabled !== undefined) data.yoniEnabled = input.yoniEnabled
+    if (input.yoniType !== undefined) data.yoniType = input.yoniType
+    if (input.yoniValue !== undefined) data.yoniValue = input.yoniValue
+    if (input.shippingCost !== undefined) data.shippingCost = input.shippingCost
+    if (input.profitType !== undefined) data.profitType = input.profitType
+    if (input.profitValue !== undefined) data.profitValue = input.profitValue
+    if (input.stock !== undefined) data.stock = input.stock
+    if (input.minStock !== undefined) data.minStock = input.minStock
+    if (input.isAvailable !== undefined) data.isAvailable = input.isAvailable
+    if (input.isFeatured !== undefined) data.isFeatured = input.isFeatured
+    if (input.hasFinancing !== undefined) data.hasFinancing = input.hasFinancing
+    if (input.categoryId !== undefined) data.categoryId = input.categoryId || null
+    if (input.storeId !== undefined) data.storeId = input.storeId || null
 
-    const costUSDT = body.costUSDT ?? existing.costUSDT ?? existing.priceUSD
-    const yoniEnabled = body.yoniEnabled ?? existing.yoniEnabled
-    const yoniType = (body.yoniType ?? existing.yoniType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars"
-    const yoniValue = body.yoniValue ?? existing.yoniValue ?? 25
-    const shippingCost = body.shippingCost ?? existing.shippingCost
-    const profitType = (body.profitType ?? existing.profitType) as "percentage" | "fixed_usdt" | "fixed_ars"
-    const profitValue = body.profitValue ?? existing.profitValue
+    const costUSDT = input.costUSDT ?? existing.costUSDT ?? existing.priceUSD
+    const yoniEnabled = input.yoniEnabled ?? existing.yoniEnabled
+    const yoniType = (input.yoniType ?? existing.yoniType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars"
+    const yoniValue = input.yoniValue ?? existing.yoniValue ?? 25
+    const shippingCost = input.shippingCost ?? existing.shippingCost
+    const profitType = (input.profitType ?? existing.profitType) as "percentage" | "fixed_usdt" | "fixed_ars"
+    const profitValue = input.profitValue ?? existing.profitValue
 
     const [exchangeRateSetting, usdtRateSetting] = await Promise.all([
       prisma.setting.findUnique({ where: { key: "exchange_rate" } }),
