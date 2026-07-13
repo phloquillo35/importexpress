@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { genId } from "@/lib/utils"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { createOrderSchema } from "@/lib/validators"
+import { calculateFinalPrice, type PricingInput } from "@/lib/pricing"
 
 const statusOrder: Record<string, number> = {
   pending: 0,
@@ -93,6 +94,43 @@ export async function POST(request: Request) {
     })
     const productMap = new Map(products.map((p) => [p.id, p]))
 
+    const orderItems: Array<{
+      id: string; productId: string; quantity: number; priceUSD: number
+      costUSDT: number | null; yoniEnabled: boolean; yoniType: string; yoniValue: number
+      shippingCost: number; profitType: string; profitValue: number
+    }> = items.map((item: { productId: string; quantity: number; priceUSD: number }) => {
+      const product = productMap.get(item.productId)
+      return {
+        id: genId(),
+        productId: item.productId,
+        quantity: item.quantity,
+        priceUSD: item.priceUSD ?? 0,
+        costUSDT: product?.costUSDT ?? null,
+        yoniEnabled: product?.yoniEnabled ?? false,
+        yoniType: product?.yoniType ?? "percentage",
+        yoniValue: product?.yoniValue ?? 25,
+        shippingCost: product?.shippingCost ?? 0,
+        profitType: product?.profitType ?? "percentage",
+        profitValue: product?.profitValue ?? 0,
+      }
+    })
+
+    let computedTotalARS = 0
+    for (const item of orderItems) {
+      const pricing = calculateFinalPrice({
+        costUSDT: item.costUSDT ?? 0,
+        yoniEnabled: item.yoniEnabled,
+        yoniType: item.yoniType as PricingInput["yoniType"],
+        yoniValue: item.yoniValue,
+        shippingCost: item.shippingCost,
+        profitType: item.profitType as PricingInput["profitType"],
+        profitValue: item.profitValue,
+        exchangeRate,
+        usdtRate,
+      })
+      computedTotalARS += pricing.finalPriceARS * item.quantity
+    }
+
     const order = await prisma.order.create({
       data: {
         id: genId(),
@@ -103,28 +141,11 @@ export async function POST(request: Request) {
         storeId: storeId || null,
         clientContact: clientContact || "",
         totalUSD: parseFloat(totalUSD) || 0,
-        totalARS: totalARS ? parseFloat(totalARS) : null,
+        totalARS: computedTotalARS,
         notes: notes || null,
         exchangeRate,
         usdtRate,
-        items: {
-          create: items.map((item: { productId: string; quantity: number; priceUSD: number }) => {
-            const product = productMap.get(item.productId)
-            return {
-              id: genId(),
-              productId: item.productId,
-              quantity: item.quantity,
-              priceUSD: item.priceUSD ?? 0,
-              costUSDT: product?.costUSDT ?? null,
-              yoniEnabled: product?.yoniEnabled ?? false,
-              yoniType: product?.yoniType ?? "percentage",
-              yoniValue: product?.yoniValue ?? 25,
-              shippingCost: product?.shippingCost ?? 0,
-              profitType: product?.profitType ?? "percentage",
-              profitValue: product?.profitValue ?? 0,
-            }
-          }),
-        },
+        items: { create: orderItems },
       },
       include: {
         store: { select: { id: true, name: true } },

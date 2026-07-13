@@ -49,6 +49,9 @@ echo "→ Verificando columnas faltantes..."
 ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "amountPaidARS" DOUBLE PRECISION;
 SQL
 
+echo "→ Backfilling totalARS en ordenes existentes..."
+node /app/scripts/backfill-total-ars.mjs 2>&1 || echo "⚠️ Backfill totalARS ignorado"
+
 echo "→ Starting application..."
 export HOSTNAME=0.0.0.0
 exec node server.js
