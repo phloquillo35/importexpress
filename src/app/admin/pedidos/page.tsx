@@ -481,11 +481,14 @@ export default function PedidosPage() {
 
       <Dialog open={!!productDetail} onOpenChange={(o) => { if (!o) setProductDetail(null) }}>
         <DialogContent className="bg-card text-foreground max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Detalle del producto</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Detalle del pedido</DialogTitle></DialogHeader>
           {productDetail && (() => {
-            const { item, order } = productDetail
-            const pricing = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
-            const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.pending
+            const { item: clickedItem, order } = productDetail
+            const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
+            const allPricing = order.items.map(i => ({
+              item: i,
+              pricing: computeItemPricing(i, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate),
+            }))
 
             return (
               <div className="space-y-5">
@@ -508,29 +511,41 @@ export default function PedidosPage() {
                   <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{order.store?.name || "—"}</p></div>
                 </div>
 
-                <div className="border border-border rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium text-foreground">{item.product.name} × {item.quantity}</span>
-                    <span className="text-foreground">{formatUSD(item.priceUSD * item.quantity)}</span>
-                  </div>
-                  {item.bulk && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{courierLabel[item.bulk.courier] || item.bulk.courier}</span>
-                      {item.bulk.trackingCode && <span className="text-blue-400">📍 {item.bulk.trackingCode}</span>}
+                <div className="border border-border rounded-lg divide-y divide-border">
+                  {allPricing.map(({ item: i, pricing: p }) => (
+                    <div key={i.id} className="p-3 space-y-1.5">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium text-foreground">{i.product.name} × {i.quantity}</span>
+                        <span className="text-foreground">{formatUSD(i.priceUSD * i.quantity)}</span>
+                      </div>
+                      {i.bulk && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{courierLabel[i.bulk.courier] || i.bulk.courier}</span>
+                          {i.bulk.trackingCode && <span className="text-blue-400">📍 {i.bulk.trackingCode}</span>}
+                        </div>
+                      )}
+                      {i.bulkType && <p className="text-xs text-muted-foreground">Tipo bulto: {i.bulkType}</p>}
+                      {getItemStatusBadge(i.shippingStatus)}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs text-muted-foreground border-t border-border/50">
+                        <span>Costo USDT: <span className="text-foreground">${p.costUSDT.toFixed(2)}</span></span>
+                        <span>Logística: <span className="text-foreground">{i.product.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
+                        <span>Envío ARS: <span className="text-foreground">${p.shippingCost.toLocaleString("es-AR")}</span></span>
+                        <span>Subtotal ARS: <span className="text-foreground">${p.subtotalARS.toLocaleString("es-AR")}</span></span>
+                        <span>Ganancia ARS: <span className="text-[#0071e3]">${p.profitARS.toLocaleString("es-AR")}</span></span>
+                        <span>Final ARS: <span className="text-[#22C55E]">${p.finalPriceARS.toLocaleString("es-AR")}</span></span>
+                      </div>
                     </div>
-                  )}
-                  {item.bulkType && <p className="text-xs text-muted-foreground">Tipo bulto: {item.bulkType}</p>}
-                  {getItemStatusBadge(item.shippingStatus)}
+                  ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Costo USDT</span><span className="text-foreground">${pricing.costUSDT.toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Logística (yoni)</span><span className="text-foreground">{item.product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Envío ARS</span><span className="text-foreground">${pricing.shippingCost.toLocaleString("es-AR")}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal ARS</span><span className="text-foreground">${pricing.subtotalARS.toLocaleString("es-AR")}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Ganancia ARS</span><span className="text-[#0071e3]">${pricing.profitARS.toLocaleString("es-AR")}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Final ARS</span><span className="text-[#22C55E] font-medium">${pricing.finalPriceARS.toLocaleString("es-AR")}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Final USD</span><span className="text-foreground">${pricing.finalPriceUSD.toFixed(2)}</span></div>
+                <div className="border border-border rounded-lg p-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">Totales del pedido</h3>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${order.totalUSD.toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${(order.totalARS ?? 0).toLocaleString("es-AR")}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Pagado</span><span className="text-[#22C55E]">${order.amountPaidUSD.toFixed(2)} USD</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Saldo pendiente</span><span className={order.totalUSD - order.amountPaidUSD > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>${Math.max(0, order.totalUSD - order.amountPaidUSD).toFixed(2)} USD</span></div>
+                  </div>
                 </div>
 
                 <div className="border-t border-border pt-4 space-y-3">
