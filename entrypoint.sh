@@ -40,10 +40,24 @@ fi
 
 echo "→ Limpiando migrations fallidas previas..."
 ./node_modules/.bin/prisma migrate resolve --rolled-back 20260710000001_add_internal_number 2>&1 || true
-./node_modules/.bin/prisma migrate resolve --rolled-back 20260711000001_add_payment_status 2>&1 || true
 
 echo "→ Aplicando migraciones pendientes..."
 ./node_modules/.bin/prisma migrate deploy 2>&1 || echo "⚠️ Error en migrate deploy, continuando..."
+
+echo "→ Verificando columnas faltantes..."
+node -e "
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+(async () => {
+  try {
+    await prisma.\$executeRawUnsafe('ALTER TABLE \"Order\" ADD COLUMN IF NOT EXISTS \"amountPaidARS\" DOUBLE PRECISION');
+    console.log('✓ amountPaidARS column verified');
+  } catch (e) {
+    console.log('⚠️ amountPaidARS check:', e.message);
+  }
+  await prisma.\$disconnect();
+})();
+" 2>&1 || true
 
 echo "→ Starting application..."
 export HOSTNAME=0.0.0.0
