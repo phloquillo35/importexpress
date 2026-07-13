@@ -207,6 +207,7 @@ export async function DELETE(
     })
     console.log(`[PEDIDO DELETE] deleting ${deletedItems.length} items: ${deletedItems.map(i => `${i.productId}x${i.quantity}`).join(", ")}`)
 
+    await prisma.transaction.deleteMany({ where: { orderId: id } })
     await prisma.orderItem.deleteMany({ where: { orderId: id } })
     await prisma.order.delete({ where: { id } })
     console.log(`[PEDIDO DELETE] order ${id} deleted successfully`)

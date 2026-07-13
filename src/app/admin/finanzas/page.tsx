@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { DollarSign, TrendingDown, Plus, ArrowUpDown } from "lucide-react"
+import { DollarSign, TrendingDown, Plus, ArrowUpDown, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD, formatDate } from "@/lib/utils"
 import {
@@ -167,6 +167,18 @@ export default function FinanzasPage() {
     }
   }
 
+  async function handleDelete(transaction: Transaction) {
+    if (!confirm(`¿Eliminar "${transaction.concept}"?`)) return
+    try {
+      const res = await fetch(`/api/transacciones/${transaction.id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Error al eliminar")
+      toast.success("Transacción eliminada")
+      fetchTransactions()
+    } catch {
+      toast.error("Error al eliminar la transacción")
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -238,13 +250,14 @@ export default function FinanzasPage() {
               <TableHead className="text-muted-foreground text-right">Monto USD</TableHead>
               <TableHead className="text-muted-foreground text-right">Monto ARS</TableHead>
               <TableHead className="text-muted-foreground text-right">Fecha</TableHead>
+              <TableHead className="text-muted-foreground text-right w-12">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">Cargando...</TableCell></TableRow>
             ) : transactions.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-12"><DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin transacciones</p></TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12"><DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin transacciones</p></TableCell></TableRow>
             ) : (
               transactions.map((t) => (
                 <TableRow key={t.id} className="border-border hover:bg-muted">
@@ -266,6 +279,11 @@ export default function FinanzasPage() {
                     {t.amountARS ? `$${t.amountARS.toLocaleString("es-AR")}` : "—"}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground text-sm">{formatDate(t.date)}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(t)} className="text-muted-foreground hover:text-red-400">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
