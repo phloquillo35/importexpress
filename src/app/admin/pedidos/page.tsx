@@ -489,6 +489,10 @@ export default function PedidosPage() {
               item: i,
               pricing: computeItemPricing(i, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate),
             }))
+            const orderTotals = allPricing.reduce((acc, { pricing: p }) => ({
+              totalUSD: Math.round((acc.totalUSD + p.finalPriceUSD) * 100) / 100,
+              totalARS: acc.totalARS + p.finalPriceARS,
+            }), { totalUSD: 0, totalARS: 0 })
 
             return (
               <div className="space-y-5">
@@ -541,10 +545,10 @@ export default function PedidosPage() {
                 <div className="border border-border rounded-lg p-4 space-y-2">
                   <h3 className="text-sm font-semibold text-foreground">Totales del pedido</h3>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${order.totalUSD.toFixed(2)}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${(order.totalARS ?? 0).toLocaleString("es-AR")}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${orderTotals.totalUSD.toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${orderTotals.totalARS.toLocaleString("es-AR")}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Pagado</span><span className="text-[#22C55E]">${order.amountPaidUSD.toFixed(2)} USD</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Saldo pendiente</span><span className={order.totalUSD - order.amountPaidUSD > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>${Math.max(0, order.totalUSD - order.amountPaidUSD).toFixed(2)} USD</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Saldo pendiente</span><span className={orderTotals.totalUSD - order.amountPaidUSD > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>${Math.max(0, orderTotals.totalUSD - order.amountPaidUSD).toFixed(2)} USD</span></div>
                   </div>
                 </div>
 
@@ -552,7 +556,7 @@ export default function PedidosPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
                     <span className={`text-xs font-medium ${payCfg.className}`}>
-                      {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${order.totalUSD.toFixed(2)} USD
+                      {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${orderTotals.totalUSD.toFixed(2)} USD
                     </span>
                   </div>
                   <div className="flex items-end gap-3">
