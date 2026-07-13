@@ -50,7 +50,11 @@ ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "amountPaidARS" DOUBLE PRECISION;
 SQL
 
 echo "→ Backfilling totalARS en ordenes existentes..."
-node /app/scripts/backfill-total-ars.mjs 2>&1 || echo "⚠️ Backfill totalARS ignorado"
+if node /app/scripts/backfill-total-ars.mjs 2>&1; then
+  echo "✓ Backfill totalARS completado"
+else
+  echo "⚠️ Backfill totalARS falló — revisar output arriba"
+fi
 
 echo "→ Starting application..."
 export HOSTNAME=0.0.0.0

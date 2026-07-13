@@ -7,11 +7,20 @@ const pg = require("pg")
 async function main() {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 
+  // Quick diagnostic
+  const { rows: stats } = await pool.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE "totalARS" IS NULL) AS nulls,
+      COUNT(*) FILTER (WHERE "totalARS" = 0) AS zeros,
+      COUNT(*) FILTER (WHERE "totalARS" > 0) AS ok
+    FROM "Order"
+  `)
+  console.log(`→ Orders: ${stats[0].nulls} null, ${stats[0].zeros} zero, ${stats[0].ok} ok`)
+
   // Get orders with missing totalARS
   const { rows: orders } = await pool.query(
-    `SELECT id, "internalNumber", "usdtRate", "exchangeRate" FROM "Order" WHERE "totalARS" IS NULL OR "totalARS" = 0`
+    `SELECT id, "internalNumber", "usdtRate", "exchangeRate" FROM "Order" WHERE "totalARS" IS NULL OR "totalARS" = 0 ORDER BY "internalNumber"`
   )
-  console.log(`→ Backfilling totalARS for ${orders.length} orders`)
 
   let ok = 0
   let fail = 0
@@ -43,7 +52,7 @@ async function main() {
         const shippingCost = Number(item.shippingCost) || 0
         const profitType = item.profitType || "percentage"
         const profitValue = Number(item.profitValue) || 0
-        const usdtRate = Number(order.usdtRate) || 1
+        const usdtRate = order.usdtRate != null ? Number(order.usdtRate) : 1
         const quantity = Number(item.quantity) || 1
 
         let yoniUSDT = 0
