@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireAuth, requireRole } from "@/lib/auth"
-import { updateOrderSchema } from "@/lib/validators"
+import { updateOrderSchema, registerPaymentSchema } from "@/lib/validators"
 import { genId } from "@/lib/utils"
 
 export async function GET(
@@ -30,6 +30,10 @@ export async function GET(
             bulk: { select: { courier: true, trackingCode: true, type: true } },
           },
         },
+        payments: {
+          orderBy: { date: "desc" },
+          select: { id: true, amountUSD: true, amountARS: true, concept: true, date: true },
+        },
       },
     })
     if (!order) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
@@ -38,6 +42,27 @@ export async function GET(
     console.error("Error fetching order:", error)
     return Response.json({ error: "Error al cargar pedido" }, { status: 500 })
   }
+}
+
+async function recalculatePaymentStatus(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { totalUSD: true } })
+  if (!order) return
+
+  const agg = await prisma.transaction.aggregate({
+    where: { orderId },
+    _sum: { amountUSD: true },
+  })
+  const totalPaid = agg._sum.amountUSD ?? 0
+
+  let paymentStatus: string
+  if (totalPaid <= 0) paymentStatus = "debe"
+  else if (totalPaid < order.totalUSD) paymentStatus = "seña"
+  else paymentStatus = "pagado"
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { amountPaidUSD: totalPaid, paymentStatus },
+  })
 }
 
 export async function PUT(
@@ -50,18 +75,66 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
+    const existing = await prisma.order.findUnique({ where: { id } })
+    if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
+
+    if (body.payment) {
+      const parsed = registerPaymentSchema.safeParse(body.payment)
+      if (!parsed.success) {
+        return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+      }
+      const { amount, currency, concept } = parsed.data
+      let amountUSD = amount
+      let amountARS: number | null = null
+      if (currency === "ARS") {
+        amountUSD = amount / (existing.exchangeRate || 1)
+        amountARS = amount
+      }
+      await prisma.transaction.create({
+        data: {
+          id: genId(),
+          type: "income",
+          concept: concept || `Pago pedido #${existing.internalNumber} — ${existing.clientName}`,
+          amountUSD,
+          amountARS,
+          orderId: id,
+          date: new Date(),
+        },
+      })
+      await recalculatePaymentStatus(id)
+      const updated = await prisma.order.findUnique({
+        where: { id },
+        include: {
+          store: { select: { id: true, name: true } },
+          items: {
+            include: {
+              product: {
+                select: {
+                  name: true, slug: true, images: true, categoryId: true, stock: true,
+                  costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
+                  yoniEnabled: true, yoniType: true, yoniValue: true,
+                  shippingCost: true, profitType: true, profitValue: true,
+                },
+              },
+              bulk: { select: { courier: true, trackingCode: true, type: true } },
+            },
+          },
+          payments: {
+            orderBy: { date: "desc" },
+            select: { id: true, amountUSD: true, amountARS: true, concept: true, date: true },
+          },
+        },
+      })
+      return Response.json(updated)
+    }
+
     const parsed = updateOrderSchema.safeParse(body)
     if (!parsed.success) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const existing = await prisma.order.findUnique({ where: { id } })
-    if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
-
     const data: Record<string, unknown> = {}
-    if (body.status) {
-      data.status = body.status
-    }
+    if (body.status) data.status = body.status
     if (body.notes !== undefined) data.notes = body.notes
     if (body.clientName) data.clientName = body.clientName
     if (body.clientSurname !== undefined) data.clientSurname = body.clientSurname
@@ -69,9 +142,6 @@ export async function PUT(
     if (body.clientEmail !== undefined) data.clientEmail = body.clientEmail
     if (body.storeId !== undefined) data.storeId = body.storeId
     if (body.clientContact !== undefined) data.clientContact = body.clientContact
-    if (body.paymentStatus !== undefined) data.paymentStatus = body.paymentStatus
-    if (body.amountPaidUSD !== undefined) data.amountPaidUSD = body.amountPaidUSD
-    if (body.amountPaidARS !== undefined) data.amountPaidARS = body.amountPaidARS
 
     const updated = await prisma.order.update({
       where: { id },
@@ -93,25 +163,6 @@ export async function PUT(
         },
       },
     })
-
-    if (body.paymentStatus && body.amountPaidUSD && body.amountPaidUSD > 0) {
-      const prevStatus = existing.paymentStatus
-      const prevAmount = existing.amountPaidUSD
-      const changed = body.paymentStatus !== prevStatus || body.amountPaidUSD !== prevAmount
-      if (changed) {
-        const concept = `Pago pedido #${existing.internalNumber} — ${existing.clientName}${body.paymentStatus === "deposit" ? " (seña)" : ""}`
-        await prisma.transaction.create({
-          data: {
-            id: genId(),
-            type: "income",
-            concept,
-            amountUSD: body.amountPaidUSD,
-            amountARS: body.amountPaidARS || null,
-            date: new Date(),
-          },
-        })
-      }
-    }
 
     return Response.json(updated)
   } catch (error) {

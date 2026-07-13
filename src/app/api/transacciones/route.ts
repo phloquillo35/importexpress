@@ -4,6 +4,27 @@ import { genId } from "@/lib/utils"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { createTransactionSchema } from "@/lib/validators"
 
+async function recalculateOrderPaymentStatus(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { totalUSD: true } })
+  if (!order) return
+
+  const agg = await prisma.transaction.aggregate({
+    where: { orderId },
+    _sum: { amountUSD: true },
+  })
+  const totalPaid = agg._sum.amountUSD ?? 0
+
+  let paymentStatus: string
+  if (totalPaid <= 0) paymentStatus = "debe"
+  else if (totalPaid < order.totalUSD) paymentStatus = "seña"
+  else paymentStatus = "pagado"
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { amountPaidUSD: totalPaid, paymentStatus },
+  })
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth()
@@ -27,6 +48,11 @@ export async function GET(request: NextRequest) {
     const transactions = await prisma.transaction.findMany({
       where,
       orderBy: { date: "desc" },
+      include: {
+        order: {
+          select: { id: true, internalNumber: true, clientName: true, clientSurname: true },
+        },
+      },
     })
 
     return Response.json(transactions)
@@ -47,23 +73,24 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { type, concept, amountUSD, amountARS, date, notes } = body
-
-    if (!type || !concept || amountUSD === undefined) {
-      return Response.json({ error: "type, concept y amountUSD son requeridos" }, { status: 400 })
-    }
+    const { type, concept, amountUSD, amountARS, date, notes, orderId } = parsed.data
 
     const transaction = await prisma.transaction.create({
       data: {
         id: genId(),
         type,
         concept,
-        amountUSD: parseFloat(amountUSD),
-        amountARS: amountARS ? parseFloat(amountARS) : null,
+        amountUSD,
+        amountARS: amountARS || null,
         date: date ? new Date(date) : new Date(),
         notes: notes || null,
+        orderId: orderId || null,
       },
     })
+
+    if (orderId) {
+      await recalculateOrderPaymentStatus(orderId)
+    }
 
     return Response.json(transaction, { status: 201 })
   } catch (error) {

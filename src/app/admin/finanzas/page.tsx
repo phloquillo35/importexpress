@@ -38,6 +38,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+interface LinkedOrder {
+  id: string
+  internalNumber: number
+  clientName: string
+  clientSurname: string
+}
+
 interface Transaction {
   id: string
   type: string
@@ -46,6 +53,14 @@ interface Transaction {
   amountARS: number | null
   date: string
   notes: string | null
+  order: LinkedOrder | null
+}
+
+interface OrderOption {
+  id: string
+  internalNumber: number
+  clientName: string
+  clientSurname: string
 }
 
 export default function FinanzasPage() {
@@ -53,10 +68,12 @@ export default function FinanzasPage() {
   const [loading, setLoading] = useState(true)
   const [tipoFilter, setTipoFilter] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [form, setForm] = useState({ type: "income", concept: "", amountUSD: "", amountARS: "", date: "", notes: "" })
+  const [form, setForm] = useState({ type: "income", concept: "", amountUSD: "", amountARS: "", date: "", notes: "", orderId: "" })
   const [saving, setSaving] = useState(false)
   const [income, setIncome] = useState(0)
   const [expense, setExpense] = useState(0)
+  const [orderOptions, setOrderOptions] = useState<OrderOption[]>([])
+  const [orderSearch, setOrderSearch] = useState("")
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -81,6 +98,12 @@ export default function FinanzasPage() {
   }, [tipoFilter])
 
   useEffect(() => { fetchTransactions() }, [fetchTransactions])
+
+  useEffect(() => {
+    fetch("/api/pedidos?limit=200").then(r => r.json()).then(d => {
+      if (Array.isArray(d)) setOrderOptions(d.map((o: any) => ({ id: o.id, internalNumber: o.internalNumber, clientName: o.clientName, clientSurname: o.clientSurname })))
+    }).catch(() => {})
+  }, [])
 
   const balance = income - expense
 
@@ -120,9 +143,13 @@ export default function FinanzasPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
+          type: form.type,
+          concept: form.concept,
           amountUSD: parseFloat(form.amountUSD) || 0,
           amountARS: form.amountARS ? parseFloat(form.amountARS) : undefined,
+          date: form.date || undefined,
+          notes: form.notes || undefined,
+          orderId: form.orderId || undefined,
         }),
       })
       if (!res.ok) {
@@ -131,7 +158,7 @@ export default function FinanzasPage() {
       }
       toast.success("Transacción creada")
       setDialogOpen(false)
-      setForm({ type: "income", concept: "", amountUSD: "", amountARS: "", date: "", notes: "" })
+      setForm({ type: "income", concept: "", amountUSD: "", amountARS: "", date: "", notes: "", orderId: "" })
       fetchTransactions()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear transacción")
@@ -221,7 +248,14 @@ export default function FinanzasPage() {
             ) : (
               transactions.map((t) => (
                 <TableRow key={t.id} className="border-border hover:bg-muted">
-                  <TableCell className="text-foreground">{t.concept}</TableCell>
+                  <TableCell className="text-foreground">
+                    {t.concept}
+                    {t.order && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        — #{t.order.internalNumber} {t.order.clientName} {t.order.clientSurname}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${t.type === "income" ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-red-500/10 text-red-400"}`}>
                       {t.type === "income" ? "Ingreso" : "Egreso"}
@@ -273,6 +307,41 @@ export default function FinanzasPage() {
               <Label>Fecha</Label>
               <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
+            {form.type === "income" && (
+              <div className="space-y-2">
+                <Label>Vincular a pedido (opcional)</Label>
+                <Input
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  placeholder="Buscar por nombre o número..."
+                  className="bg-muted border-border text-foreground mb-1"
+                />
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {orderOptions
+                    .filter((o) => {
+                      if (!orderSearch) return true
+                      const q = orderSearch.toLowerCase()
+                      return o.clientName.toLowerCase().includes(q) || o.clientSurname.toLowerCase().includes(q) || String(o.internalNumber).includes(q)
+                    })
+                    .slice(0, 5)
+                    .map((o) => (
+                      <button
+                        key={o.id}
+                        type="button"
+                        onClick={() => {
+                          setForm({ ...form, orderId: o.id, concept: `Pago pedido #${o.internalNumber} — ${o.clientName}` })
+                          setOrderSearch("")
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          form.orderId === o.id ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        #{o.internalNumber} — {o.clientName} {o.clientSurname}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Notas</Label>
               <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-muted border-border text-foreground" />

@@ -21,7 +21,7 @@ async function getDashboardData(periodDays: number = 30) {
       prisma.transaction.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } }),
       prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
       prisma.category.findMany({ include: { _count: { select: { products: true } } } }),
-      prisma.order.findMany({ where: { paymentStatus: { not: "paid" } }, select: { totalUSD: true, amountPaidUSD: true } }),
+      prisma.order.findMany({ where: { paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
     ])
 
     const incomeAgg = await prisma.transaction.aggregate({

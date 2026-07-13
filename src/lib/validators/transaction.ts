@@ -7,6 +7,7 @@ export const createTransactionSchema = z.object({
   amountARS: z.number().optional(),
   date: z.string().optional(),
   notes: z.string().optional(),
+  orderId: z.string().optional(),
 })
 
 export const updateTransactionSchema = createTransactionSchema.partial()

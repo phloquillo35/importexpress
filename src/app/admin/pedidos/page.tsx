@@ -47,9 +47,9 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 }
 
 const paymentConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: "Debe", className: "text-orange-400" },
-  deposit: { label: "Seña", className: "text-yellow-400" },
-  paid: { label: "Pagado", className: "text-[#22C55E]" },
+  debe: { label: "Debe", className: "text-orange-400" },
+  seña: { label: "Seña", className: "text-yellow-400" },
+  pagado: { label: "Pagado", className: "text-[#22C55E]" },
 }
 
 interface OrderItem {
@@ -91,6 +91,14 @@ interface StoreType {
   name: string
 }
 
+interface Payment {
+  id: string
+  amountUSD: number
+  amountARS: number | null
+  concept: string | null
+  date: string
+}
+
 interface Order {
   id: string
   internalNumber: number
@@ -111,6 +119,7 @@ interface Order {
   exchangeRate: number
   usdtRate: number
   items: OrderItem[]
+  payments: Payment[]
 }
 
 interface Product {
@@ -159,9 +168,8 @@ export default function PedidosPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
   const [productDetail, setProductDetail] = useState<{ item: OrderItem; order: Order } | null>(null)
-  const [editPaymentStatus, setEditPaymentStatus] = useState("pending")
-  const [editAmount, setEditAmount] = useState(0)
-  const [editAmountARS, setEditAmountARS] = useState(0)
+  const [paymentAmount, setPaymentAmount] = useState(0)
+  const [paymentCurrency, setPaymentCurrency] = useState("USD")
   const [savingPay, setSavingPay] = useState(false)
 
   const fetchOrders = useCallback(async () => {
@@ -178,9 +186,8 @@ export default function PedidosPage() {
 
   useEffect(() => {
     if (productDetail) {
-      setEditPaymentStatus(productDetail.order.paymentStatus)
-      setEditAmount(productDetail.order.amountPaidUSD)
-      setEditAmountARS(productDetail.order.amountPaidARS ?? 0)
+      setPaymentAmount(0)
+      setPaymentCurrency("USD")
     }
   }, [productDetail])
 
@@ -192,14 +199,16 @@ export default function PedidosPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          paymentStatus: editPaymentStatus,
-          amountPaidUSD: editAmount,
-          amountPaidARS: editAmountARS || null,
+          payment: { amount: paymentAmount, currency: paymentCurrency },
         }),
       })
-      if (!res.ok) throw new Error("Error al guardar pago")
-      toast.success("Pago actualizado")
-      setProductDetail(null)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al guardar pago")
+      }
+      const updated = await res.json()
+      toast.success("Pago registrado")
+      setProductDetail({ item: productDetail.item, order: updated })
       fetchOrders()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al guardar pago")
@@ -403,7 +412,7 @@ export default function PedidosPage() {
             ) : (
               flatItems.map(({ item, order }) => {
                 const pricing = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
-                const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.pending
+                const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
                 return (
                   <TableRow
                     key={item.id}
@@ -525,54 +534,69 @@ export default function PedidosPage() {
                 </div>
 
                 <div className="border-t border-border pt-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
+                    <span className={`text-xs font-medium ${payCfg.className}`}>
+                      {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${order.totalUSD.toFixed(2)} USD
+                    </span>
+                  </div>
                   <div className="flex items-end gap-3">
-                    <div className="w-36 space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Estado</Label>
-                      <Select value={editPaymentStatus} onValueChange={(v) => v && setEditPaymentStatus(v)}>
-                        <SelectTrigger className="bg-muted border-border text-foreground">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card text-foreground">
-                          <SelectItem value="pending">Debe</SelectItem>
-                          <SelectItem value="deposit">Seña</SelectItem>
-                          <SelectItem value="paid">Pagado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                     <div className="flex-1 space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Monto USD</Label>
+                      <Label className="text-xs text-muted-foreground">Monto</Label>
                       <Input
                         type="number"
                         min={0}
                         step={0.01}
-                        value={editAmount}
-                        onChange={(e) => setEditAmount(Number(e.target.value))}
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(Number(e.target.value))}
                         className="bg-muted border-border text-foreground"
                       />
                     </div>
-                    <div className="flex-1 space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Monto ARS</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={100}
-                        value={editAmountARS}
-                        onChange={(e) => setEditAmountARS(Number(e.target.value))}
-                        className="bg-muted border-border text-foreground"
-                      />
+                    <div className="w-24 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Moneda</Label>
+                      <Select value={paymentCurrency} onValueChange={(v) => v && setPaymentCurrency(v)}>
+                        <SelectTrigger className="bg-muted border-border text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card text-foreground">
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="ARS">ARS</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <Button
                       type="button"
-                      disabled={savingPay}
+                      disabled={savingPay || paymentAmount <= 0}
                       onClick={handleSavePayment}
                       size="sm"
                       className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
-                      {savingPay ? "Guardando..." : "Guardar"}
+                      {savingPay ? "Guardando..." : "Registrar pago"}
                     </Button>
                   </div>
                 </div>
+
+                {order.payments && order.payments.length > 0 && (
+                  <div className="border-t border-border pt-4 space-y-2">
+                    <h3 className="text-sm font-semibold text-foreground">Historial de pagos</h3>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {order.payments.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-2">
+                          <span className="text-muted-foreground">
+                            {new Date(p.date).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          <span className="text-foreground font-medium">
+                            {p.amountARS ? `$${p.amountARS.toLocaleString("es-AR")} ARS` : `$${p.amountUSD.toFixed(2)} USD`}
+                          </span>
+                          <span className="text-muted-foreground">{p.concept || "—"}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-right">
+                      Total pagado: <span className="text-[#22C55E] font-medium">${order.amountPaidUSD.toFixed(2)} USD</span>
+                    </p>
+                  </div>
+                )}
 
                 {order.notes && (
                   <div className="border-t border-border pt-3">

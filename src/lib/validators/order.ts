@@ -26,7 +26,13 @@ export const updateOrderSchema = z.object({
   clientEmail: z.string().optional(),
   storeName: z.string().optional(),
   clientContact: z.string().optional(),
-  paymentStatus: z.enum(["pending", "deposit", "paid"]).optional(),
+  paymentStatus: z.enum(["debe", "seña", "pagado"]).optional(),
   amountPaidUSD: z.number().min(0).optional(),
   amountPaidARS: z.number().min(0).optional(),
+})
+
+export const registerPaymentSchema = z.object({
+  amount: z.number().positive(),
+  currency: z.enum(["USD", "ARS"]),
+  concept: z.string().optional(),
 })
