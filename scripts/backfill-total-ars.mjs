@@ -2,7 +2,7 @@
 // Uses raw pg (no Prisma) to avoid schema/model mismatch
 // Run: node scripts/backfill-total-ars.mjs
 
-const pg = require("pg")
+import pg from "pg"
 
 async function main() {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
@@ -88,7 +88,9 @@ async function main() {
   await pool.end()
 }
 
-main().catch((err) => {
+try {
+  await main()
+} catch (err) {
   console.error("❌ Backfill error:", err)
   process.exit(1)
-})
+}

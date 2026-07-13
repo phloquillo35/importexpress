@@ -2,7 +2,7 @@
 // Run: railway run node scripts/check-total-ars.mjs
 // Or:  DATABASE_URL=... node scripts/check-total-ars.mjs
 
-const pg = require("pg")
+import pg from "pg"
 
 async function main() {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
@@ -53,7 +53,9 @@ async function main() {
   await pool.end()
 }
 
-main().catch((err) => {
+try {
+  await main()
+} catch (err) {
   console.error("❌ Diagnostic error:", err)
   process.exit(1)
-})
+}
