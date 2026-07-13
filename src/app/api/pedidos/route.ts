@@ -52,9 +52,16 @@ export async function GET(request: NextRequest) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
 
+    const [exchangeRateSetting, usdtRateSetting] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: "exchange_rate" } }),
+      prisma.setting.findUnique({ where: { key: "usdt_rate" } }),
+    ])
+    const defaultExchangeRate = parseFloat(exchangeRateSetting?.value || "1350")
+    const defaultUsdtRate = parseFloat(usdtRateSetting?.value || "1400")
+
     const enriched = sorted.map((order) => ({
       ...order,
-      totalARS: order.totalARS ?? computeOrderTotalARS(order),
+      totalARS: order.totalARS ?? computeOrderTotalARS(order, { exchangeRate: defaultExchangeRate, usdtRate: defaultUsdtRate }),
     }))
 
     return Response.json(enriched)

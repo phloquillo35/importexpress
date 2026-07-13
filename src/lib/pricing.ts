@@ -84,9 +84,10 @@ export function computeOrderTotalARS(
       }
     }>
   },
+  defaults?: { exchangeRate: number; usdtRate: number },
 ): number {
-  const exchangeRate = order.exchangeRate || 1
-  const usdtRate = order.usdtRate || 1
+  const exchangeRate = (order.exchangeRate || defaults?.exchangeRate) ?? 1
+  const usdtRate = (order.usdtRate || defaults?.usdtRate) ?? 1
   let total = 0
   for (const item of order.items) {
     const pricing = calculateFinalPrice({

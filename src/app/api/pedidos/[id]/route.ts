@@ -5,6 +5,17 @@ import { updateOrderSchema, registerPaymentSchema } from "@/lib/validators"
 import { genId } from "@/lib/utils"
 import { computeOrderTotalARS } from "@/lib/pricing"
 
+async function getSettings() {
+  const [er, ur] = await Promise.all([
+    prisma.setting.findUnique({ where: { key: "exchange_rate" } }),
+    prisma.setting.findUnique({ where: { key: "usdt_rate" } }),
+  ])
+  return {
+    exchangeRate: parseFloat(er?.value || "1350"),
+    usdtRate: parseFloat(ur?.value || "1400"),
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,9 +49,10 @@ export async function GET(
       },
     })
     if (!order) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
+    const defaults = await getSettings()
     return Response.json({
       ...order,
-      totalARS: order.totalARS ?? computeOrderTotalARS(order),
+      totalARS: order.totalARS ?? computeOrderTotalARS(order, defaults),
     })
   } catch (error) {
     console.error("Error fetching order:", error)
