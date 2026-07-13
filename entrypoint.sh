@@ -45,19 +45,9 @@ echo "→ Aplicando migraciones pendientes..."
 ./node_modules/.bin/prisma migrate deploy 2>&1 || echo "⚠️ Error en migrate deploy, continuando..."
 
 echo "→ Verificando columnas faltantes..."
-node -e "
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-(async () => {
-  try {
-    await prisma.\$executeRawUnsafe('ALTER TABLE \"Order\" ADD COLUMN IF NOT EXISTS \"amountPaidARS\" DOUBLE PRECISION');
-    console.log('✓ amountPaidARS column verified');
-  } catch (e) {
-    console.log('⚠️ amountPaidARS check:', e.message);
-  }
-  await prisma.\$disconnect();
-})();
-" 2>&1 || true
+./node_modules/.bin/prisma db execute --stdin <<'SQL' 2>&1 || echo "⚠️ No se pudo verificar amountPaidARS"
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "amountPaidARS" DOUBLE PRECISION;
+SQL
 
 echo "→ Starting application..."
 export HOSTNAME=0.0.0.0
