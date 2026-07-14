@@ -26,6 +26,7 @@ interface ProductCardProps {
     hasFinancing: boolean
     category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
   }
+  colorName?: string | null
 }
 
 function getCardColors(images: unknown): string[] {
@@ -35,19 +36,27 @@ function getCardColors(images: unknown): string[] {
   return colors
 }
 
-function getCardImage(images: unknown): string | null {
+function getCardImage(images: unknown, colorName?: string | null): string | null {
   if (!images || !Array.isArray(images) || images.length === 0) return null
+  if (colorName) {
+    for (const item of images) {
+      const img = item as { url: string; color?: string }
+      if (img.color?.toLowerCase() === colorName.toLowerCase()) return img.url
+    }
+    return null
+  }
   const first = images[0]
   if (typeof first === "string") return first
   return (first as { url: string }).url || null
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, colorName }: ProductCardProps) {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
   const { addItem } = useCart()
 
   const cardColors = useMemo(() => getCardColors(product.images), [product.images])
-  const cardImage = useMemo(() => getCardImage(product.images), [product.images])
+  const cardImage = useMemo(() => getCardImage(product.images, colorName), [product.images, colorName])
+  const colorHex = colorName ? colorSwatch[colorName.toLowerCase()] || null : null
 
   useEffect(() => {
     fetchExchangeRate().then(setExchangeRate)
@@ -55,13 +64,14 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const displayPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
   const price = Math.round(displayPrice)
+  const href = colorName ? `/productos/${product.slug}?color=${encodeURIComponent(colorName)}` : `/productos/${product.slug}`
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
     addItem({
       slug: product.slug,
-      name: product.name,
+      name: colorName ? `${product.name} (${colorName})` : product.name,
       price,
       image: cardImage,
     })
@@ -69,7 +79,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group block bg-card rounded-2xl border border-border/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <Link href={`/productos/${product.slug}`} className="block">
+      <Link href={href} className="block">
         <div className="aspect-[4/3] bg-muted flex items-center justify-center p-8">
           {cardImage ? (
             <img
@@ -83,7 +93,15 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {cardColors.length > 1 && (
+        {colorName && colorHex ? (
+          <div className="flex items-center justify-center gap-1.5 px-5 pt-3">
+            <span
+              className="w-3 h-3 rounded-full border border-muted-foreground/30"
+              style={{ backgroundColor: colorHex }}
+            />
+            <span className="text-xs font-medium text-muted-foreground capitalize">{colorName}</span>
+          </div>
+        ) : cardColors.length > 1 ? (
           <div className="flex items-center justify-center gap-1.5 px-5 pt-3">
             {cardColors.map(color => (
               <span
@@ -94,9 +112,9 @@ export function ProductCard({ product }: ProductCardProps) {
               />
             ))}
           </div>
-        )}
+        ) : null}
 
-        <div className={`p-5 space-y-3 ${cardColors.length > 1 ? "pt-2" : ""}`}>
+        <div className={`p-5 space-y-3 ${(colorName || cardColors.length > 1) ? "pt-2" : ""}`}>
           {product.category && (
             <span className="inline-block text-[11px] font-medium uppercase tracking-wider text-primary">
               {product.category.parent

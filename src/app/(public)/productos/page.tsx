@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState, useMemo, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, ChevronDown, Package, AlertCircle, ArrowRight } from "lucide-react"
 import { ProductCard } from "@/components/public/ProductCard"
@@ -27,6 +27,13 @@ interface Category {
   parent: { id: string; name: string; slug: string } | null
   _count: { products: number }
   children: { id: string; name: string; slug: string; _count: { products: number } }[]
+}
+
+function getProductColors(images: unknown): string[] {
+  if (!images || !Array.isArray(images) || images.length === 0) return []
+  if (typeof images[0] === "string") return []
+  const colors = [...new Set(images.map((img: unknown) => (img as { color?: string }).color).filter(Boolean))] as string[]
+  return colors
 }
 
 function ProductosContent() {
@@ -108,12 +115,28 @@ function ProductosContent() {
     updateParams({ search, categoria: undefined })
   }
 
+  const colorVariants = useMemo(() => {
+    const variants: Array<{ product: Product; colorName: string | null }> = []
+    for (const product of products) {
+      const colors = getProductColors(product.images)
+      if (colors.length > 1) {
+        for (const color of colors) {
+          variants.push({ product, colorName: color })
+        }
+      } else {
+        variants.push({ product, colorName: null })
+      }
+    }
+    return variants
+  }, [products])
+  const displayTotal = colorVariants.length
+
   return (
     <div>
       <div className="border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground font-heading mb-2">Catálogo</h1>
-          <p className="text-foreground/70 dark:text-muted-foreground">{total} productos disponibles</p>
+          <p className="text-foreground/70 dark:text-muted-foreground">{displayTotal} productos disponibles</p>
         </div>
       </div>
 
@@ -231,8 +254,8 @@ function ProductosContent() {
             ) : products.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {colorVariants.map(({ product, colorName }) => (
+                    <ProductCard key={colorName ? `${product.id}-${colorName}` : product.id} product={product} colorName={colorName} />
                   ))}
                 </div>
 

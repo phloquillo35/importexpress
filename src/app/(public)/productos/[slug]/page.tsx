@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
-import { useParams } from "next/navigation"
+import { useEffect, useState, useMemo, Suspense } from "react"
+import { useParams, useSearchParams } from "next/navigation"
 import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
@@ -26,8 +26,9 @@ interface Product {
   category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
-export default function ProductDetailPage() {
+function ProductDetailContent() {
   const { slug } = useParams<{ slug: string }>()
+  const searchParams = useSearchParams()
   const [product, setProduct] = useState<Product | null>(null)
   const [related, setRelated] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,7 +60,11 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (parsed.colors.length > 0) {
-      setSelectedColor(parsed.colors[0])
+      const fromUrl = searchParams.get("color")
+      const initialColor = fromUrl && parsed.colors.some(c => c.toLowerCase() === fromUrl.toLowerCase())
+        ? parsed.colors.find(c => c.toLowerCase() === fromUrl.toLowerCase())!
+        : parsed.colors[0]
+      setSelectedColor(initialColor)
       setCurrentIndex(0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -319,5 +324,28 @@ export default function ProductDetailPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function ProductDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="space-y-6">
+          <Skeleton className="h-6 w-32 bg-muted" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <Skeleton className="aspect-square rounded-2xl bg-muted" />
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-20 bg-muted" />
+              <Skeleton className="h-8 w-3/4 bg-muted" />
+              <Skeleton className="h-6 w-24 bg-muted" />
+              <Skeleton className="h-20 w-full bg-muted" />
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <ProductDetailContent />
+    </Suspense>
   )
 }
