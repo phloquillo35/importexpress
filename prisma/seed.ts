@@ -10,17 +10,17 @@ const prisma = new PrismaClient({
 })
 
 async function main() {
-  const admin = await prisma.admin.findUnique({ where: { email: "admin@importexpress.com" } })
+  const admin = await prisma.admin.findUnique({ where: { email: "lopedislotenes@admin.com" } })
   if (!admin) {
     await prisma.admin.create({
       data: {
         id: randomUUID(),
-        email: "admin@importexpress.com",
+        email: "lopedislotenes@admin.com",
         name: "Admin",
-        password: hashSync("admin123", 10),
+        password: hashSync("elpiratad", 10),
       },
     })
-    console.log("Admin creado: admin@importexpress.com / admin123")
+    console.log("Admin creado: lopedislotenes@admin.com / elpiratad")
   }
 
   const settings = [
