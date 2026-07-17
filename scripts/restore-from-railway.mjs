@@ -19,8 +19,8 @@ async function getToken() {
     console.log("  ⚠️  Sesión guardada expiró, renovando...")
   }
 
-  const EMAIL = process.env.RAILWAY_EMAIL || "admin@importexpress.com"
-  const PASSWORD = process.env.RAILWAY_PASSWORD || "admin123"
+  const EMAIL = process.env.RAILWAY_EMAIL || "lopedislotenes@admin.com"
+  const PASSWORD = process.env.RAILWAY_PASSWORD || "elpiratad"
 
   const csrfRes = await fetch(`${RAILWAY_URL}/api/auth/csrf`)
   const csrfData = await csrfRes.json()
@@ -140,7 +140,7 @@ async function main() {
 
     if (aList.length) insertSafe("Admin", aList)
     else insertSafe("Admin", [{
-      id: randomUUID(), email: "admin@importexpress.com", name: "Admin",
+      id: randomUUID(), email: "lopedislotenes@admin.com", name: "Admin",
       password: "$2a$10$dummy", role: "admin",
     }])
 

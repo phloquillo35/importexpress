@@ -9,7 +9,7 @@ const prisma = new PrismaClient({
 
 async function main() {
   const existing = await prisma.admin.findUnique({
-    where: { email: "admin@importexpress.com" },
+    where: { email: "lopedislotenes@admin.com" },
   })
 
   if (existing) {
@@ -18,12 +18,12 @@ async function main() {
     return
   }
 
-  const hashed = await hash("admin123", 12)
+  const hashed = await hash("elpiratad", 12)
 
   await prisma.admin.create({
     data: {
       id: randomUUID(),
-      email: "admin@importexpress.com",
+      email: "lopedislotenes@admin.com",
       name: "Admin",
       password: hashed,
     },
@@ -41,7 +41,7 @@ async function main() {
     console.log(`Setting "${setting.key}" created`)
   }
 
-  console.log("Admin created: admin@importexpress.com / admin123")
+  console.log("Admin created: lopedislotenes@admin.com / elpiratad")
   await prisma.$disconnect()
 }
 
