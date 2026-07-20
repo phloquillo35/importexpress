@@ -62,10 +62,13 @@ export default function AdminCategoriasPage() {
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null)
   const [categoryProducts, setCategoryProducts] = useState<ViewProduct[]>([])
   const [viewLoading, setViewLoading] = useState(false)
+  const [showDeleted, setShowDeleted] = useState(false)
 
   async function loadCategories() {
     try {
-      const res = await fetch("/api/categorias")
+      const params = new URLSearchParams()
+      if (showDeleted) params.set("showDeleted", "true")
+      const res = await fetch(`/api/categorias?${params}`)
       const data = await res.json()
       setCategories(Array.isArray(data) ? data : [])
     } catch {
@@ -77,7 +80,7 @@ export default function AdminCategoriasPage() {
 
   useEffect(() => {
     loadCategories()
-  }, [])
+  }, [showDeleted])
 
   function openNew() {
     setEditing(null)
@@ -175,7 +178,17 @@ export default function AdminCategoriasPage() {
           <h1 className="text-2xl font-bold text-foreground font-heading">Categorías</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestioná las categorías de productos</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant={showDeleted ? "default" : "outline"}
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" />
             Nueva categoría
@@ -276,6 +289,7 @@ export default function AdminCategoriasPage() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">

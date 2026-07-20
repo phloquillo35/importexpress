@@ -160,7 +160,7 @@ export async function DELETE(
       return Response.json({ error: "Producto no encontrado" }, { status: 404 })
     }
 
-    await prisma.product.delete({ where: { slug } })
+    await prisma.product.update({ where: { slug }, data: { deletedAt: new Date() } })
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting product:", error)

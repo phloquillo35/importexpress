@@ -201,16 +201,7 @@ export async function DELETE(
 
     console.log(`[PEDIDO DELETE] id=${id} client=${existing.clientName} ${existing.clientSurname} total=${existing.totalUSD} status=${existing.status}`)
 
-    const deletedItems = await prisma.orderItem.findMany({
-      where: { orderId: id },
-      select: { id: true, productId: true, quantity: true },
-    })
-    console.log(`[PEDIDO DELETE] deleting ${deletedItems.length} items: ${deletedItems.map(i => `${i.productId}x${i.quantity}`).join(", ")}`)
-
-    await prisma.transaction.deleteMany({ where: { orderId: id } })
-    await prisma.orderItem.deleteMany({ where: { orderId: id } })
-    await prisma.order.delete({ where: { id } })
-    console.log(`[PEDIDO DELETE] order ${id} deleted successfully`)
+    await prisma.order.update({ where: { id }, data: { deletedAt: new Date() } })
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting order:", error)

@@ -49,7 +49,7 @@ export async function DELETE(
         error: `No se puede eliminar: tiene ${existing._count.products} producto(s) y ${existing._count.bulks} bulto(s) asociados`,
       }, { status: 409 })
     }
-    await prisma.store.delete({ where: { id } })
+    await prisma.store.update({ where: { id }, data: { deletedAt: new Date() } })
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting store:", error)

@@ -74,11 +74,13 @@ export default function FinanzasPage() {
   const [expense, setExpense] = useState(0)
   const [orderOptions, setOrderOptions] = useState<OrderOption[]>([])
   const [orderSearch, setOrderSearch] = useState("")
+  const [showDeleted, setShowDeleted] = useState(false)
 
   const fetchTransactions = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (tipoFilter) params.set("tipo", tipoFilter)
+      if (showDeleted) params.set("showDeleted", "true")
       const res = await fetch(`/api/transacciones?${params}`)
       const data = await res.json()
       setTransactions(Array.isArray(data) ? data : [])
@@ -97,7 +99,7 @@ export default function FinanzasPage() {
     }
   }, [tipoFilter])
 
-  useEffect(() => { fetchTransactions() }, [fetchTransactions])
+  useEffect(() => { fetchTransactions() }, [fetchTransactions, showDeleted])
 
   useEffect(() => {
     fetch("/api/pedidos?limit=200").then(r => r.json()).then(d => {
@@ -186,9 +188,20 @@ export default function FinanzasPage() {
           <h1 className="text-2xl font-bold text-foreground font-heading">Finanzas</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestión de ingresos y egresos</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" /> Nueva transacción
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant={showDeleted ? "default" : "outline"}
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
+          </Button>
+          <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Plus className="w-4 h-4 mr-2" /> Nueva transacción
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -39,17 +39,20 @@ export default function TiendasPage() {
   const [editing, setEditing] = useState<StoreType | null>(null)
   const [form, setForm] = useState({ name: "", contact: "", website: "", notes: "" })
   const [saving, setSaving] = useState(false)
+  const [showDeleted, setShowDeleted] = useState(false)
 
   async function load() {
     try {
-      const res = await fetch("/api/tiendas")
+      const params = new URLSearchParams()
+      if (showDeleted) params.set("showDeleted", "true")
+      const res = await fetch(`/api/tiendas?${params}`)
       const data = await res.json()
       setStores(Array.isArray(data) ? data : [])
     } catch { toast.error("Error al cargar") }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [showDeleted])
 
   function openNew() {
     setEditing(null)
@@ -100,9 +103,20 @@ export default function TiendasPage() {
           <h1 className="text-2xl font-bold text-foreground font-heading">Tiendas</h1>
           <p className="text-muted-foreground text-sm mt-1">{stores.length} tiendas</p>
         </div>
-        <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" /> Nueva tienda
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant={showDeleted ? "default" : "outline"}
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
+          </Button>
+          <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Plus className="w-4 h-4 mr-2" /> Nueva tienda
+          </Button>
+        </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">

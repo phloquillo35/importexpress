@@ -1,11 +1,19 @@
 import { prisma } from "@/lib/prisma"
+import { NextRequest } from "next/server"
 import { genId, slugify } from "@/lib/utils"
 import { requireRole } from "@/lib/auth"
 import { createCategorySchema } from "@/lib/validators"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const showDeleted = searchParams.get("showDeleted") === "true"
+
+    const where: Record<string, unknown> = {}
+    if (!showDeleted) where.deletedAt = null
+
     const categories = await prisma.category.findMany({
+      where,
       include: { _count: { select: { products: true } }, children: { select: { id: true, name: true, slug: true, _count: { select: { products: true } } } }, parent: { select: { id: true, name: true, slug: true } } },
       orderBy: { name: "asc" },
     })

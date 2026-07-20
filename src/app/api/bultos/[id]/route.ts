@@ -248,8 +248,8 @@ export async function DELETE(
       console.log(`[BULK DELETE] order ${orderId} recalculated -> ${computed}`)
     }
 
-    console.log(`[BULK DELETE] deleted bulk ${id} success`)
-    await prisma.bulk.delete({ where: { id } })
+    console.log(`[BULK DELETE] soft deleted bulk ${id} success`)
+    await prisma.bulk.update({ where: { id }, data: { deletedAt: new Date() } })
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting bulk:", error)

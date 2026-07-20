@@ -108,12 +108,14 @@ export default function BultosPage() {
   const [viewLoading, setViewLoading] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Bulk | null>(null)
+  const [showDeleted, setShowDeleted] = useState(false)
 
   const fetchBulks = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (statusFilter) params.set("status", statusFilter)
+      if (showDeleted) params.set("showDeleted", "true")
       const res = await fetch(`/api/bultos?${params}`)
       const data = await res.json()
       setBulks(Array.isArray(data) ? data : [])
@@ -121,7 +123,7 @@ export default function BultosPage() {
     finally { setLoading(false) }
   }, [statusFilter])
 
-  useEffect(() => { fetchBulks() }, [fetchBulks])
+  useEffect(() => { fetchBulks() }, [fetchBulks, showDeleted])
 
   useEffect(() => {
     fetch("/api/pedidos?status=pending")
@@ -266,9 +268,20 @@ export default function BultosPage() {
           <h1 className="text-2xl font-bold text-foreground font-heading">Bultos</h1>
           <p className="text-muted-foreground text-sm mt-1">{bulks.length} bultos</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" /> Nuevo bulto
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant={showDeleted ? "default" : "outline"}
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
+          </Button>
+          <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Plus className="w-4 h-4 mr-2" /> Nuevo bulto
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2">

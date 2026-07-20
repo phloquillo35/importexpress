@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")))
 
     const admin = searchParams.get("admin") || ""
+    const showDeleted = searchParams.get("showDeleted") === "true"
     const where: Record<string, unknown> = {}
+    if (!showDeleted) where.deletedAt = null
 
     if (!admin) {
       where.isAvailable = true

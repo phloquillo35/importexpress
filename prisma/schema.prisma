@@ -29,6 +29,7 @@ model Category {
   products    Product[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
 }
 
 model Store {
@@ -44,6 +45,7 @@ model Store {
   orders   Order[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Product {
@@ -77,6 +79,7 @@ model Product {
   orderItems OrderItem[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
 }
 
 model Order {
@@ -102,6 +105,7 @@ model Order {
   usdtRate      Float       @default(0)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
 }
 
 model OrderItem {
@@ -145,6 +149,7 @@ model Bulk {
   store     Store?     @relation(fields: [storeId], references: [id])
   createdAt DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
 }
 
 model Transaction {
@@ -158,6 +163,7 @@ model Transaction {
   orderId   String?
   order     Order?   @relation(fields: [orderId], references: [id])
   createdAt DateTime @default(now())
+  deletedAt DateTime?
 }
 
 model Setting {

@@ -133,7 +133,7 @@ export async function DELETE(
       })
     }
 
-    await prisma.bulk.delete({ where: { id } })
+    await prisma.bulk.update({ where: { id }, data: { deletedAt: new Date() } })
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting bulk:", error)

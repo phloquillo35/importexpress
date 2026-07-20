@@ -65,7 +65,7 @@ export async function DELETE(
     const existing = await prisma.transaction.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Transacción no encontrada" }, { status: 404 })
     const orderId = existing.orderId
-    await prisma.transaction.delete({ where: { id } })
+    await prisma.transaction.update({ where: { id }, data: { deletedAt: new Date() } })
     if (orderId) await recalculateOrderPaymentStatus(orderId)
     return Response.json({ success: true })
   } catch (error) {

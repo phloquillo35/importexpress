@@ -173,16 +173,19 @@ export default function PedidosPage() {
   const [paymentAmount, setPaymentAmount] = useState(0)
   const [paymentCurrency, setPaymentCurrency] = useState("USD")
   const [savingPay, setSavingPay] = useState(false)
+  const [showDeleted, setShowDeleted] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     try {
-      const res = await fetch("/api/pedidos")
+      const params = new URLSearchParams()
+      if (showDeleted) params.set("showDeleted", "true")
+      const res = await fetch(`/api/pedidos?${params}`)
       const data = await res.json()
       setOrders(Array.isArray(data) ? data : [])
     } catch {
       toast.error("Error al cargar pedidos")
     } finally { setLoading(false) }
-  }, [])
+  }, [showDeleted])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
@@ -366,9 +369,20 @@ export default function PedidosPage() {
           <h1 className="text-2xl font-bold text-foreground font-heading">Pedidos</h1>
           <p className="text-muted-foreground text-sm mt-1">{flatItems.length} productos</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant={showDeleted ? "default" : "outline"}
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
+          </Button>
+          <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2">

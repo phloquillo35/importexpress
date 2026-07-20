@@ -18,6 +18,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -33,6 +34,7 @@ const links = [
   { href: "/admin/bultos", label: "Bultos", icon: Ship },
   { href: "/admin/miembros", label: "Miembros", icon: Users },
   { href: "/admin/reportes", label: "Reportes", icon: FileText },
+  { href: "/admin/papelera", label: "Papelera", icon: Trash2 },
   { href: "/admin/configuracion", label: "Configuración", icon: Settings },
 ]
 

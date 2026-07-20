@@ -62,21 +62,13 @@ export async function DELETE(
 
     const existing = await prisma.category.findUnique({
       where: { id },
-      include: { _count: { select: { products: true } } },
     })
 
     if (!existing) {
       return Response.json({ error: "Categoría no encontrada" }, { status: 404 })
     }
 
-    if (existing._count.products > 0) {
-      return Response.json(
-        { error: `No se puede eliminar: tiene ${existing._count.products} producto(s) asociado(s)` },
-        { status: 409 }
-      )
-    }
-
-    await prisma.category.delete({ where: { id } })
+    await prisma.category.update({ where: { id }, data: { deletedAt: new Date() } })
 
     return Response.json({ success: true })
   } catch (error) {

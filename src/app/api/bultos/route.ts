@@ -13,11 +13,13 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status")
     const courier = searchParams.get("courier")
     const type = searchParams.get("type")
+    const showDeleted = searchParams.get("showDeleted") === "true"
 
     const where: Record<string, unknown> = {}
     if (status) where.status = status
     if (courier) where.courier = courier
     if (type) where.type = type
+    if (!showDeleted) where.deletedAt = null
 
     const bulks = await prisma.bulk.findMany({
       where,

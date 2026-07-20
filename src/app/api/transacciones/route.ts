@@ -34,10 +34,12 @@ export async function GET(request: NextRequest) {
     const tipo = searchParams.get("tipo")
     const desde = searchParams.get("desde")
     const hasta = searchParams.get("hasta")
+    const showDeleted = searchParams.get("showDeleted") === "true"
 
     const where: Record<string, unknown> = {}
 
     if (tipo) where.type = tipo
+    if (!showDeleted) where.deletedAt = null
     if (desde || hasta) {
       const dateFilter: Record<string, string> = {}
       if (desde) dateFilter.gte = new Date(desde).toISOString()
