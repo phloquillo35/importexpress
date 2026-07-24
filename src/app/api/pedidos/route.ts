@@ -4,15 +4,9 @@ import { genId } from "@/lib/utils"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { createOrderSchema } from "@/lib/validators"
 import { calculateFinalPrice, computeOrderTotalARS, type PricingInput } from "@/lib/pricing"
+import { STATUS_PRIORITY } from "@/lib/orders"
 
-const statusOrder: Record<string, number> = {
-  pending: 0,
-  en_camino: 1,
-  demorado: 2,
-  llego: 3,
-  entregado: 4,
-  cancelado: 5,
-}
+const statusOrder: Record<string, number> = STATUS_PRIORITY
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,30 +16,38 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
     const showDeleted = searchParams.get("showDeleted") === "true"
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"))
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")))
+    const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {}
     if (status) where.status = status
     if (!showDeleted) where.deletedAt = null
 
-    const orders = await prisma.order.findMany({
-      where,
-      include: {
-        store: { select: { id: true, name: true } },
-        items: {
-          include: {
-            product: {
-              select: {
-                name: true, slug: true, images: true, categoryId: true, stock: true,
-                costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
-                yoniEnabled: true, yoniType: true, yoniValue: true,
-                shippingCost: true, profitType: true, profitValue: true,
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          store: { select: { id: true, name: true } },
+          items: {
+            include: {
+              product: {
+                select: {
+                  name: true, slug: true, images: true, categoryId: true, stock: true,
+                  costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
+                  yoniEnabled: true, yoniType: true, yoniValue: true,
+                  shippingCost: true, profitType: true, profitValue: true,
+                },
               },
+              bulk: { select: { courier: true, trackingCode: true, type: true } },
             },
-            bulk: { select: { courier: true, trackingCode: true, type: true } },
           },
         },
-      },
-    })
+      }),
+    ])
 
     const sorted = orders.sort((a, b) => {
       const aOrder = statusOrder[a.status] ?? 99
@@ -66,7 +68,7 @@ export async function GET(request: NextRequest) {
       totalARS: order.totalARS ?? computeOrderTotalARS(order, { exchangeRate: defaultExchangeRate, usdtRate: defaultUsdtRate }),
     }))
 
-    return Response.json(enriched)
+    return Response.json({ orders: enriched, total, page, limit })
   } catch (error) {
     console.error("Error fetching orders:", error)
     return Response.json({ error: "Error al cargar pedidos" }, { status: 500 })
@@ -181,6 +183,15 @@ export async function POST(request: Request) {
         },
       },
     })
+
+    await Promise.all(
+      items.map((item: { productId: string; quantity: number }) =>
+        prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        })
+      )
+    )
 
     return Response.json(order, { status: 201 })
   } catch (error) {

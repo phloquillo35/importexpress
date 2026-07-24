@@ -4,6 +4,7 @@ import { calculateFinalPrice } from "@/lib/pricing"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { updateBulkSchema } from "@/lib/validators"
 import { sendEmail } from "@/lib/email"
+import { STATUS_PRIORITY, computeOrderStatus } from "@/lib/orders"
 
 export async function GET(
   request: NextRequest,
@@ -103,15 +104,7 @@ export async function PUT(
           select: { shippingStatus: true },
         })
 
-        let computed = "entregado"
-        let minPrio = statusPriority[computed]
-        for (const item of items) {
-          const prio = statusPriority[item.shippingStatus] ?? 99
-          if (prio < minPrio) {
-            minPrio = prio
-            computed = item.shippingStatus
-          }
-        }
+        const computed = computeOrderStatus(items)
 
         await prisma.order.update({
           where: { id: orderId },
@@ -216,30 +209,13 @@ export async function DELETE(
       data: { bulkId: null, trackingCode: null, shippingStatus: "pending", bulkType: null },
     })
 
-    const statusPriority: Record<string, number> = {
-      demorado: 0,
-      cancelado: 1,
-      pending: 2,
-      en_camino: 3,
-      llego: 4,
-      entregado: 5,
-    }
-
     for (const { orderId } of deletedItems) {
       const items = await prisma.orderItem.findMany({
         where: { orderId },
         select: { shippingStatus: true },
       })
 
-      let computed = "entregado"
-      let minPrio = statusPriority[computed]
-      for (const item of items) {
-        const prio = statusPriority[item.shippingStatus] ?? 99
-        if (prio < minPrio) {
-          minPrio = prio
-          computed = item.shippingStatus
-        }
-      }
+      const computed = computeOrderStatus(items)
 
       await prisma.order.update({
         where: { id: orderId },

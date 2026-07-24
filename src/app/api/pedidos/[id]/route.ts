@@ -4,6 +4,7 @@ import { requireAuth, requireRole } from "@/lib/auth"
 import { updateOrderSchema, registerPaymentSchema } from "@/lib/validators"
 import { genId } from "@/lib/utils"
 import { computeOrderTotalARS } from "@/lib/pricing"
+import { recalculatePaymentStatus } from "@/lib/orders"
 
 async function getSettings() {
   const [er, ur] = await Promise.all([
@@ -58,27 +59,6 @@ export async function GET(
     console.error("Error fetching order:", error)
     return Response.json({ error: "Error al cargar pedido" }, { status: 500 })
   }
-}
-
-async function recalculatePaymentStatus(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { totalUSD: true } })
-  if (!order) return
-
-  const agg = await prisma.transaction.aggregate({
-    where: { orderId },
-    _sum: { amountUSD: true },
-  })
-  const totalPaid = agg._sum.amountUSD ?? 0
-
-  let paymentStatus: string
-  if (totalPaid <= 0) paymentStatus = "debe"
-  else if (totalPaid < order.totalUSD) paymentStatus = "seña"
-  else paymentStatus = "pagado"
-
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { amountPaidUSD: totalPaid, paymentStatus },
-  })
 }
 
 export async function PUT(
@@ -196,10 +176,24 @@ export async function DELETE(
     if (session instanceof Response) return session
 
     const { id } = await params
-    const existing = await prisma.order.findUnique({ where: { id } })
+    const existing = await prisma.order.findUnique({
+      where: { id },
+      include: { items: { select: { productId: true, quantity: true } } },
+    })
     if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
 
     console.log(`[PEDIDO DELETE] id=${id} client=${existing.clientName} ${existing.clientSurname} total=${existing.totalUSD} status=${existing.status}`)
+
+    await Promise.all(
+      existing.items
+        .filter(item => item.productId)
+        .map(item =>
+          prisma.product.update({
+            where: { id: item.productId! },
+            data: { stock: { increment: item.quantity } },
+          })
+        )
+    )
 
     await prisma.order.update({ where: { id }, data: { deletedAt: new Date() } })
     return Response.json({ success: true })

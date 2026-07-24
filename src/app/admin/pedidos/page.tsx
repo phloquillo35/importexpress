@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useMemo } from "react"
-import { Package, Plus, Search, Trash2 } from "lucide-react"
+import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
@@ -170,29 +170,44 @@ export default function PedidosPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
   const [productDetail, setProductDetail] = useState<{ item: OrderItem; order: Order } | null>(null)
-  const [paymentAmount, setPaymentAmount] = useState(0)
+  const [paymentAmount, setPaymentAmount] = useState("")
   const [paymentCurrency, setPaymentCurrency] = useState("USD")
   const [savingPay, setSavingPay] = useState(false)
   const [showDeleted, setShowDeleted] = useState(false)
+  const [editingOrder, setEditingOrder] = useState(false)
+  const [editForm, setEditForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", clientContact: "", storeId: "", status: "", notes: "" })
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const limit = 50
 
   const fetchOrders = useCallback(async () => {
     try {
       const params = new URLSearchParams()
+      params.set("page", String(page))
+      params.set("limit", String(limit))
       if (showDeleted) params.set("showDeleted", "true")
       const res = await fetch(`/api/pedidos?${params}`)
       const data = await res.json()
-      setOrders(Array.isArray(data) ? data : [])
+      if (data.orders) {
+        setOrders(data.orders)
+        setTotal(data.total)
+      } else {
+        setOrders(Array.isArray(data) ? data : [])
+        setTotal(0)
+      }
     } catch {
       toast.error("Error al cargar pedidos")
     } finally { setLoading(false) }
-  }, [showDeleted])
+  }, [showDeleted, page])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
   useEffect(() => {
     if (productDetail) {
-      setPaymentAmount(0)
+      setPaymentAmount("")
       setPaymentCurrency("USD")
+      setEditingOrder(false)
     }
   }, [productDetail])
 
@@ -204,7 +219,7 @@ export default function PedidosPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          payment: { amount: paymentAmount, currency: paymentCurrency },
+          payment: { amount: Number(paymentAmount) || 0, currency: paymentCurrency },
         }),
       })
       if (!res.ok) {
@@ -218,6 +233,54 @@ export default function PedidosPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al guardar pago")
     } finally { setSavingPay(false) }
+  }
+
+  async function handleSaveEdit() {
+    if (!productDetail) return
+    setSavingEdit(true)
+    try {
+      const body: Record<string, unknown> = {}
+      if (editForm.clientName) body.clientName = editForm.clientName
+      if (editForm.clientSurname !== undefined) body.clientSurname = editForm.clientSurname
+      if (editForm.clientPhone !== undefined) body.clientPhone = editForm.clientPhone
+      if (editForm.clientEmail !== undefined) body.clientEmail = editForm.clientEmail
+      if (editForm.clientContact !== undefined) body.clientContact = editForm.clientContact
+      if (editForm.storeId) body.storeId = editForm.storeId
+      else body.storeId = null
+      if (editForm.status) body.status = editForm.status
+      if (editForm.notes !== undefined) body.notes = editForm.notes
+
+      const res = await fetch(`/api/pedidos/${productDetail.order.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al actualizar pedido")
+      }
+      const updated = await res.json()
+      toast.success("Pedido actualizado")
+      setEditingOrder(false)
+      setProductDetail({ item: productDetail.item, order: updated })
+      fetchOrders()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al actualizar pedido")
+    } finally { setSavingEdit(false) }
+  }
+
+  function startEditing(order: Order) {
+    setEditForm({
+      clientName: order.clientName,
+      clientSurname: order.clientSurname,
+      clientPhone: order.clientPhone,
+      clientEmail: order.clientEmail,
+      clientContact: order.clientContact,
+      storeId: order.store?.id || "",
+      status: order.status,
+      notes: order.notes || "",
+    })
+    setEditingOrder(true)
   }
 
   useEffect(() => {
@@ -294,10 +357,8 @@ export default function PedidosPage() {
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
 
   async function handleCreateOrder() {
-    console.log("[CREATE ORDER] called", { clientName: form.clientName, cartLen: cart.length, cart, totalUSD })
     if (!form.clientName || cart.length === 0) {
       toast.error("Completá nombre del cliente y agregá productos")
-      console.log("[CREATE ORDER] validation failed", { clientName: form.clientName, cartLen: cart.length })
       return
     }
     setSaving(true)
@@ -312,22 +373,16 @@ export default function PedidosPage() {
         items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
         totalUSD,
       }
-      const body = JSON.stringify(bodyObj)
-      console.log("[CREATE ORDER] sending body keys types", Object.fromEntries(Object.entries(bodyObj).map(([k, v]) => [k, typeof v])))
-      console.log("[CREATE ORDER] items types", bodyObj.items.map(i => ({ productId: typeof i.productId, quantity: typeof i.quantity, priceUSD: typeof i.priceUSD })))
       const res = await fetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body,
+        body: JSON.stringify(bodyObj),
       })
-      console.log("[CREATE ORDER] response", { status: res.status, ok: res.ok })
-      const text = await res.text()
-      console.log("[CREATE ORDER] response body", text)
       if (!res.ok) {
+        const text = await res.text()
         let errData: Record<string, unknown> = {}
         try { errData = JSON.parse(text) } catch {}
-        console.error("[CREATE ORDER] validation error", errData)
-        throw new Error(String(errData.error || `Error ${res.status}: ${text.slice(0, 300)}`))
+        throw new Error(String(errData.error || `Error ${res.status}`))
       }
       toast.success("Pedido creado")
       setDialogOpen(false)
@@ -335,7 +390,6 @@ export default function PedidosPage() {
       setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
       fetchOrders()
     } catch (err) {
-      console.error("[CREATE ORDER] catch", err)
       toast.error(err instanceof Error ? err.message : "Error al crear pedido")
     } finally { setSaving(false) }
   }
@@ -362,12 +416,14 @@ export default function PedidosPage() {
     finally { setSaving(false) }
   }
 
+  const totalPages = Math.ceil(total / limit)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Pedidos</h1>
-          <p className="text-muted-foreground text-sm mt-1">{flatItems.length} productos</p>
+          <p className="text-muted-foreground text-sm mt-1">{total} pedidos — página {page} de {totalPages || 1}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -386,7 +442,7 @@ export default function PedidosPage() {
       </div>
 
       <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v || "")}>
+          <Select value={statusFilter} onValueChange={(v: string | null) => setStatusFilter(v === "all" ? "" : v || "")}>
             <SelectTrigger className="w-40 bg-muted border-border text-foreground">
               <SelectValue placeholder="Filtrar estado">{!statusFilter ? "Filtrar estado" : statusConfig[statusFilter]?.label || statusFilter}</SelectValue>
             </SelectTrigger>
@@ -495,11 +551,44 @@ export default function PedidosPage() {
         </Table>
       </div>
 
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground px-3">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
       <Dialog open={!!productDetail} onOpenChange={(o) => { if (!o) setProductDetail(null) }}>
         <DialogContent className="bg-card text-foreground max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Detalle del pedido</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>Detalle del pedido</DialogTitle>
+              {productDetail && !editingOrder && (
+                <Button variant="ghost" size="sm" onClick={() => startEditing(productDetail.order)} className="text-muted-foreground hover:text-foreground">
+                  <Pencil className="w-4 h-4 mr-1" /> Editar
+                </Button>
+              )}
+            </div>
+          </DialogHeader>
           {productDetail && (() => {
-            const { item: clickedItem, order } = productDetail
+            const order = productDetail.order
             const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
             const allPricing = order.items.map(i => ({
               item: i,
@@ -524,120 +613,192 @@ export default function PedidosPage() {
                   </Badge>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{order.clientPhone || "—"}</p></div>
-                  <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{order.clientEmail || "—"}</p></div>
-                  <div><p className="text-muted-foreground">Contacto</p><p className="text-foreground">{order.clientContact || "—"}</p></div>
-                  <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{order.store?.name || "—"}</p></div>
-                </div>
-
-                <div className="border border-border rounded-lg divide-y divide-border">
-                  {allPricing.map(({ item: i, pricing: p }) => (
-                    <div key={i.id} className="p-3 space-y-1.5">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium text-foreground">{i.productName ?? i.product?.name ?? "Producto eliminado"} × {i.quantity}</span>
-                        <span className="text-foreground">{formatUSD(i.priceUSD * i.quantity)}</span>
+                {editingOrder ? (
+                  <div className="space-y-3 border border-border rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-foreground">Editar pedido</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Nombre</Label>
+                        <Input value={editForm.clientName} onChange={(e) => setEditForm({ ...editForm, clientName: e.target.value })} className="bg-muted border-border text-foreground" />
                       </div>
-                      {i.bulk && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{courierLabel[i.bulk.courier] || i.bulk.courier}</span>
-                          {i.bulk.trackingCode && <span className="text-blue-400">📍 {i.bulk.trackingCode}</span>}
-                        </div>
-                      )}
-                      {i.bulkType && <p className="text-xs text-muted-foreground">Tipo bulto: {i.bulkType}</p>}
-                      {getItemStatusBadge(i.shippingStatus)}
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs text-muted-foreground border-t border-border/50">
-                        <span>Costo USDT: <span className="text-foreground">${p.costUSDT.toFixed(2)}</span></span>
-                        <span>Logística: <span className="text-foreground">{i.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
-                        <span>Envío ARS: <span className="text-foreground">${p.shippingCost.toLocaleString("es-AR")}</span></span>
-                        <span>Subtotal ARS: <span className="text-foreground">${p.subtotalARS.toLocaleString("es-AR")}</span></span>
-                        <span>Ganancia ARS: <span className="text-[#0071e3]">${p.profitARS.toLocaleString("es-AR")}</span></span>
-                        <span>Final ARS: <span className="text-[#22C55E]">${p.finalPriceARS.toLocaleString("es-AR")}</span></span>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Apellido</Label>
+                        <Input value={editForm.clientSurname} onChange={(e) => setEditForm({ ...editForm, clientSurname: e.target.value })} className="bg-muted border-border text-foreground" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Teléfono</Label>
+                        <Input value={editForm.clientPhone} onChange={(e) => setEditForm({ ...editForm, clientPhone: e.target.value })} className="bg-muted border-border text-foreground" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Email</Label>
+                        <Input type="email" value={editForm.clientEmail} onChange={(e) => setEditForm({ ...editForm, clientEmail: e.target.value })} className="bg-muted border-border text-foreground" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Contacto</Label>
+                        <Input value={editForm.clientContact} onChange={(e) => setEditForm({ ...editForm, clientContact: e.target.value })} className="bg-muted border-border text-foreground" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Tienda</Label>
+                        <Select value={editForm.storeId || "__none"} onValueChange={(v: string | null) => setEditForm({ ...editForm, storeId: v === "__none" ? "" : v || "" })}>
+                          <SelectTrigger className="bg-muted border-border text-foreground">
+                            <SelectValue placeholder="Seleccionar tienda" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card text-foreground">
+                            <SelectItem value="__none">Sin tienda</SelectItem>
+                            {stores.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Estado</Label>
+                        <Select value={editForm.status} onValueChange={(v: string | null) => setEditForm({ ...editForm, status: v || "" })}>
+                          <SelectTrigger className="bg-muted border-border text-foreground">
+                            <SelectValue placeholder="Seleccionar estado" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card text-foreground">
+                            {Object.entries(statusConfig).map(([k, v]) => (
+                              <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5 col-span-2">
+                        <Label className="text-xs text-muted-foreground">Notas</Label>
+                        <textarea
+                          value={editForm.notes}
+                          onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                          className="w-full bg-muted border border-border rounded-lg p-2 text-sm text-foreground resize-none"
+                          rows={3}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                <div className="border border-border rounded-lg p-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-foreground">Totales del pedido</h3>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${orderTotals.totalUSD.toFixed(2)}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${orderTotals.totalARS.toLocaleString("es-AR")}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Pagado</span><span className="text-[#22C55E]">${order.amountPaidUSD.toFixed(2)} USD</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Saldo pendiente</span><span className={orderTotals.totalUSD - order.amountPaidUSD > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>${Math.max(0, orderTotals.totalUSD - order.amountPaidUSD).toFixed(2)} USD</span></div>
-                  </div>
-                </div>
-
-                <div className="border-t border-border pt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
-                    <span className={`text-xs font-medium ${payCfg.className}`}>
-                      {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${orderTotals.totalUSD.toFixed(2)} USD
-                    </span>
-                  </div>
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1 space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Monto</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={0.01}
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                        className="bg-muted border-border text-foreground"
-                      />
+                    <div className="flex justify-end gap-2 pt-2">
+                      <Button type="button" variant="ghost" onClick={() => setEditingOrder(false)} className="text-muted-foreground">Cancelar</Button>
+                      <Button type="button" disabled={savingEdit} onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        {savingEdit ? "Guardando..." : "Guardar cambios"}
+                      </Button>
                     </div>
-                    <div className="w-24 space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Moneda</Label>
-                      <Select value={paymentCurrency} onValueChange={(v) => v && setPaymentCurrency(v)}>
-                        <SelectTrigger className="bg-muted border-border text-foreground">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card text-foreground">
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="ARS">ARS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      type="button"
-                      disabled={savingPay || paymentAmount <= 0}
-                      onClick={handleSavePayment}
-                      size="sm"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    >
-                      {savingPay ? "Guardando..." : "Registrar pago"}
-                    </Button>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{order.clientPhone || "—"}</p></div>
+                      <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{order.clientEmail || "—"}</p></div>
+                      <div><p className="text-muted-foreground">Contacto</p><p className="text-foreground">{order.clientContact || "—"}</p></div>
+                      <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{order.store?.name || "—"}</p></div>
+                    </div>
 
-                {order.payments && order.payments.length > 0 && (
-                  <div className="border-t border-border pt-4 space-y-2">
-                    <h3 className="text-sm font-semibold text-foreground">Historial de pagos</h3>
-                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                      {order.payments.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-2">
-                          <span className="text-muted-foreground">
-                            {new Date(p.date).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                          <span className="text-foreground font-medium">
-                            {p.amountARS ? `$${p.amountARS.toLocaleString("es-AR")} ARS` : `$${p.amountUSD.toFixed(2)} USD`}
-                          </span>
-                          <span className="text-muted-foreground">{p.concept || "—"}</span>
+                    <div className="border border-border rounded-lg divide-y divide-border">
+                      {allPricing.map(({ item: i, pricing: p }) => (
+                        <div key={i.id} className="p-3 space-y-1.5">
+                          <div className="flex justify-between text-sm">
+                            <span className="font-medium text-foreground">{i.productName ?? i.product?.name ?? "Producto eliminado"} × {i.quantity}</span>
+                            <span className="text-foreground">{formatUSD(i.priceUSD * i.quantity)}</span>
+                          </div>
+                          {i.bulk && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{courierLabel[i.bulk.courier] || i.bulk.courier}</span>
+                              {i.bulk.trackingCode && <span className="text-blue-400">📍 {i.bulk.trackingCode}</span>}
+                            </div>
+                          )}
+                          {i.bulkType && <p className="text-xs text-muted-foreground">Tipo bulto: {i.bulkType}</p>}
+                          {getItemStatusBadge(i.shippingStatus)}
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs text-muted-foreground border-t border-border/50">
+                            <span>Costo USDT: <span className="text-foreground">${p.costUSDT.toFixed(2)}</span></span>
+                            <span>Logística: <span className="text-foreground">{i.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
+                            <span>Envío ARS: <span className="text-foreground">${p.shippingCost.toLocaleString("es-AR")}</span></span>
+                            <span>Subtotal ARS: <span className="text-foreground">${p.subtotalARS.toLocaleString("es-AR")}</span></span>
+                            <span>Ganancia ARS: <span className="text-[#0071e3]">${p.profitARS.toLocaleString("es-AR")}</span></span>
+                            <span>Final ARS: <span className="text-[#22C55E]">${p.finalPriceARS.toLocaleString("es-AR")}</span></span>
+                          </div>
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground text-right">
-                      Total pagado: <span className="text-[#22C55E] font-medium">${order.amountPaidUSD.toFixed(2)} USD</span>
-                    </p>
-                  </div>
-                )}
 
-                {order.notes && (
-                  <div className="border-t border-border pt-3">
-                    <p className="text-xs text-muted-foreground mb-1">Notas</p>
-                    <p className="text-sm text-foreground">{order.notes}</p>
-                  </div>
+                    <div className="border border-border rounded-lg p-4 space-y-2">
+                      <h3 className="text-sm font-semibold text-foreground">Totales del pedido</h3>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${orderTotals.totalUSD.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${orderTotals.totalARS.toLocaleString("es-AR")}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Pagado</span><span className="text-[#22C55E]">${order.amountPaidUSD.toFixed(2)} USD</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Saldo pendiente</span><span className={orderTotals.totalUSD - order.amountPaidUSD > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>${Math.max(0, orderTotals.totalUSD - order.amountPaidUSD).toFixed(2)} USD</span></div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
+                        <span className={`text-xs font-medium ${payCfg.className}`}>
+                          {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${orderTotals.totalUSD.toFixed(2)} USD
+                        </span>
+                      </div>
+                      <div className="flex items-end gap-3">
+                        <div className="flex-1 space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Monto</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={paymentAmount}
+                            onChange={(e) => setPaymentAmount(e.target.value)}
+                            className="bg-muted border-border text-foreground"
+                          />
+                        </div>
+                        <div className="w-24 space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Moneda</Label>
+                          <Select value={paymentCurrency} onValueChange={(v) => v && setPaymentCurrency(v)}>
+                            <SelectTrigger className="bg-muted border-border text-foreground">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card text-foreground">
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="ARS">ARS</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          type="button"
+                          disabled={savingPay || !paymentAmount || Number(paymentAmount) <= 0}
+                          onClick={handleSavePayment}
+                          size="sm"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                        >
+                          {savingPay ? "Guardando..." : "Registrar pago"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {order.payments && order.payments.length > 0 && (
+                      <div className="border-t border-border pt-4 space-y-2">
+                        <h3 className="text-sm font-semibold text-foreground">Historial de pagos</h3>
+                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                          {order.payments.map((p) => (
+                            <div key={p.id} className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-2">
+                              <span className="text-muted-foreground">
+                                {new Date(p.date).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                              <span className="text-foreground font-medium">
+                                {p.amountARS ? `$${p.amountARS.toLocaleString("es-AR")} ARS` : `$${p.amountUSD.toFixed(2)} USD`}
+                              </span>
+                              <span className="text-muted-foreground">{p.concept || "—"}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground text-right">
+                          Total pagado: <span className="text-[#22C55E] font-medium">${order.amountPaidUSD.toFixed(2)} USD</span>
+                        </p>
+                      </div>
+                    )}
+
+                    {order.notes && (
+                      <div className="border-t border-border pt-3">
+                        <p className="text-xs text-muted-foreground mb-1">Notas</p>
+                        <p className="text-sm text-foreground">{order.notes}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )
@@ -671,9 +832,9 @@ export default function PedidosPage() {
             </div>
             <div className="space-y-2">
               <Label>Tienda</Label>
-              <Select value={form.storeId} onValueChange={(v) => setForm({ ...form, storeId: v === "__none" ? "" : v || "" })}>
+              <Select value={form.storeId} onValueChange={(v: string | null) => setForm({ ...form, storeId: v === "__none" ? "" : v || "" })}>
                 <SelectTrigger className="bg-muted border-border text-foreground">
-                  <SelectValue placeholder="Seleccionar tienda">{(value) => !value ? "Seleccionar tienda" : value === "__none" ? "Sin tienda" : stores.find(s => s.id === value)?.name || value}</SelectValue>
+                  <SelectValue placeholder="Seleccionar tienda" />
                 </SelectTrigger>
                 <SelectContent className=" bg-card text-foreground">
                   <SelectItem value="__none">Sin tienda</SelectItem>

@@ -1,27 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
-
-async function recalculateOrderPaymentStatus(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { totalUSD: true } })
-  if (!order) return
-
-  const agg = await prisma.transaction.aggregate({
-    where: { orderId },
-    _sum: { amountUSD: true },
-  })
-  const totalPaid = agg._sum.amountUSD ?? 0
-
-  let paymentStatus: string
-  if (totalPaid <= 0) paymentStatus = "debe"
-  else if (totalPaid < order.totalUSD) paymentStatus = "seña"
-  else paymentStatus = "pagado"
-
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { amountPaidUSD: totalPaid, paymentStatus },
-  })
-}
+import { recalculatePaymentStatus } from "@/lib/orders"
 
 export async function PUT(
   request: Request,
@@ -66,7 +46,7 @@ export async function DELETE(
     if (!existing) return Response.json({ error: "Transacción no encontrada" }, { status: 404 })
     const orderId = existing.orderId
     await prisma.transaction.update({ where: { id }, data: { deletedAt: new Date() } })
-    if (orderId) await recalculateOrderPaymentStatus(orderId)
+    if (orderId) await recalculatePaymentStatus(orderId)
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting transaction:", error)
