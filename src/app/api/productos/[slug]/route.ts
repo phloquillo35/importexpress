@@ -101,7 +101,7 @@ export async function PUT(
     if (input.categoryId !== undefined) data.categoryId = input.categoryId || null
     if (input.storeId !== undefined) data.storeId = input.storeId || null
 
-    const costUSDT = input.costUSDT ?? existing.costUSDT ?? existing.priceUSD
+    const costUSDT = input.costUSDT ?? existing.costUSDT ?? 0
     const yoniEnabled = input.yoniEnabled ?? existing.yoniEnabled
     const yoniType = (input.yoniType ?? existing.yoniType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars"
     const yoniValue = input.yoniValue ?? existing.yoniValue ?? 25

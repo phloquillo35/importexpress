@@ -5,9 +5,31 @@ import { useParams } from "next/navigation"
 import { Package } from "lucide-react"
 import { ProductForm } from "@/components/admin/ProductForm"
 
+interface ProductData {
+  name: string
+  slug: string
+  description: string | null
+  costUSDT: number | null
+  yoniEnabled: boolean
+  yoniType: string
+  yoniValue: number
+  hasFinancing: boolean
+  shippingCost: number | null
+  profitType: string
+  profitValue: number
+  stock: number
+  minStock: number
+  isAvailable: boolean
+  isFeatured: boolean
+  categoryId: string | null
+  storeId: string | null
+  images: string[] | { url: string; color: string }[]
+  specs: Record<string, string> | null
+}
+
 export default function EditarProductoPage() {
   const { id } = useParams<{ id: string }>()
-  const [product, setProduct] = useState<Record<string, unknown> | null>(null)
+  const [product, setProduct] = useState<ProductData | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
@@ -20,7 +42,7 @@ export default function EditarProductoPage() {
           return
         }
         const data = await res.json()
-        setProduct(data.product)
+        setProduct(data.product as ProductData)
       } catch {
         setNotFound(true)
       } finally {
@@ -47,27 +69,27 @@ export default function EditarProductoPage() {
     )
   }
 
-  const specs = product.specs ? product.specs as Record<string, string> : undefined
-  const images = product.images ? (product.images as string[]) : []
+  const specs = product.specs ?? undefined
+  const images = Array.isArray(product.images) ? product.images : []
 
   const defaultValues = {
-    name: product.name as string,
-    slug: product.slug as string,
-    description: (product.description as string) || "",
+    name: product.name,
+    slug: product.slug,
+    description: product.description ?? "",
     costUSDT: product.costUSDT ? String(product.costUSDT) : "",
-    yoniEnabled: (product.yoniEnabled as boolean) ?? false,
-    yoniType: (product.yoniType as string) || "percentage",
+    yoniEnabled: product.yoniEnabled,
+    yoniType: product.yoniType || "percentage",
     yoniValue: product.yoniValue ? String(product.yoniValue) : "25",
-    hasFinancing: (product.hasFinancing as boolean) ?? false,
+    hasFinancing: product.hasFinancing,
     shippingCost: product.shippingCost ? String(product.shippingCost) : "0",
-    profitType: (product.profitType as string) || "percentage",
+    profitType: product.profitType || "percentage",
     profitValue: product.profitValue ? String(product.profitValue) : "0",
     stock: String(product.stock ?? "0"),
     minStock: String(product.minStock ?? "5"),
-    isAvailable: product.isAvailable as boolean,
-    isFeatured: product.isFeatured as boolean,
-    categoryId: (product.categoryId as string) || "",
-    storeId: (product.storeId as string) || "",
+    isAvailable: product.isAvailable,
+    isFeatured: product.isFeatured,
+    categoryId: product.categoryId ?? "",
+    storeId: product.storeId ?? "",
     images,
     specs,
   }
@@ -78,7 +100,7 @@ export default function EditarProductoPage() {
         <h1 className="text-2xl font-bold text-foreground font-heading">Editar producto</h1>
         <p className="text-muted-foreground text-sm mt-1">Modificá los datos del producto</p>
       </div>
-      <ProductForm defaultValues={defaultValues} productSlug={product.slug as string} />
+      <ProductForm defaultValues={defaultValues} productSlug={product.slug} />
     </div>
   )
 }

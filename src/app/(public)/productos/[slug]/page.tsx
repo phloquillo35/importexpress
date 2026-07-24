@@ -67,8 +67,7 @@ function ProductDetailContent() {
       setSelectedColor(initialColor)
       setCurrentIndex(0)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product?.id])
+    }, [parsed.colors, product?.id])
 
   useEffect(() => {
     fetchExchangeRate().then(setExchangeRate)
@@ -151,8 +150,8 @@ function ProductDetailContent() {
   }
 
   const { addItem } = useCart()
-  const specs = product.specs as Record<string, string> | null
-  const arsPrice = (product as any).finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
+  const specs = product.specs
+  const arsPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">

@@ -153,7 +153,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
         setUsdtRate(Number(data.usdt_rate) || Number(data.exchange_rate) || 1)
       })
       .catch(() => {})
-  }, [])
+  }, [defaultValues?.categoryId])
 
   useEffect(() => {
     if (!productSlug && watchedName) {

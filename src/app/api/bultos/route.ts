@@ -59,11 +59,8 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { type, courier, storeId, orderItemIds, products, notes } = body
-
-    if (!type || !courier) {
-      return Response.json({ error: "type y courier son requeridos" }, { status: 400 })
-    }
+    const { type, courier, orderItemIds, products, notes } = parsed.data
+    const { storeId } = body
 
     const bulk = await prisma.bulk.create({
       data: {

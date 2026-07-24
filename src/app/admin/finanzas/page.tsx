@@ -103,7 +103,7 @@ export default function FinanzasPage() {
 
   useEffect(() => {
     fetch("/api/pedidos?limit=200").then(r => r.json()).then(d => {
-      if (Array.isArray(d)) setOrderOptions(d.map((o: any) => ({ id: o.id, internalNumber: o.internalNumber, clientName: o.clientName, clientSurname: o.clientSurname })))
+      if (Array.isArray(d)) setOrderOptions(d.map((o: OrderOption) => ({ id: o.id, internalNumber: o.internalNumber, clientName: o.clientName, clientSurname: o.clientSurname })))
     }).catch(() => {})
   }, [])
 

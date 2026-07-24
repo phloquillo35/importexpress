@@ -36,13 +36,13 @@ const courierLabel: Record<string, string> = {
   andreani: "Andreani",
 }
 
-const statusConfig: Record<string, { label: string; className: string; dot: string }> = {
-  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400", dot: "bg-yellow-400" },
-  en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400", dot: "bg-blue-400" },
-  demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400", dot: "bg-orange-400" },
-  llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]", dot: "bg-[#22C55E]" },
-  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-muted-foreground", dot: "bg-zinc-400" },
-  cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400", dot: "bg-red-400" },
+const statusConfig: Record<string, { label: string; className: string; dot: string; textColor: string }> = {
+  pending: { label: "Pendiente", className: "bg-yellow-500/10 text-yellow-400", dot: "bg-yellow-400", textColor: "text-yellow-400" },
+  en_camino: { label: "En camino", className: "bg-blue-500/10 text-blue-400", dot: "bg-blue-400", textColor: "text-blue-400" },
+  demorado: { label: "Demorado", className: "bg-orange-500/10 text-orange-400", dot: "bg-orange-400", textColor: "text-orange-400" },
+  llego: { label: "Llegó", className: "bg-[#22C55E]/10 text-[#22C55E]", dot: "bg-[#22C55E]", textColor: "text-[#22C55E]" },
+  entregado: { label: "Entregado", className: "bg-zinc-500/10 text-muted-foreground", dot: "bg-zinc-400", textColor: "text-muted-foreground" },
+  cancelado: { label: "Cancelado", className: "bg-red-500/10 text-red-400", dot: "bg-red-400", textColor: "text-red-400" },
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -50,7 +50,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
-      <span className={`text-xs ${cfg.className.split(" ").find(c => c.startsWith("text-"))}`}>{cfg.label}</span>
+      <span className={`text-xs ${cfg.textColor}`}>{cfg.label}</span>
     </span>
   )
 }

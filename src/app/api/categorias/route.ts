@@ -35,11 +35,8 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { name, slug: providedSlug, description, image, parentId, subcategories } = body
-
-    if (!name) {
-      return Response.json({ error: "name es requerido" }, { status: 400 })
-    }
+    const { name, description, image, parentId, subcategories } = parsed.data
+    const { slug: providedSlug } = body
 
     const slug = providedSlug || slugify(name)
 
