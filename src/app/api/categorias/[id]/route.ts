@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
 import { updateCategorySchema } from "@/lib/validators"
+import { genId, slugify } from "@/lib/utils"
 
 export async function PUT(
   request: Request,
@@ -43,7 +44,42 @@ export async function PUT(
       include: { _count: { select: { products: true } }, children: { select: { id: true, name: true, slug: true } }, parent: { select: { id: true, name: true, slug: true } } },
     })
 
-    return Response.json(category)
+    if (body.subcategories !== undefined) {
+      const currentChildren = await prisma.category.findMany({
+        where: { parentId: id, deletedAt: null },
+        select: { id: true, name: true, slug: true },
+      })
+
+      const newNames = (body.subcategories as string[]).map((s: string) => s.trim()).filter(Boolean)
+      const currentMap = new Map(currentChildren.map(c => [c.name.toLowerCase(), c]))
+
+      const toCreate = newNames.filter(n => !currentMap.has(n.toLowerCase()))
+      for (const name of toCreate) {
+        await prisma.category.create({
+          data: {
+            id: genId(),
+            name,
+            slug: slugify(`${category.slug}-${name}`),
+            parentId: id,
+          },
+        })
+      }
+
+      const toRemove = currentChildren.filter(c => !newNames.some(n => n.toLowerCase() === c.name.toLowerCase()))
+      for (const child of toRemove) {
+        await prisma.category.update({
+          where: { id: child.id },
+          data: { deletedAt: new Date() },
+        })
+      }
+    }
+
+    const updated = await prisma.category.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true } }, children: { select: { id: true, name: true, slug: true, _count: { select: { products: true } } } }, parent: { select: { id: true, name: true, slug: true } } },
+    })
+
+    return Response.json(updated)
   } catch (error) {
     console.error("Error updating category:", error)
     return Response.json({ error: "Error al actualizar la categoría" }, { status: 500 })
