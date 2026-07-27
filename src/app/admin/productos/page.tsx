@@ -204,35 +204,35 @@ export default function AdminProductosPage() {
                 })
                 return (
                 <TableRow key={product.id} className="border-border hover:bg-muted">
-                  <TableCell className="font-medium text-foreground">{product.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="font-medium text-foreground cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>{product.name}</TableCell>
+                  <TableCell className="text-muted-foreground cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     {product.category?.name || "—"}
                   </TableCell>
-                  <TableCell className="text-right text-foreground">${(product.costUSDT || 0).toFixed(2)}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-right text-foreground cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>${(product.costUSDT || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     {product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     ${(product.shippingCost || 0).toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-foreground">
+                  <TableCell className="text-right text-foreground cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     ${pricing.subtotalARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-[#0071e3]">
+                  <TableCell className="text-right text-[#0071e3] cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     ${pricing.profitARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-[#22C55E] font-medium">
+                  <TableCell className="text-right text-[#22C55E] font-medium cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     ${pricing.finalPriceARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     ${pricing.finalPriceUSD.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-muted-foreground"}>
                       {product.stock}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center cursor-pointer" onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}>
                     {product.isAvailable ? (
                       <Badge className="bg-[#22C55E]/10 text-[#22C55E] border-0">Sí</Badge>
                     ) : (
@@ -241,29 +241,13 @@ export default function AdminProductosPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}
-                        className="text-muted-foreground hover:text-[#22C55E]"
-                      >
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); router.push(`/admin/productos/${product.slug}/editar`) }} className="text-muted-foreground hover:text-[#22C55E]">
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleToggleAvailability(product)}
-                        className={product.isAvailable ? "text-muted-foreground hover:text-red-400" : "text-muted-foreground hover:text-[#22C55E]"}
-                        title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
-                      >
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleToggleAvailability(product) }} className={product.isAvailable ? "text-muted-foreground hover:text-red-400" : "text-muted-foreground hover:text-[#22C55E]"} title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}>
                         {product.isAvailable ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(product)}
-                        className="text-muted-foreground hover:text-red-400"
-                      >
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(product) }} className="text-muted-foreground hover:text-red-400">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
