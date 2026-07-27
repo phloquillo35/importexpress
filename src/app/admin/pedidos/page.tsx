@@ -488,54 +488,53 @@ export default function PedidosPage() {
                 return (
                   <TableRow
                     key={item.id}
-                    className="border-border hover:bg-muted cursor-pointer"
-                    onClick={() => setProductDetail({ item, order })}
+                    className="border-border hover:bg-muted"
                   >
-                    <TableCell className="text-center text-xs text-muted-foreground font-mono">
+                    <TableCell className="text-center text-xs text-muted-foreground font-mono cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       #{order.internalNumber}
                     </TableCell>
-                    <TableCell className={`font-medium cursor-default ${payCfg.className}`}>
+                    <TableCell className={`font-medium ${payCfg.className} cursor-pointer`} onClick={() => setProductDetail({ item, order })}>
                       {order.clientName} {order.clientSurname}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="text-muted-foreground text-xs cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       {new Date(order.createdAt).toLocaleDateString("es-AR")}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="text-muted-foreground text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       {order.clientPhone || order.clientContact}
                     </TableCell>
-                    <TableCell className="text-foreground text-sm">
+                    <TableCell className="text-foreground text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       {item.productName ?? item.product?.name ?? "Producto eliminado"}
                       <span className="text-muted-foreground ml-1">×{item.quantity}</span>
                     </TableCell>
-                    <TableCell className="text-right text-foreground text-sm">
+                    <TableCell className="text-right text-foreground text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       ${pricing.costUSDT.toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm">
+                    <TableCell className="text-right text-muted-foreground text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       {item.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm">
+                    <TableCell className="text-right text-muted-foreground text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       ${pricing.shippingCost.toLocaleString("es-AR")}
                     </TableCell>
-                    <TableCell className="text-right text-foreground text-sm">
+                    <TableCell className="text-right text-foreground text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       ${pricing.subtotalARS.toLocaleString("es-AR")}
                     </TableCell>
-                    <TableCell className="text-right text-[#0071e3] text-sm">
+                    <TableCell className="text-right text-[#0071e3] text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       ${pricing.profitARS.toLocaleString("es-AR")}
                     </TableCell>
-                    <TableCell className="text-right text-[#22C55E] font-medium text-sm">
+                    <TableCell className="text-right text-[#22C55E] font-medium text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       ${pricing.finalPriceARS.toLocaleString("es-AR")}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-sm">
+                    <TableCell className="text-right text-muted-foreground text-sm cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       ${pricing.finalPriceUSD.toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-center text-xs text-muted-foreground">
+                    <TableCell className="text-center text-xs text-muted-foreground cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       {item.trackingCode ? (
                         <span className="text-blue-400">{item.trackingCode}</span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       {getItemStatusBadge(item.shippingStatus)}
                     </TableCell>
                     <TableCell className="text-right">
