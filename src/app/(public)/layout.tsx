@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import Link from "next/link"
 import { Navbar } from "@/components/public/Navbar"
 import { HeroBackground } from "@/components/public/HeroBackground"
@@ -19,7 +20,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen flex flex-col">
       <HeroBackground />
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1"><Suspense fallback={null}>{children}</Suspense></main>
       <Footer />
     </div>
     </CartProvider>

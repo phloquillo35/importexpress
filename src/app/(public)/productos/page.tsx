@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo, Suspense } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, ChevronDown, Package, AlertCircle, ArrowRight } from "lucide-react"
 import { ProductCard } from "@/components/public/ProductCard"
@@ -314,27 +314,5 @@ function ProductosContent() {
 }
 
 export default function ProductosPage() {
-  return (
-    <Suspense fallback={
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-64 bg-muted" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-2xl border border-border/60 overflow-hidden">
-                <Skeleton className="aspect-[4/3] !rounded-none bg-muted" />
-                <div className="p-5 space-y-3">
-                  <Skeleton className="h-3 w-16 bg-muted" />
-                  <Skeleton className="h-4 w-3/4 bg-muted" />
-                  <Skeleton className="h-5 w-20 bg-muted" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    }>
-      <ProductosContent />
-    </Suspense>
-  )
+  return <ProductosContent />
 }
