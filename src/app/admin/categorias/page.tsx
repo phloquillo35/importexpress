@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Pencil, Trash2, Tags, X, Eye, Package } from "lucide-react"
+import { Plus, Pencil, Trash2, Tags, X, Eye, Package, ChevronRight, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import {
   Table,
@@ -27,6 +27,7 @@ interface Subcategory {
   id: string
   name: string
   slug: string
+  _count: { products: number }
 }
 
 interface Category {
@@ -63,6 +64,7 @@ export default function AdminCategoriasPage() {
   const [categoryProducts, setCategoryProducts] = useState<ViewProduct[]>([])
   const [viewLoading, setViewLoading] = useState(false)
   const [showDeleted, setShowDeleted] = useState(false)
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
 
   async function loadCategories() {
     try {
@@ -82,6 +84,15 @@ export default function AdminCategoriasPage() {
     loadCategories()
   }, [showDeleted])
 
+  function toggleParent(id: string) {
+    setExpandedParents(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   function openNew() {
     setEditing(null)
     setForm({ name: "", slug: "", description: "" })
@@ -93,6 +104,9 @@ export default function AdminCategoriasPage() {
   function openEdit(cat: Category) {
     setEditing(cat)
     setForm({ name: cat.name, slug: cat.slug, description: cat.description || "" })
+    const subs = cat.children?.map(c => c.name) || []
+    setSubcatInputs(subs.length > 0 ? subs : [""])
+    setShowSubcategories(subs.length > 0)
     setDialogOpen(true)
   }
 
@@ -104,11 +118,16 @@ export default function AdminCategoriasPage() {
 
     setSaving(true)
     try {
+      const body: Record<string, unknown> = { ...form }
+      if (showSubcategories) {
+        const subs = subcatInputs.map(s => s.trim()).filter(Boolean)
+        if (subs.length > 0) body.subcategories = subs
+      }
       if (editing) {
         const res = await fetch(`/api/categorias/${editing.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify(body),
         })
         if (!res.ok) {
           const err = await res.json()
@@ -116,11 +135,6 @@ export default function AdminCategoriasPage() {
         }
         toast.success("Categoría actualizada")
       } else {
-        const body: Record<string, unknown> = { ...form }
-        if (showSubcategories) {
-          const subs = subcatInputs.map(s => s.trim()).filter(Boolean)
-          if (subs.length > 0) body.subcategories = subs
-        }
         const res = await fetch("/api/categorias", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -232,50 +246,44 @@ export default function AdminCategoriasPage() {
                   rows={3}
                 />
               </div>
-              {!editing && (
-                <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowSubcategories(!showSubcategories)
-                      if (!showSubcategories) setSubcatInputs([""])
-                    }}
-                    className="border-border text-muted-foreground"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    {showSubcategories ? "Ocultar subcategorías" : "Agregar subcategorías"}
-                  </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowSubcategories(!showSubcategories)
+                  if (!showSubcategories && !editing) setSubcatInputs([""])
+                }}
+                className="border-border text-muted-foreground"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                {showSubcategories ? "Ocultar subcategorías" : editing ? "Editar subcategorías" : "Agregar subcategorías"}
+              </Button>
 
-                  {showSubcategories && (
-                    <div className="space-y-2 border border-border rounded-lg p-4 bg-muted/30">
-                      <Label className="text-muted-foreground text-sm font-medium">Subcategorías</Label>
-                      {subcatInputs.map((val, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <Input
-                            value={val}
-                            onChange={(e) => {
-                              const updated = [...subcatInputs]
-                              updated[i] = e.target.value
-                              setSubcatInputs(updated)
-                            }}
-                            className="bg-muted border-border text-foreground flex-1"
-                            placeholder="Nombre de la subcategoría"
-                          />
-                          {subcatInputs.length > 1 && (
-                            <Button type="button" variant="ghost" size="icon" onClick={() => setSubcatInputs(subcatInputs.filter((_, j) => j !== i))} className="text-red-400 flex-shrink-0">
-                              <X className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button type="button" variant="outline" size="sm" onClick={() => setSubcatInputs([...subcatInputs, ""])} className="border-border text-muted-foreground">
-                        <Plus className="w-4 h-4 mr-1" /> Agregar otra
+              {showSubcategories && (
+                <div className="space-y-2 border border-border rounded-lg p-4 bg-muted/30">
+                  <Label className="text-muted-foreground text-sm font-medium">Subcategorías</Label>
+                  {subcatInputs.map((val, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={val}
+                        onChange={(e) => {
+                          const updated = [...subcatInputs]
+                          updated[i] = e.target.value
+                          setSubcatInputs(updated)
+                        }}
+                        className="bg-muted border-border text-foreground flex-1"
+                        placeholder="Nombre de la subcategoría"
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setSubcatInputs(subcatInputs.filter((_, j) => j !== i))} className="text-red-400 flex-shrink-0">
+                        <X className="w-4 h-4" />
                       </Button>
                     </div>
-                  )}
-                </>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => setSubcatInputs([...subcatInputs, ""])} className="border-border text-muted-foreground">
+                    <Plus className="w-4 h-4 mr-1" /> Agregar otra
+                  </Button>
+                </div>
               )}
 
               <div className="flex justify-end gap-3 pt-2">
@@ -320,64 +328,82 @@ export default function AdminCategoriasPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              categories.map((cat) => (
-                <TableRow key={cat.id} className="border-border hover:bg-muted">
-                  <TableCell className="font-medium text-foreground">{cat.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{cat.slug}</TableCell>
-                  <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                    {cat.description || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {cat.parent ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                        ← {cat.parent.name}
+              categories.filter((c: Category) => !c.parent).flatMap((cat: Category) => {
+                const isExpanded = expandedParents.has(cat.id)
+                const hasChildren = cat.children.length > 0
+                const parentRow = (
+                  <TableRow key={cat.id} className="border-border hover:bg-muted cursor-pointer" onClick={() => hasChildren ? toggleParent(cat.id) : openEdit(cat)}>
+                    <TableCell className="font-medium text-foreground">
+                      <span className="flex items-center gap-2">
+                        {hasChildren ? (
+                          isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                        ) : (
+                          <span className="w-4 shrink-0" />
+                        )}
+                        {cat.name}
                       </span>
-                    ) : cat.children.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {cat.children.map((child) => (
-                          <span key={child.id} className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                            {child.name}
-                          </span>
-                        ))}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{cat.slug}</TableCell>
+                    <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                      {cat.description || "—"}
+                    </TableCell>
+                    <TableCell>
+                      {cat.children.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {cat.children.map((child) => (
+                            <span key={child.id} className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                              {child.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">{cat._count.products}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatDate(cat.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openView(cat)} className="text-muted-foreground hover:text-blue-400"><Eye className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(cat)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
                       </div>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center text-muted-foreground">{cat._count.products}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {formatDate(cat.createdAt)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openView(cat)}
-                        className="text-muted-foreground hover:text-blue-400"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEdit(cat)}
-                        className="text-muted-foreground hover:text-[#22C55E]"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(cat)}
-                        className="text-muted-foreground hover:text-red-400"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                  </TableRow>
+                )
+                const childRows = isExpanded && hasChildren
+                  ? cat.children.map((child) => {
+                      const fullChild = categories.find((c: Category) => c.id === child.id)
+                      return (
+                        <TableRow key={child.id} className="border-border hover:bg-muted/50 cursor-pointer bg-muted/20" onClick={() => fullChild && openEdit(fullChild)}>
+                          <TableCell className="font-medium text-foreground pl-10">
+                            <span className="text-muted-foreground text-xs mr-2">└─</span>
+                            {child.name}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{child.slug}</TableCell>
+                          <TableCell className="text-muted-foreground max-w-[200px] truncate">—</TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                              ← {cat.name}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">{child._count?.products || 0}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">—</TableCell>
+                          <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => fullChild && openView(fullChild)} className="text-muted-foreground hover:text-blue-400"><Eye className="w-4 h-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => fullChild && openEdit(fullChild)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => fullChild && handleDelete(fullChild)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  : []
+                return [parentRow, ...childRows]
+              })
             )}
           </TableBody>
         </Table>

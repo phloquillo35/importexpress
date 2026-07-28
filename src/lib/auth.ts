@@ -41,7 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
-    maxAge: 120 * 60, // 120 minutos para desarrollo/producción
+    maxAge: 15 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -54,7 +54,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       const now = Math.floor(Date.now() / 1000)
       const lastActivity = token.lastActivity as number | undefined
-      if (lastActivity && now - lastActivity > 7200) { // 120 min de inactividad
+      if (lastActivity && now - lastActivity > 900) {
         return {}
       }
 

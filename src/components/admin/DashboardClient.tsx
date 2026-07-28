@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import { Package, DollarSign, TrendingDown, AlertTriangle, ShoppingCart } from "lucide-react"
 import { formatUSD, formatDate } from "@/lib/utils"
 import {
@@ -36,15 +35,15 @@ const COLORS = ["#F59E0B", "#8B5CF6", "#22C55E", "#3B82F6", "#EF4444", "#EC4899"
 
 const statusLabels: Record<string, string> = {
   pending: "Pendiente",
-  ordered: "Pedido",
-  arrived: "Llegó",
-  delivered: "Entregado",
-  cancelled: "Cancelado",
+  en_camino: "En camino",
+  demorado: "Demorado",
+  llego: "Llegó",
+  entregado: "Entregado",
+  cancelado: "Cancelado",
 }
 
-export function DashboardClient({ data, period: initialPeriod }: { data: DashboardData; period: number }) {
-  const [period, setPeriod] = useState(initialPeriod)
-  const router = useRouter()
+export function DashboardClient({ data }: { data: DashboardData }) {
+  const [period, setPeriod] = useState(30)
   const [chartData, setChartData] = useState<{ date: string; income: number; expense: number }[]>([])
 
   const buildChart = useCallback(() => {
@@ -90,10 +89,7 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
               key={d}
               variant={period === d ? "default" : "ghost"}
               size="sm"
-              onClick={() => {
-                setPeriod(d)
-                router.push(`/admin?period=${d}`)
-              }}
+              onClick={() => setPeriod(d)}
                className={period === d ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}
             >
               {d}d
@@ -194,8 +190,11 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
                     <p className="text-sm font-medium text-foreground">{formatUSD(order.totalUSD)}</p>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                       order.status === "pending" ? "bg-yellow-500/10 text-yellow-400" :
-                      order.status === "delivered" ? "bg-zinc-500/10 text-muted-foreground" :
-                      order.status === "cancelled" ? "bg-red-500/10 text-red-400" :
+                      order.status === "en_camino" ? "bg-blue-500/10 text-blue-400" :
+                      order.status === "demorado" ? "bg-orange-500/10 text-orange-400" :
+                      order.status === "llego" ? "bg-green-500/10 text-green-400" :
+                      order.status === "entregado" ? "bg-zinc-500/10 text-muted-foreground" :
+                      order.status === "cancelado" ? "bg-red-500/10 text-red-400" :
                       "bg-[#22C55E]/10 text-[#22C55E]"
                     }`}>
                       {statusLabels[order.status] || order.status}

@@ -5,7 +5,6 @@ export const createOrderSchema = z.object({
   clientSurname: z.string().optional(),
   clientPhone: z.string().optional(),
   clientEmail: z.string().optional(),
-  storeName: z.string().optional(),
   clientContact: z.string().optional(),
   items: z.array(z.object({
     productId: z.string(),
@@ -24,7 +23,6 @@ export const updateOrderSchema = z.object({
   clientSurname: z.string().optional(),
   clientPhone: z.string().optional(),
   clientEmail: z.string().optional(),
-  storeName: z.string().optional(),
   clientContact: z.string().optional(),
   paymentStatus: z.enum(["debe", "seña", "pagado"]).optional(),
   amountPaidUSD: z.number().min(0).optional(),

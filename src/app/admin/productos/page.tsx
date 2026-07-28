@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff, RotateCcw } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff, RotateCcw, X } from "lucide-react"
 import { toast } from "sonner"
 import {
   Table,
@@ -15,6 +15,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { formatUSD } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
 
@@ -49,6 +55,7 @@ export default function AdminProductosPage() {
   const [loading, setLoading] = useState(true)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
+  const [viewProduct, setViewProduct] = useState<Product | null>(null)
   const limit = 20
 
   const fetchProducts = useCallback(async () => {
@@ -204,35 +211,35 @@ export default function AdminProductosPage() {
                 })
                 return (
                 <TableRow key={product.id} className="border-border hover:bg-muted">
-                  <TableCell className="font-medium text-foreground">{product.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="font-medium text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{product.name}</TableCell>
+                  <TableCell className="text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
                     {product.category?.name || "—"}
                   </TableCell>
-                  <TableCell className="text-right text-foreground">${(product.costUSDT || 0).toFixed(2)}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-right text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>${(product.costUSDT || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
                     {product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
                     ${(product.shippingCost || 0).toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-foreground">
+                  <TableCell className="text-right text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
                     ${pricing.subtotalARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-[#0071e3]">
+                  <TableCell className="text-right text-[#0071e3] cursor-pointer" onClick={() => setViewProduct(product)}>
                     ${pricing.profitARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-[#22C55E] font-medium">
+                  <TableCell className="text-right text-[#22C55E] font-medium cursor-pointer" onClick={() => setViewProduct(product)}>
                     ${pricing.finalPriceARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
                     ${pricing.finalPriceUSD.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center cursor-pointer" onClick={() => setViewProduct(product)}>
                     <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-muted-foreground"}>
                       {product.stock}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center cursor-pointer" onClick={() => setViewProduct(product)}>
                     {product.isAvailable ? (
                       <Badge className="bg-[#22C55E]/10 text-[#22C55E] border-0">Sí</Badge>
                     ) : (
@@ -241,29 +248,13 @@ export default function AdminProductosPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}
-                        className="text-muted-foreground hover:text-[#22C55E]"
-                      >
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); router.push(`/admin/productos/${product.slug}/editar`) }} className="text-muted-foreground hover:text-[#22C55E]">
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleToggleAvailability(product)}
-                        className={product.isAvailable ? "text-muted-foreground hover:text-red-400" : "text-muted-foreground hover:text-[#22C55E]"}
-                        title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
-                      >
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleToggleAvailability(product) }} className={product.isAvailable ? "text-muted-foreground hover:text-red-400" : "text-muted-foreground hover:text-[#22C55E]"} title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}>
                         {product.isAvailable ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(product)}
-                        className="text-muted-foreground hover:text-red-400"
-                      >
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(product) }} className="text-muted-foreground hover:text-red-400">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -301,6 +292,45 @@ export default function AdminProductosPage() {
           </Button>
         </div>
       )}
+
+      <Dialog open={!!viewProduct} onOpenChange={(o) => { if (!o) setViewProduct(null) }}>
+        <DialogContent className="bg-card text-foreground max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{viewProduct?.name}</DialogTitle>
+          </DialogHeader>
+          {viewProduct && (() => {
+            const p = viewProduct
+            const pricing = calculateFinalPrice({
+              costUSDT: p.costUSDT || 0,
+              yoniEnabled: p.yoniEnabled,
+              yoniType: (p.yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+              yoniValue: p.yoniValue || 0,
+              shippingCost: p.shippingCost || 0,
+              profitType: (p.profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+              profitValue: p.profitValue || 0,
+              exchangeRate,
+              usdtRate,
+            })
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><p className="text-muted-foreground text-xs">Slug</p><p className="text-foreground">{p.slug}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Categoría</p><p className="text-foreground">{p.category?.name || "—"}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Costo USDT</p><p className="text-foreground">${(p.costUSDT || 0).toFixed(2)}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Logística</p><p className="text-foreground">{p.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Envío ARS</p><p className="text-foreground">${(p.shippingCost || 0).toLocaleString("es-AR")}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Subtotal ARS</p><p className="text-foreground">${pricing.subtotalARS.toLocaleString("es-AR")}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Ganancia ARS</p><p className="text-[#0071e3]">${pricing.profitARS.toLocaleString("es-AR")}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Final ARS</p><p className="text-[#22C55E] font-medium">${pricing.finalPriceARS.toLocaleString("es-AR")}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Final USD</p><p className="text-foreground">${pricing.finalPriceUSD.toFixed(2)}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Stock</p><p className={p.stock <= p.minStock ? "text-red-400 font-medium" : "text-foreground"}>{p.stock} / mín. {p.minStock}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Disponible</p><p className={p.isAvailable ? "text-[#22C55E]" : "text-red-400"}>{p.isAvailable ? "Sí" : "No"}</p></div>
+                </div>
+              </div>
+            )
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

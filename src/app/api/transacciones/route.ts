@@ -3,27 +3,7 @@ import { NextRequest } from "next/server"
 import { genId } from "@/lib/utils"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { createTransactionSchema } from "@/lib/validators"
-
-async function recalculateOrderPaymentStatus(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { totalUSD: true } })
-  if (!order) return
-
-  const agg = await prisma.transaction.aggregate({
-    where: { orderId },
-    _sum: { amountUSD: true },
-  })
-  const totalPaid = agg._sum.amountUSD ?? 0
-
-  let paymentStatus: string
-  if (totalPaid <= 0) paymentStatus = "debe"
-  else if (totalPaid < order.totalUSD) paymentStatus = "seña"
-  else paymentStatus = "pagado"
-
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { amountPaidUSD: totalPaid, paymentStatus },
-  })
-}
+import { recalculatePaymentStatus } from "@/lib/orders"
 
 export async function GET(request: NextRequest) {
   try {
@@ -91,7 +71,7 @@ export async function POST(request: Request) {
     })
 
     if (orderId) {
-      await recalculateOrderPaymentStatus(orderId)
+      await recalculatePaymentStatus(orderId)
     }
 
     return Response.json(transaction, { status: 201 })

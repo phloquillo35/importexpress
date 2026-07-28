@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { Bell, Menu, Sun, Moon } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -18,26 +18,17 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const [lowStockOpen, setLowStockOpen] = useState(false)
   const [lowStockItems, setLowStockItems] = useState<{ id: string; name: string; stock: number; minStock: number }[]>([])
 
-  useEffect(() => {
-    async function loadNotifications() {
-      try {
-        const res = await fetch("/api/notificaciones")
-        if (!res.ok) return
-        const data = await res.json()
-        setLowStockItems(data.items || [])
-      } catch {}
-    }
-    loadNotifications()
-  }, [])
-
   async function openLowStock() {
     setLowStockOpen(true)
-    try {
-      const res = await fetch("/api/notificaciones")
-      if (!res.ok) return
-      const data = await res.json()
-      setLowStockItems(data.items || [])
-    } catch {}
+    if (lowStockItems.length === 0) {
+      try {
+        const res = await fetch("/api/productos?admin=1&limit=200")
+        const data = await res.json()
+        const products = data.products || []
+        const low = products.filter((p: any) => p.stock <= p.minStock)
+        setLowStockItems(low.map((p: any) => ({ id: p.id, name: p.name, stock: p.stock, minStock: p.minStock })))
+      } catch {}
+    }
   }
 
   return (
