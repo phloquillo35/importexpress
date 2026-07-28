@@ -3,7 +3,7 @@ import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
 
 const MODEL_MAP: Record<string, { findUnique: Function; update: Function; delete: Function }> = {
-  productos: prisma.product,
+  products: prisma.product,
   categorias: prisma.category,
   pedidos: prisma.order,
   bultos: prisma.bulk,
