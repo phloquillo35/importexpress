@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { Plus, Pencil, Trash2, Tags, X, Eye, Package, ChevronRight, ChevronDown } from "lucide-react"
+import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import {
   Table,
@@ -64,14 +65,11 @@ export default function AdminCategoriasPage() {
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null)
   const [categoryProducts, setCategoryProducts] = useState<ViewProduct[]>([])
   const [viewLoading, setViewLoading] = useState(false)
-  const [showDeleted, setShowDeleted] = useState(false)
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
 
   async function loadCategories() {
     try {
-      const params = new URLSearchParams()
-      if (showDeleted) params.set("showDeleted", "true")
-      const res = await fetch(`/api/categorias?${params}`)
+      const res = await fetch("/api/categorias")
       const data = await res.json()
       setCategories(Array.isArray(data) ? data : [])
     } catch {
@@ -83,7 +81,7 @@ export default function AdminCategoriasPage() {
 
   useEffect(() => {
     loadCategories()
-  }, [showDeleted])
+  }, [])
 
   function toggleParent(id: string) {
     setExpandedParents(prev => {
@@ -194,15 +192,7 @@ export default function AdminCategoriasPage() {
           <p className="text-muted-foreground text-sm mt-1">Gestioná las categorías de productos</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant={showDeleted ? "default" : "outline"}
-            onClick={() => setShowDeleted(!showDeleted)}
-            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
-          </Button>
+          <PapeleraModal model="categorias" sectionLabel="Categorías" />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" />

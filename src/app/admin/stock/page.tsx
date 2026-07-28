@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Search, Package, Plus, Minus, Trash2 } from "lucide-react"
+import { Search, Package, Plus, Minus } from "lucide-react"
+import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { cn, formatUSD } from "@/lib/utils"
 import {
@@ -30,7 +31,6 @@ interface StockProduct {
   minStock: number
   priceUSD: number
   isAvailable: boolean
-  deletedAt: string | null
   category: { name: string } | null
 }
 
@@ -45,12 +45,9 @@ export default function AdminStockPage() {
   const [adjustField, setAdjustField] = useState<"stock" | "minStock">("stock")
   const [saving, setSaving] = useState(false)
   const [viewProduct, setViewProduct] = useState<StockProduct | null>(null)
-  const [showDeleted, setShowDeleted] = useState(false)
-
   async function loadStock() {
     try {
-      const params = showDeleted ? "?showDeleted=true" : ""
-      const res = await fetch("/api/stock" + params)
+      const res = await fetch("/api/stock")
       const data = await res.json()
       setProducts(Array.isArray(data) ? data : [])
     } catch {
@@ -63,7 +60,7 @@ export default function AdminStockPage() {
   useEffect(() => {
     loadStock()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showDeleted])
+  }, [])
 
   useEffect(() => {
     if (!search.trim()) {
@@ -144,30 +141,17 @@ export default function AdminStockPage() {
       </div>
 
       <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, categoría, stock, mínimo, precio, disponibilidad"
-              className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDeleted(!showDeleted)}
-              className={cn(
-                "border-border text-xs gap-1.5",
-                showDeleted ? "bg-red-500/10 text-red-400 border-red-500/30" : "text-muted-foreground"
-              )}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
-            </Button>
+          <div className="flex items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por nombre, categoría, stock, mínimo, precio, disponibilidad"
+                className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
+              />
+            </div>
+            <PapeleraModal model="products" sectionLabel="Stock" />
           </div>
 
           <div className="bg-card border border-border rounded-xl overflow-x-auto">
@@ -179,20 +163,19 @@ export default function AdminStockPage() {
                   <TableHead className="text-muted-foreground text-right">Precio</TableHead>
                   <TableHead className="text-muted-foreground text-center">Stock</TableHead>
                   <TableHead className="text-muted-foreground text-center">Mínimo</TableHead>
-                  {showDeleted && <TableHead className="text-muted-foreground text-center">Eliminado</TableHead>}
                   <TableHead className="text-muted-foreground text-right">Acción</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={showDeleted ? 7 : 6} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                       Cargando...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={showDeleted ? 7 : 6} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                       <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p>{search ? "Sin resultados" : "No hay productos"}</p>
                     </TableCell>
@@ -215,11 +198,6 @@ export default function AdminStockPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-center text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{product.minStock}</TableCell>
-                      {showDeleted && (
-                        <TableCell className="text-center text-xs text-red-400 cursor-pointer" onClick={() => setViewProduct(product)}>
-                          {product.deletedAt ? new Date(product.deletedAt).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
-                        </TableCell>
-                      )}
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"

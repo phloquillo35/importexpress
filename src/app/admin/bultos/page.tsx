@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { Ship, Plus, Search, Package, Eye, Trash2 } from "lucide-react"
+import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD, formatDate, formatARS } from "@/lib/utils"
 import {
@@ -108,20 +109,18 @@ export default function BultosPage() {
   const [viewLoading, setViewLoading] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Bulk | null>(null)
-  const [showDeleted, setShowDeleted] = useState(false)
 
   const fetchBulks = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (statusFilter) params.set("status", statusFilter)
-      if (showDeleted) params.set("showDeleted", "true")
       const res = await fetch(`/api/bultos?${params}`)
       const data = await res.json()
       setBulks(Array.isArray(data) ? data : [])
     } catch { toast.error("Error al cargar bultos") }
     finally { setLoading(false) }
-  }, [statusFilter, showDeleted])
+  }, [statusFilter])
 
   useEffect(() => { fetchBulks() }, [fetchBulks])
 
@@ -269,15 +268,7 @@ export default function BultosPage() {
           <p className="text-muted-foreground text-sm mt-1">{bulks.length} bultos</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant={showDeleted ? "default" : "outline"}
-            onClick={() => setShowDeleted(!showDeleted)}
-            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
-          </Button>
+          <PapeleraModal model="bultos" sectionLabel="Bultos" />
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nuevo bulto
           </Button>

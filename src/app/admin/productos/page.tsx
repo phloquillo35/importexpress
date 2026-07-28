@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff, RotateCcw, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff } from "lucide-react"
+import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import {
   Table,
@@ -51,7 +52,6 @@ export default function AdminProductosPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
-  const [showDeleted, setShowDeleted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
@@ -66,7 +66,6 @@ export default function AdminProductosPage() {
       params.set("admin", "1")
       params.set("page", String(page))
       params.set("limit", String(limit))
-      if (showDeleted) params.set("showDeleted", "true")
 
       const res = await fetch(`/api/productos?${params}`)
       const data = await res.json()
@@ -78,7 +77,7 @@ export default function AdminProductosPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, page, showDeleted])
+  }, [search, page])
 
   useEffect(() => {
     fetchProducts()
@@ -153,15 +152,7 @@ export default function AdminProductosPage() {
         <Button type="submit" variant="secondary" className="bg-muted text-muted-foreground hover:bg-zinc-700">
           Buscar
         </Button>
-        <Button
-          type="button"
-          variant={showDeleted ? "default" : "outline"}
-          onClick={() => setShowDeleted(!showDeleted)}
-          className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
-        </Button>
+        <PapeleraModal model="products" sectionLabel="Productos" />
       </form>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">

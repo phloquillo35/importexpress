@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { DollarSign, TrendingDown, Plus, ArrowUpDown, Trash2 } from "lucide-react"
+import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD, formatDate } from "@/lib/utils"
 import {
@@ -74,13 +75,11 @@ export default function FinanzasPage() {
   const [expense, setExpense] = useState(0)
   const [orderOptions, setOrderOptions] = useState<OrderOption[]>([])
   const [orderSearch, setOrderSearch] = useState("")
-  const [showDeleted, setShowDeleted] = useState(false)
 
   const fetchTransactions = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (tipoFilter) params.set("tipo", tipoFilter)
-      if (showDeleted) params.set("showDeleted", "true")
       const res = await fetch(`/api/transacciones?${params}`)
       const data = await res.json()
       setTransactions(Array.isArray(data) ? data : [])
@@ -97,7 +96,7 @@ export default function FinanzasPage() {
     } finally {
       setLoading(false)
     }
-  }, [tipoFilter, showDeleted])
+  }, [tipoFilter])
 
   useEffect(() => { fetchTransactions() }, [fetchTransactions])
 
@@ -189,15 +188,7 @@ export default function FinanzasPage() {
           <p className="text-muted-foreground text-sm mt-1">Gestión de ingresos y egresos</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant={showDeleted ? "default" : "outline"}
-            onClick={() => setShowDeleted(!showDeleted)}
-            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
-          </Button>
+          <PapeleraModal model="transacciones" sectionLabel="Finanzas" />
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nueva transacción
           </Button>

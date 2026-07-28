@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react"
+import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
@@ -173,7 +174,6 @@ export default function PedidosPage() {
   const [paymentAmount, setPaymentAmount] = useState("")
   const [paymentCurrency, setPaymentCurrency] = useState("USD")
   const [savingPay, setSavingPay] = useState(false)
-  const [showDeleted, setShowDeleted] = useState(false)
   const [editingOrder, setEditingOrder] = useState(false)
   const [editForm, setEditForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", clientContact: "", storeId: "", status: "", notes: "" })
   const [savingEdit, setSavingEdit] = useState(false)
@@ -186,7 +186,6 @@ export default function PedidosPage() {
       const params = new URLSearchParams()
       params.set("page", String(page))
       params.set("limit", String(limit))
-      if (showDeleted) params.set("showDeleted", "true")
       const res = await fetch(`/api/pedidos?${params}`)
       const data = await res.json()
       if (data.orders) {
@@ -199,7 +198,7 @@ export default function PedidosPage() {
     } catch {
       toast.error("Error al cargar pedidos")
     } finally { setLoading(false) }
-  }, [showDeleted, page])
+  }, [page])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
@@ -426,15 +425,7 @@ export default function PedidosPage() {
           <p className="text-muted-foreground text-sm mt-1">{total} pedidos — página {page} de {totalPages || 1}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant={showDeleted ? "default" : "outline"}
-            onClick={() => setShowDeleted(!showDeleted)}
-            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
-          </Button>
+          <PapeleraModal model="pedidos" sectionLabel="Pedidos" />
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
           </Button>

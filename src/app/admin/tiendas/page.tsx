@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Store, Plus, Pencil, Trash2 } from "lucide-react"
+import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatDate } from "@/lib/utils"
 import {
@@ -39,20 +40,17 @@ export default function TiendasPage() {
   const [editing, setEditing] = useState<StoreType | null>(null)
   const [form, setForm] = useState({ name: "", contact: "", website: "", notes: "" })
   const [saving, setSaving] = useState(false)
-  const [showDeleted, setShowDeleted] = useState(false)
 
   async function load() {
     try {
-      const params = new URLSearchParams()
-      if (showDeleted) params.set("showDeleted", "true")
-      const res = await fetch(`/api/tiendas?${params}`)
+      const res = await fetch("/api/tiendas")
       const data = await res.json()
       setStores(Array.isArray(data) ? data : [])
     } catch { toast.error("Error al cargar") }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [showDeleted])
+  useEffect(() => { load() }, [])
 
   function openNew() {
     setEditing(null)
@@ -104,15 +102,7 @@ export default function TiendasPage() {
           <p className="text-muted-foreground text-sm mt-1">{stores.length} tiendas</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant={showDeleted ? "default" : "outline"}
-            onClick={() => setShowDeleted(!showDeleted)}
-            className={showDeleted ? "bg-red-500 hover:bg-red-600 text-white" : ""}
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {showDeleted ? "Ocultar eliminados" : "Ver eliminados"}
-          </Button>
+          <PapeleraModal model="tiendas" sectionLabel="Tiendas" />
           <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nueva tienda
           </Button>
