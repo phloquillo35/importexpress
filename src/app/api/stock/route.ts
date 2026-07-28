@@ -1,12 +1,19 @@
 import { prisma } from "@/lib/prisma"
 import { requireAuth, requireRole } from "@/lib/auth"
+import { NextRequest } from "next/server"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth()
     if (session instanceof Response) return session
 
+    const { searchParams } = new URL(request.url)
+    const showDeleted = searchParams.get("showDeleted") === "true"
+    const where: Record<string, unknown> = {}
+    if (!showDeleted) where.deletedAt = null
+
     const products = await prisma.product.findMany({
+      where,
       select: {
         id: true,
         name: true,
@@ -15,6 +22,7 @@ export async function GET() {
         minStock: true,
         priceUSD: true,
         isAvailable: true,
+        deletedAt: true,
         category: { select: { name: true } },
       },
       orderBy: { name: "asc" },

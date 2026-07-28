@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      const searchNumber = parseFloat(search.replace(/[$,.]/g, ""))
+      const searchNumber = parseFloat(search.replace(/[$,\s]/g, ""))
       const isNumeric = !isNaN(searchNumber)
       const lowerSearch = search.toLowerCase()
 
@@ -44,10 +44,10 @@ export async function GET(request: NextRequest) {
 
       if (isNumeric) {
         searchConditions.push(
-          { costUSDT: { equals: searchNumber } },
-          { shippingCost: { equals: searchNumber } },
-          { finalPriceUSD: { equals: searchNumber } },
-          { finalPriceARS: { equals: searchNumber } },
+          { costUSDT: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
+          { shippingCost: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
+          { finalPriceUSD: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
+          { finalPriceARS: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
           { stock: { equals: searchNumber } },
         )
       }

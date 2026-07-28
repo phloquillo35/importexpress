@@ -30,6 +30,10 @@ export async function PATCH(
       return Response.json({ error: "Elemento no encontrado" }, { status: 404 })
     }
 
+    if (existing.deletedAt === null) {
+      return Response.json({ error: "El elemento no está eliminado. No se puede restaurar." }, { status: 409 })
+    }
+
     await (db.update as Function)({
       where: { id },
       data: { deletedAt: null },
@@ -59,6 +63,10 @@ export async function DELETE(
     const existing = await (db.findUnique as Function)({ where: { id } })
     if (!existing) {
       return Response.json({ error: "Elemento no encontrado" }, { status: 404 })
+    }
+
+    if (existing.deletedAt === null) {
+      return Response.json({ error: "El elemento no está eliminado. Eliminálo desde la sección normal primero." }, { status: 409 })
     }
 
     await (db.delete as Function)({ where: { id } })
