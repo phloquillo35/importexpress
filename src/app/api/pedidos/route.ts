@@ -100,6 +100,19 @@ export async function POST(request: Request) {
     const exchangeRate = parseFloat(exchangeRateSetting?.value || "1350")
     const usdtRate = parseFloat(usdtRateSetting?.value || "1400")
 
+    const stockProductIds = items.map((item: { productId: string }) => item.productId)
+    const stockProducts = await prisma.product.findMany({
+      where: { id: { in: stockProductIds } },
+      select: { id: true, stock: true },
+    })
+    const stockMap = new Map(stockProducts.map((p) => [p.id, p.stock]))
+    for (const item of items) {
+      const available = stockMap.get(item.productId) ?? 0
+      if (available < item.quantity) {
+        return Response.json({ error: `Stock insuficiente para producto ${item.productId}: disponible ${available}, requerido ${item.quantity}` }, { status: 400 })
+      }
+    }
+
     const productIds = items.map((item: { productId: string }) => item.productId)
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -150,48 +163,52 @@ export async function POST(request: Request) {
       computedTotalARS += pricing.finalPriceARS * item.quantity
     }
 
-    const order = await prisma.order.create({
-      data: {
-        id: genId(),
-        clientName,
-        clientSurname: clientSurname || "",
-        clientPhone: clientPhone || "",
-        clientEmail: clientEmail || "",
-        storeId: storeId || null,
-        clientContact: clientContact || "",
-        totalUSD: parseFloat(totalUSD) || 0,
-        totalARS: computedTotalARS,
-        notes: notes || null,
-        exchangeRate,
-        usdtRate,
-        items: { create: orderItems },
-      },
-      include: {
-        store: { select: { id: true, name: true } },
-        items: {
-          include: {
-            product: {
-              select: {
-                name: true, slug: true, images: true, categoryId: true, stock: true,
-                costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
-                yoniEnabled: true, yoniType: true, yoniValue: true,
-                shippingCost: true, profitType: true, profitValue: true,
+    const order = await prisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          id: genId(),
+          clientName,
+          clientSurname: clientSurname || "",
+          clientPhone: clientPhone || "",
+          clientEmail: clientEmail || "",
+          storeId: storeId || null,
+          clientContact: clientContact || "",
+          totalUSD: parseFloat(totalUSD) || 0,
+          totalARS: computedTotalARS,
+          notes: notes || null,
+          exchangeRate,
+          usdtRate,
+          items: { create: orderItems },
+        },
+        include: {
+          store: { select: { id: true, name: true } },
+          items: {
+            include: {
+              product: {
+                select: {
+                  name: true, slug: true, images: true, categoryId: true, stock: true,
+                  costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
+                  yoniEnabled: true, yoniType: true, yoniValue: true,
+                  shippingCost: true, profitType: true, profitValue: true,
+                },
               },
+              bulk: { select: { courier: true, trackingCode: true, type: true } },
             },
-            bulk: { select: { courier: true, trackingCode: true, type: true } },
           },
         },
-      },
-    })
+      })
 
-    await Promise.all(
-      items.map((item: { productId: string; quantity: number }) =>
-        prisma.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        })
+      await Promise.all(
+        items.map((item: { productId: string; quantity: number }) =>
+          tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          })
+        )
       )
-    )
+
+      return created
+    })
 
     return Response.json(order, { status: 201 })
   } catch (error) {

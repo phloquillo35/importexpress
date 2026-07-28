@@ -18,6 +18,8 @@ const DEFAULTS: Record<string, string> = {
 
 export async function GET() {
   try {
+    const session = await requireRole("admin")
+    if (session instanceof Response) return session
     for (const key of DEFAULT_KEYS) {
       const exists = await prisma.setting.findUnique({ where: { key } })
       if (!exists && DEFAULTS[key]) {

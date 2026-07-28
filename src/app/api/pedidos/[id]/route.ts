@@ -130,9 +130,9 @@ export async function PUT(
     }
 
     const data: Record<string, unknown> = {}
-    if (body.status) data.status = body.status
+    if (body.status !== undefined) data.status = body.status
     if (body.notes !== undefined) data.notes = body.notes
-    if (body.clientName) data.clientName = body.clientName
+    if (body.clientName !== undefined) data.clientName = body.clientName
     if (body.clientSurname !== undefined) data.clientSurname = body.clientSurname
     if (body.clientPhone !== undefined) data.clientPhone = body.clientPhone
     if (body.clientEmail !== undefined) data.clientEmail = body.clientEmail
@@ -181,21 +181,23 @@ export async function DELETE(
       include: { items: { select: { productId: true, quantity: true } } },
     })
     if (!existing) return Response.json({ error: "Pedido no encontrado" }, { status: 404 })
+    if (existing.deletedAt) return Response.json({ error: "Pedido ya eliminado" }, { status: 400 })
 
     console.log(`[PEDIDO DELETE] id=${id} client=${existing.clientName} ${existing.clientSurname} total=${existing.totalUSD} status=${existing.status}`)
 
-    await Promise.all(
-      existing.items
-        .filter(item => item.productId)
-        .map(item =>
-          prisma.product.update({
-            where: { id: item.productId! },
-            data: { stock: { increment: item.quantity } },
-          })
-        )
-    )
-
-    await prisma.order.update({ where: { id }, data: { deletedAt: new Date() } })
+    await prisma.$transaction(async (tx) => {
+      await Promise.all(
+        existing.items
+          .filter(item => item.productId)
+          .map(item =>
+            tx.product.update({
+              where: { id: item.productId! },
+              data: { stock: { increment: item.quantity } },
+            })
+          )
+      )
+      await tx.order.update({ where: { id }, data: { deletedAt: new Date() } })
+    })
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error deleting order:", error)

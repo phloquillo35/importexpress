@@ -240,7 +240,7 @@ export default function PedidosPage() {
     setSavingEdit(true)
     try {
       const body: Record<string, unknown> = {}
-      if (editForm.clientName) body.clientName = editForm.clientName
+      if (editForm.clientName !== undefined) body.clientName = editForm.clientName
       if (editForm.clientSurname !== undefined) body.clientSurname = editForm.clientSurname
       if (editForm.clientPhone !== undefined) body.clientPhone = editForm.clientPhone
       if (editForm.clientEmail !== undefined) body.clientEmail = editForm.clientEmail

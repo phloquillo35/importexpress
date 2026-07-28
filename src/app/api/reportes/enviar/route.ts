@@ -178,29 +178,38 @@ function stockSection(data: any) {
     </table>`
 }
 
-async function gatherReportData() {
+async function gatherReportData(filters?: { fechaDesde?: string | null; fechaHasta?: string | null; tipo?: string }) {
   const businessNameSetting = await prisma.setting.findUnique({ where: { key: "business_name" } })
   const businessName = businessNameSetting?.value || "Lo Pedís, Lo Tenes"
 
   const exchangeRateSetting = await prisma.setting.findUnique({ where: { key: "exchange_rate" } })
   const exchangeRate = Number(exchangeRateSetting?.value) || 1350
 
+  const fechaDesde = filters?.fechaDesde ? new Date(filters.fechaDesde) : null
+  const fechaHasta = filters?.fechaHasta ? new Date(filters.fechaHasta + "T23:59:59") : null
+
+  const dateFilter = fechaDesde || fechaHasta ? {
+    ...(fechaDesde && { gte: fechaDesde }),
+    ...(fechaHasta && { lte: fechaHasta }),
+  } : undefined
+
   const [totalProducts, productsByCategory, lowStockProducts, featuredCount, availableCount, unavailableCount] = await Promise.all([
-    prisma.product.count(),
+    prisma.product.count({ where: { deletedAt: null } }),
     prisma.category.findMany({ include: { _count: { select: { products: true } } } }),
-    prisma.product.findMany({ where: { stock: { lte: prisma.product.fields.minStock } }, select: { name: true, stock: true, minStock: true } }),
-    prisma.product.count({ where: { isFeatured: true } }),
-    prisma.product.count({ where: { isAvailable: true } }),
-    prisma.product.count({ where: { isAvailable: false } }),
+    prisma.product.findMany({ where: { deletedAt: null, stock: { lte: prisma.product.fields.minStock } }, select: { name: true, stock: true, minStock: true } }),
+    prisma.product.count({ where: { deletedAt: null, isFeatured: true } }),
+    prisma.product.count({ where: { deletedAt: null, isAvailable: true } }),
+    prisma.product.count({ where: { deletedAt: null, isAvailable: false } }),
   ])
 
   const lowStockCount = lowStockProducts.length
 
+  const orderDateFilter = dateFilter ? { createdAt: dateFilter } : undefined
   const [totalOrders, allOrders, recentOrders, ordersByStatusRaw] = await Promise.all([
-    prisma.order.count(),
-    prisma.order.findMany({ select: { totalARS: true, status: true } }),
-    prisma.order.findMany({ where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } }, select: { totalARS: true } }),
-    prisma.order.groupBy({ by: ["status"], _count: { id: true } }),
+    prisma.order.count({ where: { deletedAt: null, ...orderDateFilter } }),
+    prisma.order.findMany({ where: { deletedAt: null, ...orderDateFilter }, select: { totalARS: true, status: true } }),
+    prisma.order.findMany({ where: { deletedAt: null, createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } }, select: { totalARS: true } }),
+    prisma.order.groupBy({ by: ["status"], where: { deletedAt: null, ...orderDateFilter }, _count: { id: true } }),
   ])
 
   const totalIncomeARS = allOrders.reduce((sum, o) => sum + (o.totalARS || 0), 0)
@@ -215,10 +224,11 @@ async function gatherReportData() {
     if (!ordersByStatus[status]) ordersByStatus[status] = 0
   }
 
+  const txDateFilter = dateFilter ? { date: dateFilter } : undefined
   const [transactions, totalIncome, totalExpenses] = await Promise.all([
-    prisma.transaction.findMany({ select: { type: true, amountARS: true } }),
-    prisma.transaction.aggregate({ where: { type: "income" }, _sum: { amountARS: true } }),
-    prisma.transaction.aggregate({ where: { type: "expense" }, _sum: { amountARS: true } }),
+    prisma.transaction.findMany({ where: { deletedAt: null, ...txDateFilter }, select: { type: true, amountARS: true } }),
+    prisma.transaction.aggregate({ where: { deletedAt: null, type: "income", ...txDateFilter }, _sum: { amountARS: true } }),
+    prisma.transaction.aggregate({ where: { deletedAt: null, type: "expense", ...txDateFilter }, _sum: { amountARS: true } }),
   ])
 
   const income = totalIncome._sum.amountARS || 0
@@ -247,18 +257,28 @@ async function gatherReportData() {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const session = await auth()
-  if (!session?.user?.email) {
+  if (!session) {
     return Response.json({ error: "No autorizado" }, { status: 401 })
   }
 
   try {
-    const data = await gatherReportData()
-    const html = buildReportHTML(data)
-    await sendEmail({ to: session.user.email, subject: `Reporte - ${data.businessName}`, text: `Reporte adjunto de ${data.businessName}`, html })
+    const body = await request.json().catch(() => ({}))
+    const email = body.email || session.user?.email
+    if (!email) {
+      return Response.json({ error: "Email destino requerido" }, { status: 400 })
+    }
 
-    return Response.json({ success: true, message: "Reporte enviado a " + session.user.email })
+    const data = await gatherReportData({
+      fechaDesde: body.fechaDesde || null,
+      fechaHasta: body.fechaHasta || null,
+      tipo: body.tipo || "completo",
+    })
+    const html = buildReportHTML(data)
+    await sendEmail({ to: email, subject: `Reporte ${data.businessName}`, text: `Reporte adjunto de ${data.businessName}`, html })
+
+    return Response.json({ success: true, message: "Reporte enviado a " + email })
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error al generar el reporte"
     return Response.json({ error: msg }, { status: 500 })

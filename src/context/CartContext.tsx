@@ -18,8 +18,8 @@ function itemKey(item: { slug: string; color: string | null }) {
 interface CartContextType {
   items: CartItem[]
   addItem: (item: Omit<CartItem, "quantity">) => void
-  removeItem: (slug: string) => void
-  updateQuantity: (slug: string, quantity: number) => void
+  removeItem: (slug: string, color?: string | null) => void
+  updateQuantity: (slug: string, quantity: number, color?: string | null) => void
   clearCart: () => void
   total: number
   count: number
@@ -56,16 +56,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const removeItem = useCallback((slug: string) => {
-    setItems(prev => prev.filter(i => i.slug !== slug))
+  const removeItem = useCallback((slug: string, color?: string | null) => {
+    setItems(prev => prev.filter(i => !(i.slug === slug && (color === undefined || i.color === color))))
   }, [])
 
-  const updateQuantity = useCallback((slug: string, quantity: number) => {
+  const updateQuantity = useCallback((slug: string, quantity: number, color?: string | null) => {
     if (quantity <= 0) {
-      removeItem(slug)
+      removeItem(slug, color)
       return
     }
-    setItems(prev => prev.map(i => (i.slug === slug ? { ...i, quantity } : i)))
+    setItems(prev => prev.map(i => (i.slug === slug && (color === undefined || i.color === color) ? { ...i, quantity } : i)))
   }, [removeItem])
 
   const clearCart = useCallback(() => {

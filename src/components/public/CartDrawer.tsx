@@ -88,20 +88,20 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   </div>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => updateQuantity(item.slug, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.slug, item.quantity - 1, item.color)}
                       className="p-1 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.slug, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.slug, item.quantity + 1, item.color)}
                       className="p-1 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => removeItem(item.slug)}
+                      onClick={() => removeItem(item.slug, item.color)}
                       className="p-1 ml-1 text-[#ff3b30] hover:text-red-600 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

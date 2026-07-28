@@ -70,79 +70,86 @@ export async function PUT(
     if (body.type !== undefined) data.type = body.type
     if (body.courier !== undefined) data.courier = body.courier
 
-    if (body.status === "en_camino" && body.trackingCode) {
-      await prisma.orderItem.updateMany({
-        where: { bulkId: id },
-        data: { trackingCode: body.trackingCode, shippingStatus: "en_camino" },
-      })
+    if (body.totalCostARS !== undefined && body.totalCostARS !== null) {
+      const numericCost = parseFloat(body.totalCostARS)
+      if (isNaN(numericCost) || !isFinite(numericCost) || numericCost < 0) {
+        return Response.json({ error: "totalCostARS debe ser un número positivo" }, { status: 400 })
+      }
     }
 
-    if (body.status) {
-      await prisma.orderItem.updateMany({
-        where: { bulkId: id },
-        data: { shippingStatus: body.status },
-      })
+    const hasStatusChange = !!body.status
+    const hasCostChange = body.totalCostARS !== undefined && body.totalCostARS !== null
 
-      const affectedOrderIds = await prisma.orderItem.findMany({
-        where: { bulkId: id },
-        select: { orderId: true },
-        distinct: ["orderId"],
-      })
+    await prisma.$transaction(async (tx) => {
+      if (hasStatusChange) {
+        const trackingCode = body.trackingCode || null
 
-      const statusPriority: Record<string, number> = {
-        demorado: 0,
-        cancelado: 1,
-        pending: 2,
-        en_camino: 3,
-        llego: 4,
-        entregado: 5,
-      }
-
-      for (const { orderId } of affectedOrderIds) {
-        const items = await prisma.orderItem.findMany({
-          where: { orderId },
-          select: { shippingStatus: true },
-        })
-
-        const computed = computeOrderStatus(items)
-
-        await prisma.order.update({
-          where: { id: orderId },
-          data: { status: computed },
-        })
-        console.log(`[BULK PUT] order ${orderId} recalculated -> ${computed} from ${items.length} items`)
-      }
-
-      const allBulksOnAffectedOrders = await prisma.orderItem.findMany({
-        where: { orderId: { in: affectedOrderIds.map(o => o.orderId) } },
-        select: { bulkId: true },
-        distinct: ["bulkId"],
-      })
-      console.log(`[BULK PUT] bulks on affected orders: ${allBulksOnAffectedOrders.map(b => b.bulkId).join(", ")}`)
-    }
-
-    if (body.totalCostARS !== undefined && existing.type) {
-      const itemCount = await prisma.orderItem.count({ where: { bulkId: id } })
-      if (itemCount > 0) {
-        const shippingPerItem = parseFloat(body.totalCostARS) / itemCount
-        const items = await prisma.orderItem.findMany({ where: { bulkId: id, productId: { not: null } },
-          include: { product: true },
-        })
-
-        for (const item of items) {
-          if (!item.productId || !item.product) continue
-          const currentShipping = item.product.shippingCost || 0
-          await prisma.product.update({
-            where: { id: item.productId },
-            data: { shippingCost: currentShipping + shippingPerItem },
+        if (trackingCode) {
+          await tx.orderItem.updateMany({
+            where: { bulkId: id },
+            data: { trackingCode, shippingStatus: "en_camino" },
+          })
+        } else {
+          await tx.orderItem.updateMany({
+            where: { bulkId: id },
+            data: { shippingStatus: body.status },
           })
         }
-      }
-    }
 
-    const updated = await prisma.bulk.update({
+        const affectedOrderIds = await tx.orderItem.findMany({
+          where: { bulkId: id },
+          select: { orderId: true },
+          distinct: ["orderId"],
+        })
+
+        for (const { orderId } of affectedOrderIds) {
+          const items = await tx.orderItem.findMany({
+            where: { orderId },
+            select: { shippingStatus: true },
+          })
+          const computed = computeOrderStatus(items)
+          await tx.order.update({
+            where: { id: orderId },
+            data: { status: computed },
+          })
+          console.log(`[BULK PUT] order ${orderId} recalculated -> ${computed} from ${items.length} items`)
+        }
+      }
+
+      if (hasCostChange) {
+        const numericCost = parseFloat(body.totalCostARS)
+        const itemCount = await tx.orderItem.count({ where: { bulkId: id } })
+        if (itemCount > 0) {
+          const shippingPerItem = numericCost / itemCount
+          const oldCost = existing.totalCostARS ? Number(existing.totalCostARS) : 0
+
+          const items = await tx.orderItem.findMany({
+            where: { bulkId: id, productId: { not: null } },
+            include: { product: true },
+          })
+
+          for (const item of items) {
+            if (!item.productId || !item.product) continue
+            const currentShipping = item.product.shippingCost || 0
+            const newShipping = oldCost > 0
+              ? currentShipping - (oldCost / itemCount) + shippingPerItem
+              : currentShipping + shippingPerItem
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { shippingCost: Math.max(0, newShipping) },
+            })
+          }
+        }
+      }
+
+      await tx.bulk.update({
+        where: { id },
+        data,
+      })
+    })
+
+    const updated = await prisma.bulk.findUnique({
       where: { id },
-      data,
       include: {
         store: { select: { id: true, name: true } },
         orderItems: {
@@ -153,6 +160,7 @@ export async function PUT(
         },
       },
     })
+    if (!updated) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
 
     if (body.status === "en_camino" && body.trackingCode) {
       const orderItems = await prisma.orderItem.findMany({
