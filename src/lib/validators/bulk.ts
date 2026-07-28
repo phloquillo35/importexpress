@@ -10,6 +10,7 @@ export const createBulkSchema = z.object({
   status: z.enum(["pending", "en_camino", "demorado", "llego", "entregado", "cancelado"]).optional(),
   notes: z.string().optional().nullable(),
   products: z.any().optional(),
+  storeId: z.string().optional().nullable(),
   distributorId: z.string().optional().nullable(),
   orderItemIds: z.array(z.string()).optional(),
 })

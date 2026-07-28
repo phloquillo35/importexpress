@@ -129,7 +129,7 @@ function ProductosContent() {
     }
     return variants
   }, [products])
-  const displayTotal = colorVariants.length
+  const displayTotal = products.length
 
   return (
     <div>

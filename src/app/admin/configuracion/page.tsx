@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { clearExchangeRateCache } from "@/lib/exchange-rate"
 import { Settings, Save, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -54,6 +55,7 @@ export default function ConfiguracionPage() {
         body: JSON.stringify(form),
       })
       if (!res.ok) throw new Error()
+      clearExchangeRateCache()
       toast.success("Configuración guardada")
     } catch {
       toast.error("Error al guardar")

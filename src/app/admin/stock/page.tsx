@@ -101,7 +101,7 @@ export default function AdminStockPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: adjustProduct.id,
-          quantity: parseInt(adjustQty),
+          quantity: Math.round(parseFloat(adjustQty)),
           operation: adjustOp,
           field: adjustField,
         }),

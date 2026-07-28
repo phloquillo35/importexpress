@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
+import { updateTransactionSchema } from "@/lib/validators"
 import { recalculatePaymentStatus } from "@/lib/orders"
 
 export async function PUT(
@@ -14,16 +15,16 @@ export async function PUT(
     const { id } = await params
     const body = await request.json()
 
+    const parsed = updateTransactionSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+
     const existing = await prisma.transaction.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Transacción no encontrada" }, { status: 404 })
 
-    const data: Record<string, unknown> = {}
-    if (body.type) data.type = body.type
-    if (body.concept) data.concept = body.concept
-    if (body.amountUSD !== undefined) data.amountUSD = parseFloat(body.amountUSD)
-    if (body.amountARS !== undefined) data.amountARS = body.amountARS ? parseFloat(body.amountARS) : null
-    if (body.date) data.date = new Date(body.date)
-    if (body.notes !== undefined) data.notes = body.notes
+    const data = parsed.data as Record<string, unknown>
+    if (data.date) data.date = new Date(data.date as string)
 
     const updated = await prisma.transaction.update({ where: { id }, data })
     return Response.json(updated)

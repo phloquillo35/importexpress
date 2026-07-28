@@ -38,6 +38,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     e.preventDefault()
     const msg = buildMessage()
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank")
+    setForm({ name: "", phone: "", address: "" })
     setShowForm(false)
     onClose()
   }

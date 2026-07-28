@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
+import { updateStoreSchema } from "@/lib/validators"
 
 export async function PUT(
   request: Request,
@@ -13,16 +14,15 @@ export async function PUT(
     const { id } = await params
     const body = await request.json()
 
+    const parsed = updateStoreSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+
     const existing = await prisma.store.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: "Tienda no encontrada" }, { status: 404 })
 
-    const data: Record<string, unknown> = {}
-    if (body.name) data.name = body.name
-    if (body.contact !== undefined) data.contact = body.contact
-    if (body.website !== undefined) data.website = body.website
-    if (body.notes !== undefined) data.notes = body.notes
-
-    const updated = await prisma.store.update({ where: { id }, data })
+    const updated = await prisma.store.update({ where: { id }, data: parsed.data })
     return Response.json(updated)
   } catch (error) {
     console.error("Error updating store:", error)
