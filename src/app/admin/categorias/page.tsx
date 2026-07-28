@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Plus, Pencil, Trash2, Tags, X, Eye, Package, ChevronRight, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -57,6 +57,7 @@ export default function AdminCategoriasPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
   const [form, setForm] = useState({ name: "", slug: "", description: "" })
+  const slugTouched = useRef(false)
   const [showSubcategories, setShowSubcategories] = useState(false)
   const [subcatInputs, setSubcatInputs] = useState<string[]>([""])
   const [saving, setSaving] = useState(false)
@@ -95,7 +96,7 @@ export default function AdminCategoriasPage() {
 
   function openNew() {
     setEditing(null)
-    setForm({ name: "", slug: "", description: "" })
+    setForm({ name: "", slug: "", description: "" }); slugTouched.current = false
     setShowSubcategories(false)
     setSubcatInputs([""])
     setDialogOpen(true)
@@ -103,7 +104,7 @@ export default function AdminCategoriasPage() {
 
   function openEdit(cat: Category) {
     setEditing(cat)
-    setForm({ name: cat.name, slug: cat.slug, description: cat.description || "" })
+    setForm({ name: cat.name, slug: cat.slug, description: cat.description || "" }); slugTouched.current = true
     const subs = cat.children?.map(c => c.name) || []
     setSubcatInputs(subs.length > 0 ? subs : [""])
     setShowSubcategories(subs.length > 0)
@@ -217,10 +218,10 @@ export default function AdminCategoriasPage() {
                 <Input
                   id="name"
                   value={form.name}
-                  onChange={(e) => {
-                    const val = e.target.value
-                    setForm((prev) => ({ ...prev, name: val, slug: !editing ? val.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "") : prev.slug }))
-                  }}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm((prev) => ({ ...prev, name: val, slug: !editing && !slugTouched.current ? val.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "") : prev.slug }))
+                    }}
                   className="bg-muted border-border text-foreground"
                   placeholder="Nombre de la categoría"
                 />
@@ -230,7 +231,7 @@ export default function AdminCategoriasPage() {
                 <Input
                   id="slug"
                   value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  onChange={(e) => { slugTouched.current = true; setForm({ ...form, slug: e.target.value }) }}
                   className="bg-muted border-border text-foreground"
                   placeholder="categoria-slug"
                 />

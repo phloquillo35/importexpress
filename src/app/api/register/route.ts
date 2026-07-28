@@ -2,8 +2,15 @@ import { hash } from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { randomUUID } from "crypto"
 import { NextRequest } from "next/server"
+import { z } from "zod"
 import { rateLimit } from "@/lib/rate-limit"
 import { requireRole } from "@/lib/auth"
+
+const registerSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Contraseña debe tener al menos 6 caracteres"),
+  name: z.string().min(1).optional(),
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +23,12 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Too many requests" }, { status: 429 })
     }
 
-    const { email, password, name } = await request.json()
+    const body = await request.json()
+    const parsed = registerSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+    const { email, password, name } = parsed.data
 
     const existingAdmin = await prisma.admin.findUnique({ where: { email } })
     if (existingAdmin) {

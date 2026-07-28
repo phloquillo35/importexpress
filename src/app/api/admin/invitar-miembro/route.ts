@@ -1,19 +1,28 @@
 import { hash } from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { randomUUID } from "crypto"
+import { z } from "zod"
 import { requireRole } from "@/lib/auth"
 import { sendEmail } from "@/lib/email"
+
+const inviteSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Contraseña debe tener al menos 6 caracteres"),
+  name: z.string().min(1).optional(),
+  role: z.enum(["admin", "customer"]).optional(),
+})
 
 export async function POST(request: Request) {
   try {
     const session = await requireRole("admin")
     if (session instanceof Response) return session
 
-    const { email, password, name, role } = await request.json()
-
-    if (!email || !password) {
-      return Response.json({ error: "Email y contraseña son requeridos" }, { status: 400 })
+    const body = await request.json()
+    const parsed = inviteSchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
+    const { email, password, name, role } = parsed.data
 
     const existing = await prisma.admin.findUnique({ where: { email } })
     if (existing) {

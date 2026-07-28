@@ -9,6 +9,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const showDeleted = searchParams.get("showDeleted") === "true"
 
+    if (showDeleted) {
+      const session = await requireRole("admin")
+      if (session instanceof Response) return session
+    }
+
     const where: Record<string, unknown> = {}
     if (!showDeleted) where.deletedAt = null
 

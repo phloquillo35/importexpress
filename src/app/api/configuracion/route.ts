@@ -18,6 +18,8 @@ const DEFAULTS: Record<string, string> = {
 
 export async function GET() {
   try {
+    const session = await requireRole("admin")
+    if (session instanceof Response) return session
     for (const key of DEFAULT_KEYS) {
       const exists = await prisma.setting.findUnique({ where: { key } })
       if (!exists && DEFAULTS[key]) {
@@ -55,6 +57,12 @@ export async function PUT(request: Request) {
 
     const updated: Record<string, string> = {}
 
+    const rateKeys = ["exchange_rate", "usdt_rate"]
+    const before = await prisma.setting.findMany({
+      where: { key: { in: rateKeys } },
+    })
+    const beforeMap = new Map(before.map(s => [s.key, s.value]))
+
     for (const key of DEFAULT_KEYS) {
       if (body[key] !== undefined) {
         await prisma.setting.upsert({
@@ -66,34 +74,38 @@ export async function PUT(request: Request) {
       }
     }
 
-    const ratesChanged = body.exchange_rate !== undefined || body.usdt_rate !== undefined
-    if (ratesChanged) {
-      const settings = await prisma.setting.findMany({
-        where: { key: { in: ["exchange_rate", "usdt_rate"] } },
-      })
-      const exchangeRate = parseFloat(settings.find(s => s.key === "exchange_rate")?.value || DEFAULTS.exchange_rate)
-      const usdtRate = parseFloat(settings.find(s => s.key === "usdt_rate")?.value || DEFAULTS.usdt_rate)
+    const ratesChanged = rateKeys.some(k => body[k] !== undefined)
 
-      const products = await prisma.product.findMany()
-      await Promise.all(
-        products.map((p) => {
-          const result = calculateFinalPrice({
-            costUSDT: p.costUSDT ?? 0,
-            yoniEnabled: p.yoniEnabled,
-            yoniType: p.yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
-            yoniValue: p.yoniValue,
-            shippingCost: p.shippingCost,
-            profitType: p.profitType as "percentage" | "fixed_usdt" | "fixed_ars",
-            profitValue: p.profitValue,
-            exchangeRate,
-            usdtRate,
-          })
-          return prisma.product.update({
-            where: { id: p.id },
-            data: { finalPriceUSD: result.finalPriceUSD, finalPriceARS: result.finalPriceARS },
-          })
-        }),
-      )
+    if (ratesChanged) {
+      const same = rateKeys.every(k => body[k] === undefined || String(body[k]) === beforeMap.get(k))
+      if (!same) {
+        const settings = await prisma.setting.findMany({
+          where: { key: { in: rateKeys } },
+        })
+        const exchangeRate = parseFloat(settings.find(s => s.key === "exchange_rate")?.value || DEFAULTS.exchange_rate)
+        const usdtRate = parseFloat(settings.find(s => s.key === "usdt_rate")?.value || DEFAULTS.usdt_rate)
+
+        const products = await prisma.product.findMany()
+        await Promise.all(
+          products.map((p) => {
+            const result = calculateFinalPrice({
+              costUSDT: p.costUSDT ?? 0,
+              yoniEnabled: p.yoniEnabled,
+              yoniType: p.yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
+              yoniValue: p.yoniValue,
+              shippingCost: p.shippingCost,
+              profitType: p.profitType as "percentage" | "fixed_usdt" | "fixed_ars",
+              profitValue: p.profitValue,
+              exchangeRate,
+              usdtRate,
+            })
+            return prisma.product.update({
+              where: { id: p.id },
+              data: { finalPriceUSD: result.finalPriceUSD, finalPriceARS: result.finalPriceARS },
+            })
+          }),
+        )
+      }
     }
 
     return Response.json(updated)
