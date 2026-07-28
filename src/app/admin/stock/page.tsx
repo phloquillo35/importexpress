@@ -43,6 +43,7 @@ export default function AdminStockPage() {
   const [adjustOp, setAdjustOp] = useState<"add" | "set">("set")
   const [adjustField, setAdjustField] = useState<"stock" | "minStock">("stock")
   const [saving, setSaving] = useState(false)
+  const [viewProduct, setViewProduct] = useState<StockProduct | null>(null)
 
   async function loadStock() {
     try {
@@ -178,12 +179,12 @@ export default function AdminStockPage() {
                 ) : (
                   filtered.map((product) => (
                     <TableRow key={product.id} className="border-border hover:bg-muted">
-                      <TableCell className="font-medium text-foreground">{product.name}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
+                      <TableCell className="font-medium text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{product.name}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm cursor-pointer" onClick={() => setViewProduct(product)}>
                         {product.category?.name || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-foreground">{formatUSD(product.priceUSD)}</TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-right text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{formatUSD(product.priceUSD)}</TableCell>
+                      <TableCell className="text-center cursor-pointer" onClick={() => setViewProduct(product)}>
                         <span className={cn(
                           "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium",
                           getStockBg(product),
@@ -192,12 +193,12 @@ export default function AdminStockPage() {
                           {product.stock}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center text-muted-foreground">{product.minStock}</TableCell>
+                      <TableCell className="text-center text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{product.minStock}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => openAdjust(product)}
+                          onClick={(e) => { e.stopPropagation(); openAdjust(product) }}
                           className="text-muted-foreground hover:text-[#22C55E] text-xs"
                         >
                           Ajustar
@@ -210,6 +211,65 @@ export default function AdminStockPage() {
             </Table>
         </div>
       </div>
+
+      <Dialog open={!!viewProduct} onOpenChange={(o) => { if (!o) setViewProduct(null) }}>
+        <DialogContent className="bg-popover border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle>{viewProduct?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground mb-0.5">Slug</p>
+                <p className="text-foreground font-medium">{viewProduct?.slug}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Categoría</p>
+                <p className="text-foreground font-medium">{viewProduct?.category?.name || "—"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Precio USD</p>
+                <p className="text-foreground font-medium">{formatUSD(viewProduct?.priceUSD ?? 0)}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Stock mínimo</p>
+                <p className="text-foreground font-medium">{viewProduct?.minStock}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Stock actual</p>
+                {viewProduct && (
+                  <span className={cn(
+                    "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium",
+                    getStockBg(viewProduct),
+                    getStockColor(viewProduct)
+                  )}>
+                    {viewProduct.stock}
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Disponibilidad</p>
+                <span className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium",
+                  viewProduct?.isAvailable ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-red-500/10 text-red-400"
+                )}>
+                  {viewProduct?.isAvailable ? "Disponible" : "Oculto"}
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setViewProduct(null); if (viewProduct) openAdjust(viewProduct) }}
+                className="border-border text-foreground"
+              >
+                Ajustar stock
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!adjustProduct} onOpenChange={(o) => { if (!o) setAdjustProduct(null) }}>
         <DialogContent className="bg-popover border-border text-foreground">
