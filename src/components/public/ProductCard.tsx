@@ -5,13 +5,7 @@ import { useEffect, useState, useMemo } from "react"
 import { Package, ShoppingBag } from "lucide-react"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { useCart } from "@/context/CartContext"
-
-const colorSwatch: Record<string, string> = {
-  negro: "#1d1d1f", blanco: "#f5f5f7", rojo: "#ff3b30", azul: "#0071e3",
-  verde: "#34c759", amarillo: "#ffcc00", gris: "#8e8e93", plateado: "#c0c0c0",
-  dorado: "#ffd700", rosa: "#ffc0cb", violeta: "#af52de", marrón: "#a2845e",
-  naranja: "#ff9500",
-}
+import { colorSwatch, swatchStyle } from "@/lib/colors"
 
 interface ProductCardProps {
   product: {
@@ -56,7 +50,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
 
   const cardColors = useMemo(() => getCardColors(product.images), [product.images])
   const cardImage = useMemo(() => getCardImage(product.images, colorName), [product.images, colorName])
-  const colorHex = colorName ? colorSwatch[colorName.toLowerCase()] || null : null
+  const colorStyle = colorName ? swatchStyle(colorName) : null
 
   useEffect(() => {
     fetchExchangeRate().then(setExchangeRate)
@@ -93,11 +87,11 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
           )}
         </div>
 
-        {colorName && colorHex ? (
+        {colorName && colorStyle ? (
           <div className="flex items-center justify-center gap-1.5 px-5 pt-3">
             <span
               className="w-3 h-3 rounded-full border border-muted-foreground/30"
-              style={{ backgroundColor: colorHex }}
+              style={colorStyle}
             />
             <span className="text-xs font-medium text-muted-foreground capitalize">{colorName}</span>
           </div>
@@ -107,7 +101,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
               <span
                 key={color}
                 className="w-3 h-3 rounded-full border border-muted-foreground/30"
-                style={{ backgroundColor: colorSwatch[color.toLowerCase()] || "#c0c0c0" }}
+                style={swatchStyle(color)}
                 title={color}
               />
             ))}

@@ -8,6 +8,7 @@ import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCart } from "@/context/CartContext"
+import { swatchStyle } from "@/lib/colors"
 
 interface Product {
   id: string
@@ -216,12 +217,13 @@ function ProductDetailContent() {
                 <button
                   key={color}
                   onClick={() => { setSelectedColor(color); setCurrentIndex(0) }}
-                  className={`px-4 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                  className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-full border transition-all ${
                     selectedColor === color
                       ? "bg-[#1d1d1f] text-white border-[#1d1d1f]"
                       : "bg-card text-foreground border-border hover:border-[#1d1d1f]"
                   }`}
                 >
+                  <span className="w-2.5 h-2.5 rounded-full border border-muted-foreground/30 flex-shrink-0" style={swatchStyle(color)} />
                   {color}
                 </button>
               ))}
