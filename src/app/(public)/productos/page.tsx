@@ -104,7 +104,7 @@ function ProductosContent() {
       if (value) params.set(key, value)
       else params.delete(key)
     })
-    if (updates.categoria !== undefined || updates.search !== undefined) {
+    if (Object.keys(updates).length > 0) {
       params.set("page", "1")
     }
     router.push(`/productos?${params.toString()}`)

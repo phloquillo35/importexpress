@@ -97,9 +97,9 @@ export default function FinanzasPage() {
     } finally {
       setLoading(false)
     }
-  }, [tipoFilter])
+  }, [tipoFilter, showDeleted])
 
-  useEffect(() => { fetchTransactions() }, [fetchTransactions, showDeleted])
+  useEffect(() => { fetchTransactions() }, [fetchTransactions])
 
   useEffect(() => {
     fetch("/api/pedidos?limit=200").then(r => r.json()).then(d => {

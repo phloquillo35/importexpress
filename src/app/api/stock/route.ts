@@ -47,7 +47,8 @@ export async function POST(request: Request) {
       return Response.json({ error: "quantity debe ser un número" }, { status: 400 })
     }
 
-    const targetField = field || "stock"
+    const allowedFields = ["stock", "minStock"]
+    const targetField = allowedFields.includes(field) ? field : "stock"
 
     let newValue: number
     if (operation === "set") {

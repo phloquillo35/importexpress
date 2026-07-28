@@ -65,6 +65,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
     e.stopPropagation()
     addItem({
       slug: product.slug,
+      color: colorName || null,
       name: colorName ? `${product.name} (${colorName})` : product.name,
       price,
       image: cardImage,

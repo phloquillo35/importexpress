@@ -157,6 +157,11 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   }, [defaultValues?.categoryId])
 
   useEffect(() => {
+    setSpecs(defaultValues?.specs ? Object.entries(defaultValues.specs).map(([k, v]) => ({ key: k, value: v })) : [])
+    setColorGroups(parseImagesToColorGroups(defaultValues?.images))
+  }, [defaultValues?.specs, defaultValues?.images])
+
+  useEffect(() => {
     if (!productSlug && watchedName) {
       const slug = watchedName
         .toLowerCase()

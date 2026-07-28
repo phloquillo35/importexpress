@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Package, DollarSign, TrendingDown, AlertTriangle, ShoppingCart } from "lucide-react"
 import { formatUSD, formatDate } from "@/lib/utils"
 import {
@@ -42,8 +43,9 @@ const statusLabels: Record<string, string> = {
   cancelado: "Cancelado",
 }
 
-export function DashboardClient({ data }: { data: DashboardData }) {
-  const [period, setPeriod] = useState(30)
+export function DashboardClient({ data, period: initialPeriod }: { data: DashboardData; period: number }) {
+  const [period, setPeriod] = useState(initialPeriod)
+  const router = useRouter()
   const [chartData, setChartData] = useState<{ date: string; income: number; expense: number }[]>([])
 
   const buildChart = useCallback(() => {
@@ -89,7 +91,10 @@ export function DashboardClient({ data }: { data: DashboardData }) {
               key={d}
               variant={period === d ? "default" : "ghost"}
               size="sm"
-              onClick={() => setPeriod(d)}
+              onClick={() => {
+                setPeriod(d)
+                router.push(`/admin?period=${d}`)
+              }}
                className={period === d ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}
             >
               {d}d

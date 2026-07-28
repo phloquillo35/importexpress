@@ -48,19 +48,21 @@ export async function PUT(
     if (body.totalCostUSD !== undefined) data.totalCostUSD = parseFloat(body.totalCostUSD)
     if (body.products) data.products = body.products
 
-    if (body.status === "received" || body.status === "arrived") {
+    if ((body.status === "received" || body.status === "arrived") && existing.status !== "received" && existing.status !== "arrived") {
       const currentProducts = typeof existing.products === "string"
         ? JSON.parse(existing.products)
         : existing.products
       if (Array.isArray(currentProducts)) {
-        for (const item of currentProducts) {
-          if (item.productId && item.quantity) {
-            await prisma.product.update({
-              where: { id: item.productId },
-              data: { stock: { increment: item.quantity } },
-            })
-          }
-        }
+        await prisma.$transaction(
+          currentProducts
+            .filter((item: any) => item.productId && item.quantity)
+            .map((item: any) =>
+              prisma.product.update({
+                where: { id: item.productId },
+                data: { stock: { increment: item.quantity } },
+              })
+            )
+        )
       }
     }
 

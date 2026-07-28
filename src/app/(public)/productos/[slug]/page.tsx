@@ -271,7 +271,7 @@ function ProductDetailContent() {
 
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => addItem({ slug: product.slug, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[currentIndex] || product.images?.[0]) ?? null })}
+              onClick={() => addItem({ slug: product.slug, color: selectedColor || null, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[currentIndex] || product.images?.[0]) ?? null })}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
             >
               <Plus className="w-5 h-5" />

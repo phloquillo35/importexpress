@@ -38,7 +38,6 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     e.preventDefault()
     const msg = buildMessage()
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank")
-    clearCart()
     setShowForm(false)
     onClose()
   }
@@ -72,7 +71,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           ) : (
             <>
               {items.map((item) => (
-                <div key={item.slug} className="flex items-center gap-3 p-3 bg-muted rounded-xl">
+                <div key={`${item.slug}__${item.color ?? ""}`} className="flex items-center gap-3 p-3 bg-muted rounded-xl">
                   <div className="w-14 h-14 rounded-lg bg-card flex items-center justify-center overflow-hidden shrink-0">
                     {item.image ? (
                       <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />

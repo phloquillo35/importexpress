@@ -15,9 +15,9 @@ async function getDashboardData(periodDays: number = 30) {
       categories,
       pendingOrders,
     ] = await Promise.all([
-      prisma.product.count(),
-      prisma.product.findMany({ select: { id: true, name: true, stock: true, minStock: true, slug: true } }),
-      prisma.product.findMany({ orderBy: { createdAt: "desc" }, take: 5, include: { category: { select: { name: true } } } }),
+      prisma.product.count({ where: { deletedAt: null } }),
+      prisma.product.findMany({ where: { deletedAt: null }, select: { id: true, name: true, stock: true, minStock: true, slug: true } }),
+      prisma.product.findMany({ where: { deletedAt: null }, orderBy: { createdAt: "desc" }, take: 5, include: { category: { select: { name: true } } } }),
       prisma.transaction.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } }),
       prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
       prisma.category.findMany({ include: { _count: { select: { products: true } } } }),
@@ -72,7 +72,9 @@ async function getDashboardData(periodDays: number = 30) {
   }
 }
 
-export default async function AdminDashboardPage() {
-  const data = await getDashboardData(30)
-  return <DashboardClient data={data} />
+export default async function AdminDashboardPage(props: { searchParams: Promise<{ period?: string }> }) {
+  const sp = await props.searchParams
+  const periodDays = parseInt(sp.period || "30")
+  const data = await getDashboardData(periodDays)
+  return <DashboardClient data={data} period={periodDays} />
 }

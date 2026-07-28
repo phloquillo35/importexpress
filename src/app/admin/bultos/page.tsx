@@ -121,9 +121,9 @@ export default function BultosPage() {
       setBulks(Array.isArray(data) ? data : [])
     } catch { toast.error("Error al cargar bultos") }
     finally { setLoading(false) }
-  }, [statusFilter])
+  }, [statusFilter, showDeleted])
 
-  useEffect(() => { fetchBulks() }, [fetchBulks, showDeleted])
+  useEffect(() => { fetchBulks() }, [fetchBulks])
 
   useEffect(() => {
     fetch("/api/pedidos?status=pending")

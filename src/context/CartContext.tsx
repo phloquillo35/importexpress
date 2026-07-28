@@ -4,10 +4,15 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 
 export interface CartItem {
   slug: string
+  color: string | null
   name: string
   price: number
   quantity: number
   image: string | null
+}
+
+function itemKey(item: { slug: string; color: string | null }) {
+  return `${item.slug}__${item.color ?? ""}`
 }
 
 interface CartContextType {
@@ -40,10 +45,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((newItem: Omit<CartItem, "quantity">) => {
     setItems(prev => {
-      const existing = prev.find(i => i.slug === newItem.slug)
+      const key = itemKey(newItem)
+      const existing = prev.find(i => itemKey(i) === key)
       if (existing) {
         return prev.map(i =>
-          i.slug === newItem.slug ? { ...i, quantity: i.quantity + 1 } : i
+          itemKey(i) === key ? { ...i, quantity: i.quantity + 1 } : i
         )
       }
       return [...prev, { ...newItem, quantity: 1 }]
