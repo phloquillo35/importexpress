@@ -296,12 +296,7 @@ export default function AdminProductosPage() {
       <Dialog open={!!viewProduct} onOpenChange={(o) => { if (!o) setViewProduct(null) }}>
         <DialogContent className="bg-card text-foreground max-w-lg">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>{viewProduct?.name}</DialogTitle>
-              <Button variant="ghost" size="icon" onClick={() => setViewProduct(null)} className="text-muted-foreground hover:text-foreground">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
+            <DialogTitle>{viewProduct?.name}</DialogTitle>
           </DialogHeader>
           {viewProduct && (() => {
             const p = viewProduct
