@@ -79,7 +79,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     const map = new Map<string, string[]>()
     for (const item of images) {
       const img = item as { url: string; color?: string }
-      const color = img.color || "Único"
+      const color = img.color || ""
       if (!map.has(color)) map.set(color, [])
       map.get(color)!.push(img.url)
     }
@@ -90,6 +90,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
     parseImagesToColorGroups(defaultValues?.images)
   )
   const [uploadingForColor, setUploadingForColor] = useState<number | null>(null)
+  const [uploadingNoColor, setUploadingNoColor] = useState(false)
   const [newColorName, setNewColorName] = useState("")
   const [saving, setSaving] = useState(false)
 
@@ -221,6 +222,34 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       i === colorIndex ? { ...g, images: [...g.images, ...uploaded] } : g
     ))
     setUploadingForColor(null)
+  }
+
+  async function handleMainUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploadingNoColor(true)
+    const uploaded: string[] = []
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append("file", file)
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: formData })
+        if (!res.ok) throw new Error("Error al subir imagen")
+        const data = await res.json()
+        uploaded.push(data.url)
+      } catch {
+        toast.error(`Error al subir: ${file.name}`)
+      }
+    }
+
+    setColorGroups(prev => {
+      const noColor = prev.find(g => g.name === "")
+      if (noColor) return prev.map(g => g.name === "" ? { ...g, images: [...g.images, ...uploaded] } : g)
+      return [{ name: "", images: uploaded }, ...prev]
+    })
+    setUploadingNoColor(false)
   }
 
   function removeImage(colorIndex: number, imageIndex: number) {
@@ -552,73 +581,90 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       </div>
 
       <div className="bg-card border border-border rounded-xl p-6 space-y-5">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-lg font-semibold text-foreground font-heading">Colores e Imágenes</h2>
-          <div className="flex items-center gap-2">
-            <Input
-              value={newColorName}
-              onChange={(e) => setNewColorName(e.target.value)}
-              placeholder="Nombre del color"
-              className="bg-card border-border text-foreground w-36 h-8 text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  if (!newColorName.trim()) { toast.error("Ingresá un nombre"); return }
-                  setColorGroups([...colorGroups, { name: newColorName.trim(), images: [] }])
-                  setNewColorName("")
-                }
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (!newColorName.trim()) { toast.error("Ingresá un nombre para el color"); return }
-                setColorGroups([...colorGroups, { name: newColorName.trim(), images: [] }])
-                setNewColorName("")
-              }}
-              className="border-border text-muted-foreground flex-shrink-0"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Color
-            </Button>
+        <h2 className="text-lg font-semibold text-foreground font-heading">Subir imagen</h2>
+
+        <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-border cursor-pointer hover:border-[#22C55E] transition-colors">
+          <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+          <span className="text-sm text-muted-foreground">{uploadingNoColor ? "Subiendo..." : "Arrastrá imágenes o hacé clic para subir"}</span>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleMainUpload}
+            className="hidden"
+            disabled={uploadingNoColor}
+          />
+        </label>
+
+        {colorGroups.flatMap(g => g.images).length > 0 && (
+          <div className="flex flex-wrap gap-3">
+            {colorGroups.map((group, gi) =>
+              group.images.map((url, ii) => (
+                <div key={`${gi}-${ii}`} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
+                  <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  {group.name && (
+                    <span className="absolute top-0 right-0 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg">
+                      {group.name}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(gi, ii)}
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
+        )}
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="flex-1 border-t border-border" />
+          <span>Opcional: agregar por color</span>
+          <span className="flex-1 border-t border-border" />
         </div>
 
-        {colorGroups.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin colores. Agregá un color para subir imágenes.</p>
-        ) : (
-          <div className="space-y-4">
-            {colorGroups.map((group, ci) => (
-              <div key={ci} className="bg-muted border border-border rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">{group.name}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setColorGroups(colorGroups.filter((_, i) => i !== ci))}
-                    className="text-red-400 h-7 w-7"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {group.images.map((url, ii) => (
-                    <div key={ii} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
-                      <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(ci, ii)}
-                        className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-5 h-5 text-white" />
-                      </button>
-                    </div>
-                  ))}
-                  <label className="w-24 h-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-[#22C55E] transition-colors">
-                    <Upload className="w-5 h-5 text-muted-foreground mb-1" />
-                    <span className="text-[10px] text-muted-foreground">{uploadingForColor === ci ? "Subiendo..." : "Subir"}</span>
+        <div className="flex items-center gap-2">
+          <Input
+            value={newColorName}
+            onChange={(e) => setNewColorName(e.target.value)}
+            placeholder="Nombre del color"
+            className="bg-card border-border text-foreground w-36 h-8 text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                if (!newColorName.trim()) { toast.error("Ingresá un nombre"); return }
+                setColorGroups([...colorGroups, { name: newColorName.trim(), images: [] }])
+                setNewColorName("")
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!newColorName.trim()) { toast.error("Ingresá un nombre para el color"); return }
+              setColorGroups([...colorGroups, { name: newColorName.trim(), images: [] }])
+              setNewColorName("")
+            }}
+            className="border-border text-muted-foreground flex-shrink-0"
+          >
+            <Plus className="w-4 h-4 mr-1" /> Color
+          </Button>
+        </div>
+
+        {colorGroups.filter(g => g.name !== "").length > 0 && (
+          <div className="space-y-2">
+            {colorGroups.map((group, ci) => group.name === "" ? null : (
+              <div key={ci} className="flex items-center justify-between bg-muted border border-border rounded-lg p-3">
+                <span className="text-sm font-medium text-foreground">{group.name}</span>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-dashed border-border cursor-pointer hover:border-[#22C55E] text-xs text-muted-foreground">
+                    <Upload className="w-3.5 h-3.5" />
+                    {uploadingForColor === ci ? "Subiendo..." : "Subir"}
                     <input
                       type="file"
                       accept="image/*"
@@ -628,6 +674,15 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
                       disabled={uploadingForColor === ci}
                     />
                   </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setColorGroups(colorGroups.filter((_, i) => i !== ci))}
+                    className="text-red-400 h-7 w-7"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             ))}
