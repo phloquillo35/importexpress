@@ -2,14 +2,17 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { MessageCircle, Menu, X, ShoppingBag, Sun, Moon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { MessageCircle, Menu, X, ShoppingBag, Sun, Moon, Search } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useCart } from "@/context/CartContext"
 import { CartDrawer } from "./CartDrawer"
 
 export function Navbar() {
+  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
+  const [search, setSearch] = useState("")
   const { count } = useCart()
   const { theme, setTheme } = useTheme()
 
@@ -34,6 +37,22 @@ export function Navbar() {
                 Contacto
               </Link>
             </div>
+
+            <form
+              onSubmit={(e) => { e.preventDefault(); router.push(`/productos?search=${encodeURIComponent(search)}`); setSearch("") }}
+              className="hidden md:flex items-center flex-1 max-w-xs mx-4"
+            >
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar productos..."
+                  className="w-full pl-9 pr-4 py-2 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                />
+              </div>
+            </form>
 
             <div className="flex items-center gap-2">
               <button
@@ -77,7 +96,21 @@ export function Navbar() {
 
         {menuOpen && (
           <div className="md:hidden border-t border-border/50 bg-background/90 dark:bg-background/95 backdrop-blur-xl rounded-b-2xl overflow-hidden">
-            <div className="px-4 py-4 space-y-1">
+            <div className="px-4 py-4 space-y-3">
+              <form
+                onSubmit={(e) => { e.preventDefault(); router.push(`/productos?search=${encodeURIComponent(search)}`); setMenuOpen(false); setSearch("") }}
+              >
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar productos..."
+                    className="w-full pl-9 pr-4 py-2.5 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                  />
+                </div>
+              </form>
               <Link
                 href="/productos"
                 onClick={() => setMenuOpen(false)}
