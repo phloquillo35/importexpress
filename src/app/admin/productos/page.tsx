@@ -202,7 +202,7 @@ export default function AdminProductosPage() {
                 })
                 return (
                 <TableRow key={product.id} className="border-border hover:bg-muted">
-                  <TableCell className="font-medium text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{product.name}</TableCell>
+                  <TableCell className="font-medium text-foreground cursor-pointer max-w-[280px]" onClick={() => setViewProduct(product)}><span className="truncate block" title={product.name}>{product.name}</span></TableCell>
                   <TableCell className="text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
                     {product.category?.name || "—"}
                   </TableCell>
