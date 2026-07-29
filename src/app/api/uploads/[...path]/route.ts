@@ -2,16 +2,11 @@ import { NextRequest } from "next/server"
 import { readFile } from "fs/promises"
 import path from "path"
 import fs from "fs"
-import { auth } from "@/lib/auth"
 
 const UPLOAD_DIR = process.env.UPLOADS_DIR || path.join(process.cwd(), "public", "uploads")
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   try {
-    const session = await auth()
-    if (!session) {
-      return new Response("Unauthorized", { status: 401 })
-    }
     const { path: pathSegments } = await params
     const filename = pathSegments.join("/")
     const safeName = path.basename(filename)
