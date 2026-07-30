@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -18,6 +18,7 @@ interface HeroCarouselProps {
 export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
+  const touchStartX = useRef(0)
 
   const next = useCallback(() => {
     setCurrent((prev) => (prev + 1) % slides.length)
@@ -46,6 +47,14 @@ export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
       className="relative w-full h-full overflow-hidden rounded-2xl group"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
+      onTouchEnd={(e) => {
+        const diff = touchStartX.current - e.changedTouches[0].clientX
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) next()
+          else setCurrent((prev) => (prev - 1 + slides.length) % slides.length)
+        }
+      }}
     >
       <Wrapper
         href={slide.link || "#"}
@@ -65,14 +74,14 @@ export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
         <>
           <button
             onClick={() => setCurrent((prev) => (prev - 1 + slides.length) % slides.length)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
             aria-label="Anterior"
           >
             ‹
           </button>
           <button
             onClick={next}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
             aria-label="Siguiente"
           >
             ›
