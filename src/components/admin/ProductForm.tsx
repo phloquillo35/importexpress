@@ -34,6 +34,7 @@ interface ProductFormData {
   minStock: string
   isAvailable: boolean
   isFeatured: boolean
+  freeShipping: boolean
   categoryId: string
   storeId: string
 }
@@ -111,6 +112,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       minStock: "5",
       isAvailable: true,
       isFeatured: false,
+      freeShipping: false,
       categoryId: "",
       storeId: "",
       ...defaultValues,
@@ -564,9 +566,15 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       <div className="bg-card border border-border rounded-xl p-6 space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground font-heading">Especificaciones</h2>
-          <Button type="button" variant="outline" size="sm" onClick={addSpec} className="border-border text-muted-foreground">
-            <Plus className="w-4 h-4 mr-1" /> Agregar
-          </Button>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" {...register("freeShipping")} defaultChecked={defaultValues?.freeShipping ?? false} className="w-4 h-4 rounded border-zinc-600 bg-muted text-[#22C55E] focus:ring-[#22C55E]" />
+              <span className="text-sm text-muted-foreground">Envío gratis</span>
+            </label>
+            <Button type="button" variant="outline" size="sm" onClick={addSpec} className="border-border text-muted-foreground">
+              <Plus className="w-4 h-4 mr-1" /> Agregar
+            </Button>
+          </div>
         </div>
         {specs.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin especificaciones</p>

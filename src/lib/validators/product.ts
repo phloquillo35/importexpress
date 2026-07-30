@@ -21,6 +21,7 @@ export const createProductSchema = z.object({
   minStock: z.number().int().optional().default(0),
   isAvailable: z.boolean().optional().default(true),
   isFeatured: z.boolean().optional().default(false),
+  freeShipping: z.boolean().optional().default(false),
   categoryId: z.string().optional().nullable(),
   storeId: z.string().optional().nullable(),
   finalPriceUSD: z.number().optional(),

@@ -213,6 +213,7 @@ export async function POST(request: Request) {
         minStock: data.minStock ?? 5,
         isAvailable: data.isAvailable ?? true,
         isFeatured: data.isFeatured ?? false,
+        freeShipping: data.freeShipping ?? false,
         categoryId: data.categoryId || null,
         storeId: data.storeId || null,
       },

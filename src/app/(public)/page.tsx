@@ -29,6 +29,7 @@ interface Product {
   isAvailable: boolean
   isFeatured: boolean
   hasFinancing: boolean
+  freeShipping: boolean
   category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
@@ -147,8 +148,12 @@ export default function HomePage() {
                   href={`/categorias/${cat.slug}`}
                   className="group flex flex-col items-center justify-center gap-3 p-6 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:scale-[1.02] transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-[#e8e8ed] transition-colors">
-                    <Package className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-[#e8e8ed] transition-colors overflow-hidden">
+                    {cat.image ? (
+                      <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Package className="w-6 h-6 text-primary" />
+                    )}
                   </div>
                   <span className="text-sm font-medium text-foreground text-center">
                     {cat.name}

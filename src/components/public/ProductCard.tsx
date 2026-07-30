@@ -18,6 +18,7 @@ interface ProductCardProps {
     stock: number
     isAvailable: boolean
     hasFinancing: boolean
+    freeShipping: boolean
     category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
   }
   colorName?: string | null
@@ -132,10 +133,11 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
             </span>
           )}
 
-          <div>
-            <span className="text-[11px] font-medium text-[#34c759]">
-              Disponible
-            </span>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-[#34c759]">Disponible</span>
+            {product.freeShipping && (
+              <span className="text-[11px] font-medium text-[#34c759]">Envío gratis</span>
+            )}
           </div>
         </div>
       </Link>

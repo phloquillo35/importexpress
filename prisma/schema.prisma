@@ -74,6 +74,7 @@ model Product {
   minStock      Int         @default(5)
   isAvailable   Boolean     @default(true)
   isFeatured    Boolean     @default(false)
+  freeShipping  Boolean     @default(false)
   categoryId String?
   storeId    String?    @map("distributorId")
   category   Category?  @relation(fields: [categoryId], references: [id])

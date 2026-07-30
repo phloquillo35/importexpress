@@ -38,6 +38,7 @@ export async function GET(
         images: true,
         stock: true,
         hasFinancing: true,
+        freeShipping: true,
         category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } },
       },
     })
@@ -97,6 +98,7 @@ export async function PUT(
     if (input.minStock !== undefined) data.minStock = input.minStock
     if (input.isAvailable !== undefined) data.isAvailable = input.isAvailable
     if (input.isFeatured !== undefined) data.isFeatured = input.isFeatured
+    if (input.freeShipping !== undefined) data.freeShipping = input.freeShipping
     if (input.hasFinancing !== undefined) data.hasFinancing = input.hasFinancing
     if (input.categoryId !== undefined) data.categoryId = input.categoryId || null
     if (input.storeId !== undefined) data.storeId = input.storeId || null

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { Plus, Pencil, Trash2, Tags, X, Eye, Package, ChevronRight, ChevronDown } from "lucide-react"
+import { Plus, Pencil, Trash2, Tags, X, Eye, Package, ChevronRight, ChevronDown, Upload } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import {
@@ -36,6 +36,7 @@ interface Category {
   name: string
   slug: string
   description: string | null
+  image: string | null
   createdAt: string
   _count: { products: number }
   children: Subcategory[]
@@ -57,10 +58,11 @@ export default function AdminCategoriasPage() {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
-  const [form, setForm] = useState({ name: "", slug: "", description: "" })
+  const [form, setForm] = useState({ name: "", slug: "", description: "", image: "" })
   const slugTouched = useRef(false)
   const [showSubcategories, setShowSubcategories] = useState(false)
   const [subcatInputs, setSubcatInputs] = useState<string[]>([""])
+  const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null)
   const [categoryProducts, setCategoryProducts] = useState<ViewProduct[]>([])
@@ -94,7 +96,7 @@ export default function AdminCategoriasPage() {
 
   function openNew() {
     setEditing(null)
-    setForm({ name: "", slug: "", description: "" }); slugTouched.current = false
+    setForm({ name: "", slug: "", description: "", image: "" }); slugTouched.current = false
     setShowSubcategories(false)
     setSubcatInputs([""])
     setDialogOpen(true)
@@ -102,7 +104,7 @@ export default function AdminCategoriasPage() {
 
   function openEdit(cat: Category) {
     setEditing(cat)
-    setForm({ name: cat.name, slug: cat.slug, description: cat.description || "" }); slugTouched.current = true
+    setForm({ name: cat.name, slug: cat.slug, description: cat.description || "", image: cat.image || "" }); slugTouched.current = true
     const subs = cat.children?.map(c => c.name) || []
     setSubcatInputs(subs.length > 0 ? subs : [""])
     setShowSubcategories(subs.length > 0)
@@ -236,6 +238,45 @@ export default function AdminCategoriasPage() {
                   placeholder="Descripción opcional"
                   rows={3}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Imagen de categoría</Label>
+                <div className="flex items-center gap-3">
+                  {form.image && (
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                      <img src={form.image} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => setForm({ ...form, image: "" })} className="absolute top-0.5 right-0.5 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                  <label className="flex items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-border cursor-pointer hover:border-[#22C55E] transition-colors flex-shrink-0">
+                    {uploading ? (
+                      <span className="text-xs text-muted-foreground">Subiendo...</span>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-muted-foreground" />
+                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          setUploading(true)
+                          try {
+                            const fd = new FormData()
+                            fd.append("file", file)
+                            const res = await fetch("/api/upload", { method: "POST", body: fd })
+                            if (!res.ok) throw new Error()
+                            const data = await res.json()
+                            setForm({ ...form, image: data.url })
+                          } catch {
+                            toast.error("Error al subir imagen")
+                          } finally {
+                            setUploading(false)
+                          }
+                        }} />
+                      </>
+                    )}
+                  </label>
+                </div>
               </div>
               <Button
                 type="button"

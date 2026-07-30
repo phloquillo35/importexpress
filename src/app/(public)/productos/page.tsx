@@ -17,6 +17,7 @@ interface Product {
   stock: number
   isAvailable: boolean
   hasFinancing: boolean
+  freeShipping: boolean
   category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
