@@ -1,0 +1,316 @@
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import { ImagePlus, Plus, Trash2, GripVertical, RefreshCw } from "lucide-react"
+
+interface HeroBanner {
+  id: string
+  type: string
+  position: string
+  image: string
+  link: string | null
+  order: number
+  isActive: boolean
+}
+
+const FLYER_POSITIONS = [
+  { key: "flyer-1", label: "Flyer 1 (Cuadrado)" },
+  { key: "flyer-2", label: "Flyer 2 (Cuadrado)" },
+  { key: "flyer-3", label: "Flyer 3 (Horizontal)" },
+  { key: "flyer-4", label: "Flyer 4 (Cuadrado)" },
+  { key: "flyer-5", label: "Flyer 5 (Cuadrado)" },
+]
+
+export default function HeroAdminPage() {
+  const [carousel, setCarousel] = useState<HeroBanner[]>([])
+  const [flyers, setFlyers] = useState<HeroBanner[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+
+  const loadBanners = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/hero")
+      const data = await res.json()
+      setCarousel(data.carousel || [])
+      setFlyers(data.flyers || [])
+    } catch {
+      console.error("Error loading banners")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadBanners() }, [loadBanners])
+
+  async function uploadFile(file: File): Promise<string | null> {
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      const data = await res.json()
+      return data.url || null
+    } catch {
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function addSlide() {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = "image/*"
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+      const url = await uploadFile(file)
+      if (!url) return
+      await fetch("/api/admin/hero", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "carousel", image: url }),
+      })
+      loadBanners()
+    }
+    input.click()
+  }
+
+  async function updateFlyer(pos: string, file: File) {
+    const url = await uploadFile(file)
+    if (!url) return
+    const existing = flyers.find((f) => f.position === pos)
+    if (existing) {
+      await fetch(`/api/admin/hero/${existing.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: url }),
+      })
+    } else {
+      await fetch("/api/admin/hero", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "flyer", position: pos, image: url }),
+      })
+    }
+    loadBanners()
+  }
+
+  async function updateFlyerLink(pos: string, link: string) {
+    const existing = flyers.find((f) => f.position === pos)
+    if (!existing) return
+    await fetch(`/api/admin/hero/${existing.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ link: link || null }),
+    })
+    loadBanners()
+  }
+
+  async function toggleSlide(slide: HeroBanner) {
+    await fetch(`/api/admin/hero/${slide.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: !slide.isActive }),
+    })
+    loadBanners()
+  }
+
+  async function deleteSlide(id: string) {
+    await fetch(`/api/admin/hero/${id}`, { method: "DELETE" })
+    loadBanners()
+  }
+
+  async function reorder(slideId: string, direction: "up" | "down") {
+    const idx = carousel.findIndex((s) => s.id === slideId)
+    if (idx === -1) return
+    const newOrder = [...carousel]
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= newOrder.length) return
+    const temp = newOrder[idx].order
+    newOrder[idx].order = newOrder[swapIdx].order
+    newOrder[swapIdx].order = temp
+    ;[newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]]
+
+    await Promise.all(
+      newOrder.map((s) =>
+        fetch(`/api/admin/hero/${s.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: s.order }),
+        })
+      )
+    )
+    loadBanners()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-10">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground font-heading">Gestión del Hero</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Administrá el carrusel principal y los flyers de la página de inicio
+        </p>
+      </div>
+
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground font-heading">🎠 Carrusel Principal (Cuadrado)</h2>
+          <button
+            onClick={addSlide}
+            disabled={uploading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            <Plus className="w-4 h-4" />
+            Agregar slide
+          </button>
+        </div>
+
+        {carousel.length === 0 ? (
+          <div className="border border-dashed border-border/50 rounded-2xl p-12 text-center text-sm text-muted-foreground">
+            No hay slides en el carrusel. Agregá la primera.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {carousel.map((slide, i) => (
+              <div
+                key={slide.id}
+                className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/60"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <button
+                    onClick={() => reorder(slide.id, "up")}
+                    disabled={i === 0}
+                    className="w-5 h-3 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    onClick={() => reorder(slide.id, "down")}
+                    disabled={i === carousel.length - 1}
+                    className="w-5 h-3 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed"
+                  >
+                    ▼
+                  </button>
+                </div>
+
+                <img
+                  src={slide.image}
+                  alt=""
+                  className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                />
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground truncate">{slide.image}</p>
+                </div>
+
+                <button
+                  onClick={() => toggleSlide(slide)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors ${
+                    slide.isActive
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {slide.isActive ? "Activo" : "Inactivo"}
+                </button>
+
+                <button
+                  onClick={() => deleteSlide(slide.id)}
+                  className="p-1.5 text-muted-foreground hover:text-red-500 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold text-foreground font-heading mb-4">🖼️ Flyers</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {FLYER_POSITIONS.map((pos) => {
+            const flyer = flyers.find((f) => f.position === pos.key)
+            return (
+              <div
+                key={pos.key}
+                className={`p-4 bg-card rounded-xl border border-border/60 ${
+                  pos.key === "flyer-3" ? "md:col-span-2" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-foreground">{pos.label}</h3>
+                  {flyer && (
+                    <button
+                      onClick={() => deleteSlide(flyer.id)}
+                      className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {flyer ? (
+                  <div className="relative group">
+                    <img
+                      src={flyer.image}
+                      alt=""
+                      className="w-full aspect-video rounded-lg object-cover"
+                    />
+                    <label className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all rounded-lg cursor-pointer">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ImagePlus className="w-8 h-8 text-white" />
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) updateFlyer(pos.key, file)
+                        }}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-border/50 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                    <ImagePlus className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Subir imagen</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) updateFlyer(pos.key, file)
+                      }}
+                    />
+                  </label>
+                )}
+
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    placeholder="Link opcional (URL o slug)"
+                    defaultValue={flyer?.link || ""}
+                    onBlur={(e) => updateFlyerLink(pos.key, e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-background border border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    </div>
+  )
+}

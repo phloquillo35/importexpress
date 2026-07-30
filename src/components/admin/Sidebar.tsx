@@ -19,12 +19,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  Image as ImageIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/hero", label: "Hero / Portada", icon: ImageIcon },
   { href: "/admin/productos", label: "Productos", icon: Package },
   { href: "/admin/categorias", label: "Categorías", icon: Tags },
   { href: "/admin/stock", label: "Stock", icon: Warehouse },

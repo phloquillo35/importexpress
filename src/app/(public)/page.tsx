@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ArrowRight, Package, Ship, CreditCard, Star, AlertCircle } from "lucide-react"
+import { ArrowRight, Package, Ship, CreditCard, AlertCircle } from "lucide-react"
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
+import { HeroSection } from "@/components/public/HeroSection"
 
 interface Category {
   id: string
@@ -62,39 +63,7 @@ export default function HomePage() {
 
   return (
     <div>
-      <section className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border/50 text-primary text-xs font-medium mb-6">
-            <Star className="w-3 h-3" />
-            Importación directa sin intermediarios
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground font-heading leading-tight mb-4">
-            Todo lo que necesitás,{" "}
-            <span className="text-primary">
-              importado para vos
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-foreground/70 dark:text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-            Importamos productos de alta calidad desde Ciudad del Este, Paraguay directo a tu casa. 
-            Electrónica, hogar, moda y más, con los mejores precios del mercado.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/productos"
-              className="inline-flex items-center gap-2 px-7 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-all duration-300"
-            >
-              Explorar productos
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/como-funciona"
-              className="inline-flex items-center gap-2 px-7 py-3 bg-muted hover:bg-[#e8e8ed] text-primary text-sm font-medium rounded-full transition-all duration-300"
-            >
-              Cómo funciona
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       <section className="py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
