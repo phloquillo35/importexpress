@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Search } from "lucide-react"
 import { HeroCarousel } from "./HeroCarousel"
-import { HeroSidebar } from "./HeroSidebar"
 
 interface HeroBanner {
   id: string
@@ -14,9 +15,11 @@ interface HeroBanner {
 }
 
 export function HeroSection() {
+  const router = useRouter()
   const [carousel, setCarousel] = useState<HeroBanner[]>([])
   const [flyers, setFlyers] = useState<HeroBanner[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     async function load() {
@@ -38,19 +41,13 @@ export function HeroSection() {
   if (loading) {
     return (
       <section className="py-8 lg:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-4">
-            <div className="rounded-2xl bg-muted animate-pulse" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
+          <div className="aspect-square lg:aspect-[2/1] rounded-2xl bg-muted animate-pulse" />
+          <div className="grid grid-cols-2 gap-2">
             <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-            <div className="grid grid-cols-2 gap-2">
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-              <div className="col-span-2 aspect-[2/1] rounded-2xl bg-muted animate-pulse" />
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-            </div>
-          </div>
-          <div className="lg:hidden space-y-4">
+            <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
+            <div className="col-span-2 aspect-[2/1] rounded-2xl bg-muted animate-pulse" />
+            <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
             <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
           </div>
         </div>
@@ -60,33 +57,38 @@ export function HeroSection() {
 
   const getFlyer = (pos: string) => flyers.find((f) => f.position === pos)
 
+  const flyersGrid = (
+    <div className="grid grid-cols-2 gap-2">
+      <FlyerSlot banner={getFlyer("flyer-1")} className="aspect-square" />
+      <FlyerSlot banner={getFlyer("flyer-2")} className="aspect-square" />
+      <FlyerSlot banner={getFlyer("flyer-3")} className="col-span-2 aspect-[2/1]" />
+      <FlyerSlot banner={getFlyer("flyer-4")} className="aspect-square" />
+      <FlyerSlot banner={getFlyer("flyer-5")} className="aspect-square" />
+    </div>
+  )
+
   return (
     <section className="py-8 lg:py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-4">
-          <HeroSidebar />
-          <div className="min-h-full">
-            <HeroCarousel slides={carousel} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <FlyerSlot banner={getFlyer("flyer-1")} className="aspect-square" />
-            <FlyerSlot banner={getFlyer("flyer-2")} className="aspect-square" />
-            <FlyerSlot banner={getFlyer("flyer-3")} className="col-span-2 aspect-[2/1]" />
-            <FlyerSlot banner={getFlyer("flyer-4")} className="aspect-square" />
-            <FlyerSlot banner={getFlyer("flyer-5")} className="aspect-square" />
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
+        <div className="flex lg:hidden">
+          <form
+            onSubmit={(e) => { e.preventDefault(); router.push(`/productos?search=${encodeURIComponent(search)}`); setSearch("") }}
+            className="relative w-full"
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar productos..."
+              className="w-full pl-9 pr-4 py-2.5 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+            />
+          </form>
         </div>
 
-        <div className="lg:hidden space-y-4">
-          <HeroCarousel slides={carousel} />
-          <div className="grid grid-cols-2 gap-2">
-            <FlyerSlot banner={getFlyer("flyer-1")} className="aspect-square" />
-            <FlyerSlot banner={getFlyer("flyer-2")} className="aspect-square" />
-            <FlyerSlot banner={getFlyer("flyer-3")} className="col-span-2 aspect-[2/1]" />
-            <FlyerSlot banner={getFlyer("flyer-4")} className="aspect-square" />
-            <FlyerSlot banner={getFlyer("flyer-5")} className="aspect-square" />
-          </div>
-        </div>
+        <HeroCarousel slides={carousel} />
+
+        {flyersGrid}
       </div>
     </section>
   )

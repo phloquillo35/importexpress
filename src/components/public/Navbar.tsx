@@ -7,6 +7,7 @@ import { MessageCircle, Menu, X, ShoppingBag, Sun, Moon, Search } from "lucide-r
 import { useTheme } from "next-themes"
 import { useCart } from "@/context/CartContext"
 import { CartDrawer } from "./CartDrawer"
+import { HeroSidebar } from "./HeroSidebar"
 
 export function Navbar() {
   const router = useRouter()
@@ -15,7 +16,6 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [search, setSearch] = useState("")
-  const [searchOpen, setSearchOpen] = useState(false)
   const { count } = useCart()
   const { theme, setTheme } = useTheme()
 
@@ -23,122 +23,126 @@ export function Navbar() {
     <>
       <nav className="sticky top-0 z-50 bg-background/70 dark:bg-background/85 backdrop-blur-xl border-b border-border/50 rounded-b-2xl overflow-hidden">
         <div className="px-4 sm:px-6">
-          <div className="flex items-center justify-between h-12 lg:h-14">
-            {searchOpen ? (
-              <div className="flex md:hidden items-center w-full h-full gap-2">
-                <button
-                  onClick={() => { setSearchOpen(false); setSearch("") }}
-                  className="p-2 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Cerrar búsqueda"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <form
-                  onSubmit={(e) => { e.preventDefault(); router.push(`/productos?search=${encodeURIComponent(search)}`); setSearchOpen(false); setSearch("") }}
-                  className="flex-1"
-                >
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Buscar productos..."
-                      autoFocus
-                      className="w-full pl-9 pr-4 py-2 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
-                    />
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <>
-                <Link href="/" className="flex items-center gap-2 shrink-0">
-                  <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-7 h-7 rounded-lg object-cover" />
-                  <span className="font-heading font-semibold text-foreground text-sm">Lo Pedís, Lo Tenes</span>
-                </Link>
+          {/* Mobile */}
+          <div className="flex md:hidden items-center justify-between h-12">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Menú"
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
 
-                <div className="hidden md:flex items-center gap-8">
-                  <Link href="/productos" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-                    Productos
-                  </Link>
-                  <Link href="/como-funciona" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-                    Cómo funciona
-                  </Link>
-                  <Link href="/contacto" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-                    Contacto
-                  </Link>
+            <Link href="/" className="flex items-center gap-2 flex-1 justify-center">
+              <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-7 h-7 rounded-lg object-cover" />
+              <span className="font-heading font-semibold text-foreground text-sm">Lo Pedís, Lo Tenes</span>
+            </Link>
+
+            <a
+              href="https://wa.me/5491123456789"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-9 h-9 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </a>
+          </div>
+
+          {/* Desktop */}
+          <div className="hidden md:flex items-center justify-between h-12 lg:h-14">
+            <Link href="/" className="flex items-center gap-2 shrink-0">
+              <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-7 h-7 rounded-lg object-cover" />
+              <span className="font-heading font-semibold text-foreground text-sm">Lo Pedís, Lo Tenes</span>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-8">
+              <Link href="/productos" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                Productos
+              </Link>
+              <Link href="/como-funciona" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                Cómo funciona
+              </Link>
+              <Link href="/contacto" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                Contacto
+              </Link>
+            </div>
+
+            {!isProductos && (
+              <form
+                onSubmit={(e) => { e.preventDefault(); router.push(`/productos?search=${encodeURIComponent(search)}`); setSearch("") }}
+                className="hidden md:flex items-center flex-1 max-w-xs mx-4"
+              >
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar productos..."
+                    className="w-full pl-9 pr-4 py-2 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                  />
                 </div>
-
-                {!isProductos && (
-                  <form
-                    onSubmit={(e) => { e.preventDefault(); router.push(`/productos?search=${encodeURIComponent(search)}`); setSearch("") }}
-                    className="hidden md:flex items-center flex-1 max-w-xs mx-4"
-                  >
-                    <div className="relative w-full">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Buscar productos..."
-                        className="w-full pl-9 pr-4 py-2 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
-                      />
-                    </div>
-                  </form>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setSearchOpen(true)}
-                    className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="Buscar"
-                  >
-                    <Search className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                    title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
-                  >
-                    {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                  </button>
-                  <button
-                    onClick={() => setCartOpen(true)}
-                    className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="Carrito"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    {count > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                        {count > 9 ? "9+" : count}
-                      </span>
-                    )}
-                  </button>
-                  <a
-                    href="https://wa.me/5491123456789"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">WhatsApp</span>
-                  </a>
-                  <button
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="Menú"
-                  >
-                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                  </button>
-                </div>
-              </>
+              </form>
             )}
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
+              >
+                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={() => setCartOpen(true)}
+                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Carrito"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                {count > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+              </button>
+              <a
+                href="https://wa.me/5491123456789"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">WhatsApp</span>
+              </a>
+            </div>
           </div>
         </div>
 
         {menuOpen && (
           <div className="md:hidden border-t border-border/50 bg-background/90 dark:bg-background/95 backdrop-blur-xl rounded-b-2xl overflow-hidden">
             <div className="px-4 py-4 space-y-1">
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-foreground rounded-xl hover:bg-muted transition-colors"
+              >
+                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {theme === "dark" ? "Modo claro" : "Modo oscuro"}
+              </button>
+              <button
+                onClick={() => { setCartOpen(true); setMenuOpen(false) }}
+                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-foreground rounded-xl hover:bg-muted transition-colors"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                Carrito
+                {count > 0 && (
+                  <span className="ml-auto w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="border-t border-border/50 px-4 py-3 space-y-1">
               <Link
                 href="/productos"
                 onClick={() => setMenuOpen(false)}
@@ -160,6 +164,13 @@ export function Navbar() {
               >
                 Contacto
               </Link>
+            </div>
+
+            <div className="border-t border-border/50 px-4 py-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
+                Categorías
+              </p>
+              <HeroSidebar />
             </div>
           </div>
         )}
