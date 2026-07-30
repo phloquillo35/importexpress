@@ -42,7 +42,26 @@ export default function HeroAdminPage() {
     }
   }, [])
 
-  useEffect(() => { loadBanners() }, [loadBanners])
+  useEffect(() => {
+    let cancelled = false
+    async function initLoad() {
+      try {
+        const res = await fetch("/api/admin/hero")
+        if (!res.ok) throw new Error("Error al cargar")
+        const data = await res.json()
+        if (!cancelled) {
+          setCarousel(data.carousel || [])
+          setFlyers(data.flyers || [])
+        }
+      } catch {
+        if (!cancelled) toast.error("Error al cargar banners")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    initLoad()
+    return () => { cancelled = true }
+  }, [])
 
   async function uploadFile(file: File): Promise<string | null> {
     setUploading(true)

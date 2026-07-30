@@ -2,7 +2,13 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
 
-const MODEL_MAP: Record<string, { findUnique: Function; update: Function; delete: Function }> = {
+type PrismaDelegate = {
+  findUnique: (args: { where: { id: string } }) => Promise<Record<string, unknown> | null>
+  update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<Record<string, unknown>>
+  delete: (args: { where: { id: string } }) => Promise<Record<string, unknown>>
+}
+
+const MODEL_MAP: Record<string, PrismaDelegate> = {
   products: prisma.product,
   categorias: prisma.category,
   pedidos: prisma.order,
@@ -25,7 +31,7 @@ export async function PATCH(
       return Response.json({ error: `Modelo "${model}" no válido` }, { status: 400 })
     }
 
-    const existing = await (db.findUnique as Function)({ where: { id } })
+    const existing = await db.findUnique({ where: { id } })
     if (!existing) {
       return Response.json({ error: "Elemento no encontrado" }, { status: 404 })
     }
@@ -34,7 +40,7 @@ export async function PATCH(
       return Response.json({ error: "El elemento no está eliminado. No se puede restaurar." }, { status: 409 })
     }
 
-    await (db.update as Function)({
+    await db.update({
       where: { id },
       data: { deletedAt: null },
     })
@@ -60,7 +66,7 @@ export async function DELETE(
       return Response.json({ error: `Modelo "${model}" no válido` }, { status: 400 })
     }
 
-    const existing = await (db.findUnique as Function)({ where: { id } })
+    const existing = await db.findUnique({ where: { id } })
     if (!existing) {
       return Response.json({ error: "Elemento no encontrado" }, { status: 404 })
     }
@@ -69,7 +75,7 @@ export async function DELETE(
       return Response.json({ error: "El elemento no está eliminado. Eliminálo desde la sección normal primero." }, { status: 409 })
     }
 
-    await (db.delete as Function)({ where: { id } })
+    await db.delete({ where: { id } })
 
     return Response.json({ success: true })
   } catch (error) {

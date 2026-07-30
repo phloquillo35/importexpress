@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { Search, Package, Plus, Minus } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
@@ -40,7 +40,6 @@ export default function AdminStockPage() {
   const highlightId = searchParams.get("highlight")
   const tableRef = useRef<HTMLDivElement>(null)
   const [products, setProducts] = useState<StockProduct[]>([])
-  const [filtered, setFiltered] = useState<StockProduct[]>([])
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
   const [adjustProduct, setAdjustProduct] = useState<StockProduct | null>(null)
@@ -63,43 +62,42 @@ export default function AdminStockPage() {
     }
   }, [highlightId, products])
 
-  async function loadStock() {
-    try {
-      const res = await fetch("/api/stock")
-      const data = await res.json()
-      setProducts(Array.isArray(data) ? data : [])
-    } catch {
-      toast.error("Error al cargar stock")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    loadStock()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (!search.trim()) {
-      setFiltered(products)
-    } else {
-      const q = search.toLowerCase().trim()
-      const num = parseFloat(q.replace(/[$,.]/g, ""))
-      const isNumeric = !isNaN(num)
-      setFiltered(products.filter((p) => {
-        if (p.name.toLowerCase().includes(q)) return true
-        if (p.category?.name?.toLowerCase().includes(q)) return true
-        if (isNumeric) {
-          if (p.stock === num) return true
-          if (p.minStock === num) return true
-          if (p.priceUSD === num) return true
-        }
-        if ((q === "disponible" || q === "si" || q === "sí") && p.isAvailable) return true
-        if ((q === "no" || q === "oculto") && !p.isAvailable) return true
-        return false
-      }))
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch("/api/stock")
+        const data = await res.json()
+        if (!cancelled) setProducts(Array.isArray(data) ? data : [])
+      } catch {
+        if (!cancelled) toast.error("Error al cargar stock")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
+    load()
+    return () => { cancelled = true }
+  }, [refreshKey])
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return products
+    const q = search.toLowerCase().trim()
+    const num = parseFloat(q.replace(/[$,.]/g, ""))
+    const isNumeric = !isNaN(num)
+    return products.filter((p) => {
+      if (p.name.toLowerCase().includes(q)) return true
+      if (p.category?.name?.toLowerCase().includes(q)) return true
+      if (isNumeric) {
+        if (p.stock === num) return true
+        if (p.minStock === num) return true
+        if (p.priceUSD === num) return true
+      }
+      if ((q === "disponible" || q === "si" || q === "sí") && p.isAvailable) return true
+      if ((q === "no" || q === "oculto") && !p.isAvailable) return true
+      return false
+    })
   }, [search, products])
 
   function openAdjust(product: StockProduct) {
@@ -131,7 +129,7 @@ export default function AdminStockPage() {
       }
       toast.success("Stock ajustado")
       setAdjustProduct(null)
-      loadStock()
+      setRefreshKey(k => k + 1)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al ajustar stock")
     } finally {
@@ -169,7 +167,7 @@ export default function AdminStockPage() {
                 className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
               />
             </div>
-            <PapeleraModal model="products" sectionLabel="Stock" onRestore={loadStock} />
+            <PapeleraModal model="products" sectionLabel="Stock" onRestore={() => setRefreshKey(k => k + 1)} />
           </div>
 
           <div className="bg-card border border-border rounded-xl overflow-x-auto">

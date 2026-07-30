@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { Ship, Plus, Search, Package } from "lucide-react"
 import { toast } from "sonner"
 import { formatUSD, formatDate } from "@/lib/utils"
@@ -60,6 +60,13 @@ interface Batch {
 interface Product {
   id: string
   name: string
+  category?: { name: string } | null
+  costUSDT?: number
+  shippingCost?: number
+  finalPriceUSD?: number
+  finalPriceARS?: number
+  stock?: number
+  isAvailable?: boolean
 }
 
 interface StoreType {
@@ -78,19 +85,21 @@ export default function ImportacionPage() {
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number }[]>([])
   const [form, setForm] = useState({ storeId: "", totalCostUSD: "", notes: "" })
   const [saving, setSaving] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  const fetchBatches = useCallback(async () => {
-    try {
-      const params = new URLSearchParams()
-      if (statusFilter) params.set("status", statusFilter)
-      const res = await fetch(`/api/importacion?${params}`)
-      const data = await res.json()
-      setBatches(Array.isArray(data) ? data : [])
-    } catch { toast.error("Error al cargar") }
-    finally { setLoading(false) }
-  }, [statusFilter])
-
-  useEffect(() => { fetchBatches() }, [fetchBatches])
+  useEffect(() => {
+    async function fetchBatches() {
+      try {
+        const params = new URLSearchParams()
+        if (statusFilter) params.set("status", statusFilter)
+        const res = await fetch(`/api/importacion?${params}`)
+        const data = await res.json()
+        setBatches(Array.isArray(data) ? data : [])
+      } catch { toast.error("Error al cargar") }
+      finally { setLoading(false) }
+    }
+    fetchBatches()
+  }, [statusFilter, refreshKey])
   useEffect(() => {
     fetch("/api/productos?limit=200").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
     fetch("/api/tiendas").then(r => r.json()).then(d => setStores(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar tiendas"))
@@ -100,19 +109,18 @@ export default function ImportacionPage() {
     const q = searchProd.toLowerCase().trim()
     if (!q) return true
     if (p.name.toLowerCase().includes(q)) return true
-    const catName = (p as any).category?.name
-    if (catName?.toLowerCase().includes(q)) return true
+    if (p.category?.name?.toLowerCase().includes(q)) return true
     const num = parseFloat(q.replace(/[$,.]/g, ""))
     const isNumeric = !isNaN(num)
     if (isNumeric) {
-      if ((p as any).costUSDT === num) return true
-      if ((p as any).shippingCost === num) return true
-      if ((p as any).finalPriceUSD === num) return true
-      if ((p as any).finalPriceARS === num) return true
-      if ((p as any).stock === num) return true
+      if (p.costUSDT === num) return true
+      if (p.shippingCost === num) return true
+      if (p.finalPriceUSD === num) return true
+      if (p.finalPriceARS === num) return true
+      if (p.stock === num) return true
     }
-    if ((q === "disponible" || q === "si" || q === "sí") && (p as any).isAvailable) return true
-    if ((q === "no" || q === "oculto") && (p as any).isAvailable === false) return true
+    if ((q === "disponible" || q === "si" || q === "sí") && p.isAvailable) return true
+    if ((q === "no" || q === "oculto") && p.isAvailable === false) return true
     return false
   })
 
@@ -144,7 +152,7 @@ export default function ImportacionPage() {
       setDialogOpen(false)
       setCart([])
       setForm({ storeId: "", totalCostUSD: "", notes: "" })
-      fetchBatches()
+      setRefreshKey(k => k + 1)
     } catch { toast.error("Error al guardar") }
     finally { setSaving(false) }
   }
@@ -154,7 +162,7 @@ export default function ImportacionPage() {
       const res = await fetch(`/api/importacion/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })
       if (!res.ok) throw new Error()
       toast.success("Estado actualizado")
-      fetchBatches()
+      setRefreshKey(k => k + 1)
     } catch { toast.error("Error al actualizar") }
   }
 
@@ -205,7 +213,7 @@ export default function ImportacionPage() {
                     <TableCell className="text-right text-foreground">{formatUSD(b.totalCostUSD)}</TableCell>
                     <TableCell className="text-center"><StatusBadge status={b.status} /></TableCell>
                     <TableCell className="text-right">
-                      <Select onValueChange={(v: any) => updateStatus(b.id, v || "pending")}>
+                      <Select onValueChange={(v: string | null) => { v && updateStatus(b.id, v || "pending") }}>
                         <SelectTrigger className="w-28 h-7 text-xs bg-muted border-border text-foreground">
                           <SelectValue placeholder="Cambiar">{(value) => !value ? "Cambiar" : statusConfig[value]?.label || value}</SelectValue>
                         </SelectTrigger>

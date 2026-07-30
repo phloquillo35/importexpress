@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
@@ -22,7 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { formatUSD } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
 
 interface Product {
@@ -60,6 +59,7 @@ export default function AdminProductosPage() {
   const tableRef = useRef<HTMLDivElement>(null)
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
   const limit = 20
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (highlightId && products.length > 0) {
@@ -74,30 +74,33 @@ export default function AdminProductosPage() {
     }
   }, [highlightId, products])
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (search) params.set("search", search)
-      params.set("admin", "1")
-      params.set("page", String(page))
-      params.set("limit", String(limit))
-
-      const res = await fetch(`/api/productos?${params}`)
-      const data = await res.json()
-      setProducts(data.products || [])
-      setTotal(data.total || 0)
-      setTotalPages(data.totalPages || 0)
-    } catch {
-      toast.error("Error al cargar productos")
-    } finally {
-      setLoading(false)
-    }
-  }, [search, page])
-
   useEffect(() => {
+    let cancelled = false
+    async function fetchProducts() {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        if (search) params.set("search", search)
+        params.set("admin", "1")
+        params.set("page", String(page))
+        params.set("limit", String(limit))
+
+        const res = await fetch(`/api/productos?${params}`)
+        const data = await res.json()
+        if (!cancelled) {
+          setProducts(data.products || [])
+          setTotal(data.total || 0)
+          setTotalPages(data.totalPages || 0)
+        }
+      } catch {
+        if (!cancelled) toast.error("Error al cargar productos")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
     fetchProducts()
-  }, [fetchProducts])
+    return () => { cancelled = true }
+  }, [search, page, refreshKey])
 
   useEffect(() => {
     fetch("/api/configuracion").then(r => r.json()).then(data => {
@@ -109,7 +112,6 @@ export default function AdminProductosPage() {
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
-    fetchProducts()
   }
 
   async function handleDelete(product: Product) {
@@ -118,7 +120,7 @@ export default function AdminProductosPage() {
       const res = await fetch(`/api/productos/${product.slug}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Error al eliminar")
       toast.success("Producto eliminado")
-      fetchProducts()
+      setRefreshKey(k => k + 1)
     } catch {
       toast.error("Error al eliminar el producto")
     }
@@ -133,7 +135,7 @@ export default function AdminProductosPage() {
       })
       if (!res.ok) throw new Error("Error al actualizar")
       toast.success(product.isAvailable ? "Producto ocultado" : "Producto visible")
-      fetchProducts()
+      setRefreshKey(k => k + 1)
     } catch {
       toast.error("Error al cambiar disponibilidad")
     }
@@ -168,7 +170,7 @@ export default function AdminProductosPage() {
         <Button type="submit" variant="secondary" className="bg-muted text-muted-foreground hover:bg-zinc-700">
           Buscar
         </Button>
-        <PapeleraModal model="products" sectionLabel="Productos" onRestore={fetchProducts} />
+        <PapeleraModal model="products" sectionLabel="Productos" onRestore={() => setRefreshKey(k => k + 1)} />
       </form>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">

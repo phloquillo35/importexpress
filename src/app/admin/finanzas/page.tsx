@@ -72,6 +72,7 @@ export default function FinanzasPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState({ type: "income", concept: "", amountUSD: "", amountARS: "", date: "", notes: "", orderId: "" })
   const [saving, setSaving] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [income, setIncome] = useState(0)
   const [expense, setExpense] = useState(0)
   const [orderOptions, setOrderOptions] = useState<OrderOption[]>([])
@@ -93,12 +94,13 @@ export default function FinanzasPage() {
     }
   }, [highlightId, transactions])
 
-  const fetchTransactions = useCallback(async () => {
+  const fetchTransactions = useCallback(async (cancelledRef?: { cancelled: boolean }) => {
     try {
       const params = new URLSearchParams()
       if (tipoFilter) params.set("tipo", tipoFilter)
       const res = await fetch(`/api/transacciones?${params}`)
       const data = await res.json()
+      if (cancelledRef?.cancelled) return
       setTransactions(Array.isArray(data) ? data : [])
 
       let inc = 0, exp = 0
@@ -109,13 +111,18 @@ export default function FinanzasPage() {
       setIncome(inc)
       setExpense(exp)
     } catch {
-      toast.error("Error al cargar transacciones")
+      if (!cancelledRef?.cancelled) toast.error("Error al cargar transacciones")
     } finally {
-      setLoading(false)
+      if (!cancelledRef?.cancelled) setLoading(false)
     }
   }, [tipoFilter])
 
-  useEffect(() => { fetchTransactions() }, [fetchTransactions])
+  useEffect(() => {
+    const status = { cancelled: false }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchTransactions(status)
+    return () => { status.cancelled = true }
+  }, [fetchTransactions])
 
   useEffect(() => {
     fetch("/api/pedidos?limit=200").then(r => r.json()).then(d => {

@@ -1,7 +1,12 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireAuth, requireRole } from "@/lib/auth"
-import { STATUS_PRIORITY, computeOrderStatus } from "@/lib/orders"
+import { computeOrderStatus } from "@/lib/orders"
+
+interface BulkProductItem {
+  productId?: string
+  quantity?: number
+}
 
 export async function GET(
   request: NextRequest,
@@ -55,11 +60,11 @@ export async function PUT(
       if (Array.isArray(currentProducts)) {
         await prisma.$transaction(
           currentProducts
-            .filter((item: any) => item.productId && item.quantity)
-            .map((item: any) =>
+            .filter((item: BulkProductItem) => item.productId && item.quantity)
+            .map((item: BulkProductItem) =>
               prisma.product.update({
-                where: { id: item.productId },
-                data: { stock: { increment: item.quantity } },
+                where: { id: item.productId! },
+                data: { stock: { increment: item.quantity! } },
               })
             )
         )

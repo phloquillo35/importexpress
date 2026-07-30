@@ -82,7 +82,20 @@ export default function AdminCategoriasPage() {
   }
 
   useEffect(() => {
-    loadCategories()
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch("/api/categorias")
+        const data = await res.json()
+        if (!cancelled) setCategories(Array.isArray(data) ? data : [])
+      } catch {
+        if (!cancelled) toast.error("Error al cargar categorías")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   function toggleParent(id: string) {

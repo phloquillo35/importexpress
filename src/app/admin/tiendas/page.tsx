@@ -40,17 +40,21 @@ export default function TiendasPage() {
   const [editing, setEditing] = useState<StoreType | null>(null)
   const [form, setForm] = useState({ name: "", contact: "", website: "", notes: "" })
   const [saving, setSaving] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  async function load() {
-    try {
-      const res = await fetch("/api/tiendas")
-      const data = await res.json()
-      setStores(Array.isArray(data) ? data : [])
-    } catch { toast.error("Error al cargar") }
-    finally { setLoading(false) }
-  }
-
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch("/api/tiendas")
+        const data = await res.json()
+        if (!cancelled) setStores(Array.isArray(data) ? data : [])
+      } catch { if (!cancelled) toast.error("Error al cargar") }
+      finally { if (!cancelled) setLoading(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [refreshKey])
 
   function openNew() {
     setEditing(null)
@@ -79,7 +83,7 @@ export default function TiendasPage() {
         toast.success("Tienda creada")
       }
       setDialogOpen(false)
-      load()
+      setRefreshKey(k => k + 1)
     } catch { toast.error("Error al guardar") }
     finally { setSaving(false) }
   }
@@ -90,7 +94,7 @@ export default function TiendasPage() {
       const res = await fetch(`/api/tiendas/${s.id}`, { method: "DELETE" })
       if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
       toast.success("Tienda eliminada")
-      load()
+      setRefreshKey(k => k + 1)
     } catch (err) { toast.error(err instanceof Error ? err.message : "Error al eliminar") }
   }
 
@@ -102,7 +106,7 @@ export default function TiendasPage() {
           <p className="text-muted-foreground text-sm mt-1">{stores.length} tiendas</p>
         </div>
         <div className="flex items-center gap-2">
-          <PapeleraModal model="tiendas" sectionLabel="Tiendas" onRestore={load} />
+          <PapeleraModal model="tiendas" sectionLabel="Tiendas" onRestore={() => setRefreshKey(k => k + 1)} />
           <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nueva tienda
           </Button>

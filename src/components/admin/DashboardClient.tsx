@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Package, DollarSign, TrendingDown, AlertTriangle, ShoppingCart } from "lucide-react"
 import { formatUSD, formatDate } from "@/lib/utils"
@@ -46,9 +46,8 @@ const statusLabels: Record<string, string> = {
 export function DashboardClient({ data, period: initialPeriod }: { data: DashboardData; period: number }) {
   const [period, setPeriod] = useState(initialPeriod)
   const router = useRouter()
-  const [chartData, setChartData] = useState<{ date: string; income: number; expense: number }[]>([])
 
-  const buildChart = useCallback(() => {
+  const chartData = useMemo(() => {
     const filtered = data.recentTransactions.filter((t) => {
       const d = new Date(t.date)
       const since = new Date()
@@ -56,7 +55,7 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
       return d >= since
     })
 
-    const grouped = filtered
+    return filtered
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .reduce<{ date: string; income: number; expense: number }[]>((acc, t) => {
         const dateStr = new Date(t.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })
@@ -69,10 +68,7 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
         }
         return acc
       }, [])
-    setChartData(grouped)
   }, [data.recentTransactions, period])
-
-  useEffect(() => { buildChart() }, [buildChart])
 
   const balance = data.incomeUSD - data.expenseUSD
 

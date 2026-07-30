@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Trash2, RotateCcw, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -53,23 +53,26 @@ export function PapeleraModal({ model, sectionLabel, onRestore }: PapeleraModalP
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<PapeleraItem[]>([])
   const [loading, setLoading] = useState(false)
-
-  const fetchDeleted = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/papelera")
-      const data: PapeleraResponse = await res.json()
-      setItems(data[model] || [])
-    } catch {
-      toast.error("Error al cargar elementos eliminados")
-    } finally {
-      setLoading(false)
-    }
-  }, [model])
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    if (open) fetchDeleted()
-  }, [open, fetchDeleted])
+    if (!open) return
+    let cancelled = false
+    async function fetchDeleted() {
+      setLoading(true)
+      try {
+        const res = await fetch("/api/papelera")
+        const data: PapeleraResponse = await res.json()
+        if (!cancelled) setItems(data[model] || [])
+      } catch {
+        if (!cancelled) toast.error("Error al cargar elementos eliminados")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchDeleted()
+    return () => { cancelled = true }
+  }, [open, model, refreshKey])
 
   async function handleRestore(item: PapeleraItem) {
     try {
@@ -79,7 +82,7 @@ export function PapeleraModal({ model, sectionLabel, onRestore }: PapeleraModalP
         throw new Error(err.error || "Error al restaurar")
       }
       toast.success("Elemento restaurado")
-      fetchDeleted()
+      setRefreshKey(k => k + 1)
       onRestore?.()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al restaurar")
@@ -95,7 +98,7 @@ export function PapeleraModal({ model, sectionLabel, onRestore }: PapeleraModalP
         throw new Error(err.error || "Error al eliminar")
       }
       toast.success("Elemento eliminado permanentemente")
-      fetchDeleted()
+      setRefreshKey(k => k + 1)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al eliminar")
     }

@@ -109,20 +109,26 @@ export default function BultosPage() {
   const [viewLoading, setViewLoading] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Bulk | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  const fetchBulks = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (statusFilter) params.set("status", statusFilter)
-      const res = await fetch(`/api/bultos?${params}`)
-      const data = await res.json()
-      setBulks(Array.isArray(data) ? data : [])
-    } catch { toast.error("Error al cargar bultos") }
-    finally { setLoading(false) }
-  }, [statusFilter])
-
-  useEffect(() => { fetchBulks() }, [fetchBulks])
+  useEffect(() => {
+    let cancelled = false
+    async function fetchBulks() {
+      try {
+        const params = new URLSearchParams()
+        if (statusFilter) params.set("status", statusFilter)
+        const res = await fetch(`/api/bultos?${params}`)
+        const data = await res.json()
+        if (!cancelled) setBulks(Array.isArray(data) ? data : [])
+      } catch {
+        if (!cancelled) toast.error("Error al cargar bultos")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchBulks()
+    return () => { cancelled = true }
+  }, [statusFilter, refreshKey])
 
   useEffect(() => {
     fetch("/api/pedidos?status=pending")
@@ -183,7 +189,7 @@ export default function BultosPage() {
       setDialogOpen(false)
       setSelectedItemIds([])
       setForm({ type: "grande", courier: "buspack", notes: "" })
-      fetchBulks()
+      setRefreshKey(k => k + 1)
     } catch (err) { toast.error(err instanceof Error ? err.message : "Error al crear bulto") }
     finally { setSaving(false) }
   }
@@ -220,7 +226,7 @@ export default function BultosPage() {
       toast.success("Bulto actualizado")
       setEditDialogOpen(false)
       setSelectedBulk(null)
-      fetchBulks()
+      setRefreshKey(k => k + 1)
     } catch (err) { toast.error(err instanceof Error ? err.message : "Error al actualizar bulto") }
     finally { setSaving(false) }
   }
@@ -237,7 +243,7 @@ export default function BultosPage() {
       toast.success("Bulto eliminado")
       setDeleteDialogOpen(false)
       setDeleteTarget(null)
-      fetchBulks()
+      setRefreshKey(k => k + 1)
     } catch (err) { toast.error(err instanceof Error ? err.message : "Error al eliminar bulto") }
     finally { setSaving(false) }
   }
@@ -268,7 +274,7 @@ export default function BultosPage() {
           <p className="text-muted-foreground text-sm mt-1">{bulks.length} bultos</p>
         </div>
         <div className="flex items-center gap-2">
-          <PapeleraModal model="bultos" sectionLabel="Bultos" onRestore={fetchBulks} />
+          <PapeleraModal model="bultos" sectionLabel="Bultos" onRestore={() => setRefreshKey(k => k + 1)} />
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nuevo bulto
           </Button>

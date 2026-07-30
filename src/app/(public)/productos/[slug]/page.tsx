@@ -37,6 +37,8 @@ function ProductDetailContent() {
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState(false)
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
+  const [selectedColor, setSelectedColor] = useState("")
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   function parseProductImages(images: unknown): { colors: string[]; byColor: Record<string, string[]> } {
     if (!images || !Array.isArray(images) || images.length === 0) {
@@ -56,47 +58,51 @@ function ProductDetailContent() {
   }
 
   const parsed = useMemo(() => product ? parseProductImages(product.images) : { colors: [], byColor: {} }, [product])
-  const [selectedColor, setSelectedColor] = useState("")
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const currentImages = selectedColor ? parsed.byColor[selectedColor] || [] : []
 
+  // Defer color initialization to avoid cascading renders from effects
   useEffect(() => {
-    if (parsed.colors.length > 0) {
+    if (parsed.colors.length > 0 && !selectedColor) {
       const fromUrl = searchParams.get("color")
-      const initialColor = fromUrl && parsed.colors.some(c => c.toLowerCase() === fromUrl.toLowerCase())
-        ? parsed.colors.find(c => c.toLowerCase() === fromUrl.toLowerCase())!
-        : parsed.colors[0]
-      setSelectedColor(initialColor)
-      setCurrentIndex(0)
+      const match = fromUrl && parsed.colors.find(c => c.toLowerCase() === fromUrl.toLowerCase())
+      const timer = setTimeout(() => {
+        setSelectedColor(match || parsed.colors[0])
+        setCurrentIndex(0)
+      }, 0)
+      return () => clearTimeout(timer)
     }
-    }, [parsed.colors, product?.id, searchParams])
+  }, [parsed.colors, searchParams, selectedColor])
+
+  const currentImages = selectedColor ? parsed.byColor[selectedColor] || [] : []
 
   useEffect(() => {
     fetchExchangeRate().then(setExchangeRate)
   }, [])
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
-      setLoading(true)
-      setError(false)
       try {
         const res = await fetch(`/api/productos/${slug}`)
         if (!res.ok) {
-          if (res.status === 404) { setNotFound(true); return }
+          if (res.status === 404) { if (!cancelled) setNotFound(true); return }
           throw new Error("Error al cargar el producto")
         }
         const data = await res.json()
-        setProduct(data.product)
-        setRelated(data.related || [])
+        if (!cancelled) {
+          setProduct(data.product)
+          setRelated(data.related || [])
+        }
       } catch (e) {
-        console.error(e)
-        setError(true)
+        if (!cancelled) setError(true)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     load()
+    return () => { cancelled = true }
   }, [slug])
+
+  const { addItem } = useCart()
 
   if (loading) {
     return (
@@ -151,7 +157,6 @@ function ProductDetailContent() {
     )
   }
 
-  const { addItem } = useCart()
   const specs = product.specs
   const arsPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
 

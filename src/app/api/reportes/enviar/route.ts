@@ -6,11 +6,9 @@ function formatARS(n: number) {
   return "$" + n.toLocaleString("es-AR")
 }
 
-function formatUSD(n: number) {
-  return "$" + n.toFixed(2)
-}
+type ReportData = Awaited<ReturnType<typeof gatherReportData>>
 
-function buildReportHTML(data: Awaited<ReturnType<typeof gatherReportData>>) {
+function buildReportHTML(data: ReportData) {
   const now = new Date().toLocaleString("es-AR", {
     timeZone: "America/Argentina/Buenos_Aires",
     dateStyle: "long",
@@ -44,7 +42,7 @@ function buildReportHTML(data: Awaited<ReturnType<typeof gatherReportData>>) {
 </html>`
 }
 
-function kpiCards(data: any) {
+function kpiCards(data: ReportData) {
   const cards = [
     { label: "Productos", value: data.totalProducts, color: "#22C55E" },
     { label: "Pedidos totales", value: data.totalOrders, color: "#3B82F6" },
@@ -65,8 +63,8 @@ function kpiCards(data: any) {
     </table>`
 }
 
-function productsSection(data: any) {
-  const rows = data.productsByCategory.map((c: any) => `
+function productsSection(data: ReportData) {
+  const rows = data.productsByCategory.map((c: { name: string; _count: { products: number } }) => `
     <tr>
       <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #334155;">${c.name}</td>
       <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #334155;">${c._count.products}</td>
@@ -92,7 +90,7 @@ function productsSection(data: any) {
     </div>`
 }
 
-function ordersSection(data: any) {
+function ordersSection(data: ReportData) {
   const statusLabels: Record<string, string> = {
     pending: "Pendientes",
     en_camino: "En camino",
@@ -132,7 +130,7 @@ function ordersSection(data: any) {
     </div>`
 }
 
-function financesSection(data: any) {
+function financesSection(data: ReportData) {
   return `
     <h2 style="font-size: 16px; color: #1e293b; margin: 0 0 8px;">Finanzas</h2>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px; border-collapse: collapse;">
@@ -151,14 +149,14 @@ function financesSection(data: any) {
     </table>`
 }
 
-function stockSection(data: any) {
+function stockSection(data: ReportData) {
   if (data.lowStockProducts.length === 0) {
     return `
       <h2 style="font-size: 16px; color: #1e293b; margin: 0 0 8px;">Stock bajo</h2>
       <p style="color: #22C55E; font-size: 13px;">No hay productos con stock bajo.</p>`
   }
 
-  const rows = data.lowStockProducts.map((p: any) => `
+  const rows = data.lowStockProducts.map((p: { name: string; stock: number; minStock: number }) => `
     <tr>
       <td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; color: #334155;">${p.name}</td>
       <td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #EF4444; font-weight: 600;">${p.stock}</td>
