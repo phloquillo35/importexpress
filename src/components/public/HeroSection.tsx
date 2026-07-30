@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { HeroCarousel } from "./HeroCarousel"
+import { HeroSidebar } from "./HeroSidebar"
 
 interface HeroBanner {
   id: string
@@ -38,15 +39,19 @@ export function HeroSection() {
     return (
       <section className="py-8 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <div className="lg:col-span-3 aspect-square rounded-2xl bg-muted animate-pulse" />
-            <div className="lg:col-span-2 grid grid-cols-2 lg:grid-cols-2 gap-4">
+          <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-4">
+            <div className="rounded-2xl bg-muted animate-pulse" />
+            <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
+            <div className="grid grid-cols-2 gap-2">
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
               <div className="col-span-2 aspect-[2/1] rounded-2xl bg-muted animate-pulse" />
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
             </div>
+          </div>
+          <div className="lg:hidden space-y-4">
+            <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
           </div>
         </div>
       </section>
@@ -58,16 +63,29 @@ export function HeroSection() {
   return (
     <section className="py-8 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          <div className="lg:col-span-3 aspect-square lg:aspect-auto lg:row-span-2">
+        <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-4">
+          <HeroSidebar />
+          <div className="min-h-full">
             <HeroCarousel slides={carousel} />
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <FlyerSlot banner={getFlyer("flyer-1")} className="aspect-square" />
+            <FlyerSlot banner={getFlyer("flyer-2")} className="aspect-square" />
+            <FlyerSlot banner={getFlyer("flyer-3")} className="col-span-2 aspect-[2/1]" />
+            <FlyerSlot banner={getFlyer("flyer-4")} className="aspect-square" />
+            <FlyerSlot banner={getFlyer("flyer-5")} className="aspect-square" />
+          </div>
+        </div>
 
-          <FlyerSlot banner={getFlyer("flyer-1")} className="aspect-square" />
-          <FlyerSlot banner={getFlyer("flyer-2")} className="aspect-square" />
-          <FlyerSlot banner={getFlyer("flyer-3")} className="col-span-2 aspect-[2/1]" />
-          <FlyerSlot banner={getFlyer("flyer-4")} className="aspect-square" />
-          <FlyerSlot banner={getFlyer("flyer-5")} className="aspect-square" />
+        <div className="lg:hidden space-y-4">
+          <HeroCarousel slides={carousel} />
+          <div className="grid grid-cols-2 gap-2">
+            <FlyerSlot banner={getFlyer("flyer-1")} className="aspect-square" />
+            <FlyerSlot banner={getFlyer("flyer-2")} className="aspect-square" />
+            <FlyerSlot banner={getFlyer("flyer-3")} className="col-span-2 aspect-[2/1]" />
+            <FlyerSlot banner={getFlyer("flyer-4")} className="aspect-square" />
+            <FlyerSlot banner={getFlyer("flyer-5")} className="aspect-square" />
+          </div>
         </div>
       </div>
     </section>

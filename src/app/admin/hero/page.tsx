@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { ImagePlus, Plus, Trash2, GripVertical, RefreshCw } from "lucide-react"
+import { ImagePlus, Plus, Trash2, RefreshCw, Link as LinkIcon } from "lucide-react"
+import { toast } from "sonner"
 
 interface HeroBanner {
   id: string
@@ -30,11 +31,12 @@ export default function HeroAdminPage() {
   const loadBanners = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/hero")
+      if (!res.ok) throw new Error("Error al cargar")
       const data = await res.json()
       setCarousel(data.carousel || [])
       setFlyers(data.flyers || [])
     } catch {
-      console.error("Error loading banners")
+      toast.error("Error al cargar banners")
     } finally {
       setLoading(false)
     }
@@ -48,9 +50,13 @@ export default function HeroAdminPage() {
       const formData = new FormData()
       formData.append("file", file)
       const res = await fetch("/api/upload", { method: "POST", body: formData })
+      if (!res.ok) throw new Error("Upload failed")
       const data = await res.json()
-      return data.url || null
-    } catch {
+      if (!data.url) throw new Error("No URL returned")
+      return data.url
+    } catch (e) {
+      toast.error("Error al subir imagen")
+      console.error(e)
       return null
     } finally {
       setUploading(false)
@@ -66,74 +72,110 @@ export default function HeroAdminPage() {
       if (!file) return
       const url = await uploadFile(file)
       if (!url) return
-      await fetch("/api/admin/hero", {
+      const res = await fetch("/api/admin/hero", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "carousel", image: url }),
       })
+      if (!res.ok) {
+        toast.error("Error al crear slide")
+        return
+      }
+      toast.success("Slide agregado")
       loadBanners()
     }
     input.click()
+  }
+
+  async function updateSlideLink(slide: HeroBanner, link: string) {
+    const res = await fetch(`/api/admin/hero/${slide.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ link: link || null }),
+    })
+    if (!res.ok) {
+      toast.error("Error al actualizar link")
+      return
+    }
+    toast.success("Link actualizado")
+    loadBanners()
   }
 
   async function updateFlyer(pos: string, file: File) {
     const url = await uploadFile(file)
     if (!url) return
     const existing = flyers.find((f) => f.position === pos)
-    if (existing) {
-      await fetch(`/api/admin/hero/${existing.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: url }),
-      })
-    } else {
-      await fetch("/api/admin/hero", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "flyer", position: pos, image: url }),
-      })
+    const res = existing
+      ? await fetch(`/api/admin/hero/${existing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: url }),
+        })
+      : await fetch("/api/admin/hero", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "flyer", position: pos, image: url }),
+        })
+    if (!res.ok) {
+      toast.error("Error al actualizar flyer")
+      return
     }
+    toast.success("Flyer actualizado")
     loadBanners()
   }
 
   async function updateFlyerLink(pos: string, link: string) {
     const existing = flyers.find((f) => f.position === pos)
     if (!existing) return
-    await fetch(`/api/admin/hero/${existing.id}`, {
+    const res = await fetch(`/api/admin/hero/${existing.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ link: link || null }),
     })
+    if (!res.ok) {
+      toast.error("Error al actualizar link")
+      return
+    }
+    toast.success("Link actualizado")
     loadBanners()
   }
 
   async function toggleSlide(slide: HeroBanner) {
-    await fetch(`/api/admin/hero/${slide.id}`, {
+    const res = await fetch(`/api/admin/hero/${slide.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isActive: !slide.isActive }),
     })
+    if (!res.ok) {
+      toast.error("Error al cambiar estado")
+      return
+    }
     loadBanners()
   }
 
   async function deleteSlide(id: string) {
-    await fetch(`/api/admin/hero/${id}`, { method: "DELETE" })
+    const res = await fetch(`/api/admin/hero/${id}`, { method: "DELETE" })
+    if (!res.ok) {
+      toast.error("Error al eliminar")
+      return
+    }
+    toast.success("Eliminado")
     loadBanners()
   }
 
   async function reorder(slideId: string, direction: "up" | "down") {
     const idx = carousel.findIndex((s) => s.id === slideId)
     if (idx === -1) return
-    const newOrder = [...carousel]
+    const items = [...carousel]
     const swapIdx = direction === "up" ? idx - 1 : idx + 1
-    if (swapIdx < 0 || swapIdx >= newOrder.length) return
-    const temp = newOrder[idx].order
-    newOrder[idx].order = newOrder[swapIdx].order
-    newOrder[swapIdx].order = temp
-    ;[newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]]
+    if (swapIdx < 0 || swapIdx >= items.length) return
+    const temp = items[idx].order
+    items[idx].order = items[swapIdx].order
+    items[swapIdx].order = temp
+    ;[items[idx], items[swapIdx]] = [items[swapIdx], items[idx]]
 
     await Promise.all(
-      newOrder.map((s) =>
+      items.map((s) =>
         fetch(`/api/admin/hero/${s.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -170,7 +212,7 @@ export default function HeroAdminPage() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
-            Agregar slide
+            {uploading ? "Subiendo..." : "Agregar slide"}
           </button>
         </div>
 
@@ -208,8 +250,18 @@ export default function HeroAdminPage() {
                   className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                 />
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground truncate">{slide.image}</p>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <p className="text-xs text-muted-foreground truncate">{slide.image}</p>
+                  <div className="flex items-center gap-1.5">
+                    <LinkIcon className="w-3 h-3 text-muted-foreground/50 flex-shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Link opcional (URL)"
+                      defaultValue={slide.link || ""}
+                      onBlur={(e) => updateSlideLink(slide, e.target.value)}
+                      className="w-full px-1.5 py-0.5 text-xs bg-background border border-border/40 rounded text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
                 </div>
 
                 <button
@@ -251,7 +303,9 @@ export default function HeroAdminPage() {
                   <h3 className="text-sm font-medium text-foreground">{pos.label}</h3>
                   {flyer && (
                     <button
-                      onClick={() => deleteSlide(flyer.id)}
+                      onClick={() => {
+                        deleteSlide(flyer.id)
+                      }}
                       className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -300,7 +354,7 @@ export default function HeroAdminPage() {
                 <div className="mt-2">
                   <input
                     type="text"
-                    placeholder="Link opcional (URL o slug)"
+                    placeholder="Link opcional (URL)"
                     defaultValue={flyer?.link || ""}
                     onBlur={(e) => updateFlyerLink(pos.key, e.target.value)}
                     className="w-full px-2.5 py-1.5 text-xs bg-background border border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
