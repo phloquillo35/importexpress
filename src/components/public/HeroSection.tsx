@@ -80,7 +80,9 @@ export function HeroSection() {
         <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-4">
           <HeroSidebar />
           <div className="min-h-full">
+          <div className="aspect-square w-full">
             <HeroCarousel slides={carousel} />
+          </div>
           </div>
           {flyersGrid}
         </div>
