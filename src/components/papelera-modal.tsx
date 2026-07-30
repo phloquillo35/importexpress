@@ -46,9 +46,10 @@ interface PapeleraResponse {
 interface PapeleraModalProps {
   model: "products" | "categorias" | "pedidos" | "bultos" | "transacciones" | "tiendas"
   sectionLabel: string
+  onRestore?: () => void
 }
 
-export function PapeleraModal({ model, sectionLabel }: PapeleraModalProps) {
+export function PapeleraModal({ model, sectionLabel, onRestore }: PapeleraModalProps) {
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<PapeleraItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -79,6 +80,7 @@ export function PapeleraModal({ model, sectionLabel }: PapeleraModalProps) {
       }
       toast.success("Elemento restaurado")
       fetchDeleted()
+      onRestore?.()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al restaurar")
     }

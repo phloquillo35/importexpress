@@ -268,7 +268,7 @@ export default function BultosPage() {
           <p className="text-muted-foreground text-sm mt-1">{bulks.length} bultos</p>
         </div>
         <div className="flex items-center gap-2">
-          <PapeleraModal model="bultos" sectionLabel="Bultos" />
+          <PapeleraModal model="bultos" sectionLabel="Bultos" onRestore={fetchBulks} />
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nuevo bulto
           </Button>

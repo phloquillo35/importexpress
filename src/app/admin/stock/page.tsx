@@ -169,7 +169,7 @@ export default function AdminStockPage() {
                 className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
               />
             </div>
-            <PapeleraModal model="products" sectionLabel="Stock" />
+            <PapeleraModal model="products" sectionLabel="Stock" onRestore={loadStock} />
           </div>
 
           <div className="bg-card border border-border rounded-xl overflow-x-auto">

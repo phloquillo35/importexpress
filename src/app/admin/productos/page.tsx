@@ -168,7 +168,7 @@ export default function AdminProductosPage() {
         <Button type="submit" variant="secondary" className="bg-muted text-muted-foreground hover:bg-zinc-700">
           Buscar
         </Button>
-        <PapeleraModal model="products" sectionLabel="Productos" />
+        <PapeleraModal model="products" sectionLabel="Productos" onRestore={fetchProducts} />
       </form>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">

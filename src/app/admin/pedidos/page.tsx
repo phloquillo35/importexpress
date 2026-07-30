@@ -442,7 +442,7 @@ export default function PedidosPage() {
           <p className="text-muted-foreground text-sm mt-1">{total} pedidos — página {page} de {totalPages || 1}</p>
         </div>
         <div className="flex items-center gap-2">
-          <PapeleraModal model="pedidos" sectionLabel="Pedidos" />
+          <PapeleraModal model="pedidos" sectionLabel="Pedidos" onRestore={fetchOrders} />
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
           </Button>

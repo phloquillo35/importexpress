@@ -192,7 +192,7 @@ export default function AdminCategoriasPage() {
           <p className="text-muted-foreground text-sm mt-1">Gestioná las categorías de productos</p>
         </div>
         <div className="flex items-center gap-2">
-          <PapeleraModal model="categorias" sectionLabel="Categorías" />
+          <PapeleraModal model="categorias" sectionLabel="Categorías" onRestore={loadCategories} />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" />

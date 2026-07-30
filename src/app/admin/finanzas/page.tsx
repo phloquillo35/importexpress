@@ -205,7 +205,7 @@ export default function FinanzasPage() {
           <p className="text-muted-foreground text-sm mt-1">Gestión de ingresos y egresos</p>
         </div>
         <div className="flex items-center gap-2">
-          <PapeleraModal model="transacciones" sectionLabel="Finanzas" />
+          <PapeleraModal model="transacciones" sectionLabel="Finanzas" onRestore={fetchTransactions} />
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nueva transacción
           </Button>

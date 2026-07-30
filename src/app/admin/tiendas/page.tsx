@@ -102,7 +102,7 @@ export default function TiendasPage() {
           <p className="text-muted-foreground text-sm mt-1">{stores.length} tiendas</p>
         </div>
         <div className="flex items-center gap-2">
-          <PapeleraModal model="tiendas" sectionLabel="Tiendas" />
+          <PapeleraModal model="tiendas" sectionLabel="Tiendas" onRestore={load} />
           <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nueva tienda
           </Button>
