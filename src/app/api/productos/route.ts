@@ -31,12 +31,22 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      const searchNumber = parseFloat(search.replace(/[$,\s]/g, ""))
+      // Soporte para formato argentino: "32.000" = 32000, "32.000,50" = 32000.50
+      let cleanNumber = search.replace(/[$]/g, "").trim()
+      if (cleanNumber.includes(",")) {
+        // Formato argentino con coma decimal: "32.000,50" → sacar puntos → "32000,50" → coma a punto → "32000.50"
+        cleanNumber = cleanNumber.replace(/\./g, "").replace(",", ".")
+      } else {
+        // Sin coma: sacar puntos (separador de miles argentino): "32.000" → "32000"
+        cleanNumber = cleanNumber.replace(/\./g, "")
+      }
+      const searchNumber = parseFloat(cleanNumber)
       const isNumeric = !isNaN(searchNumber)
       const lowerSearch = search.toLowerCase()
 
       const searchConditions: Record<string, unknown>[] = [
         { name: { contains: search, mode: "insensitive" } },
+        { slug: { contains: search, mode: "insensitive" } },
         { category: { name: { contains: search, mode: "insensitive" } } },
       ]
 
@@ -49,10 +59,15 @@ export async function GET(request: NextRequest) {
 
       if (isNumeric) {
         searchConditions.push(
-          { costUSDT: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
-          { shippingCost: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
-          { finalPriceUSD: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
-          { finalPriceARS: { gte: searchNumber - 0.01, lte: searchNumber + 0.01 } },
+          // Precios: rango ±1 para cubrir redondeos
+          { costUSDT: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { costUSD: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { priceUSD: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { priceARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { finalPriceUSD: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { finalPriceARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { shippingCost: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          // Stock: búsqueda exacta
           { stock: { equals: searchNumber } },
         )
       }
