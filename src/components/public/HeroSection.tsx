@@ -106,6 +106,8 @@ function FlyerSlot({ banner, className }: { banner: HeroBanner | undefined; clas
   return (
     <Wrapper
       href={banner.link || "#"}
+      target="_blank"
+      rel="noopener noreferrer"
       className={`rounded-2xl overflow-hidden bg-card group ${banner.link ? "cursor-pointer" : ""} ${className}`}
     >
       <img

@@ -49,6 +49,8 @@ export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
     >
       <Wrapper
         href={slide.link || "#"}
+        target="_blank"
+        rel="noopener noreferrer"
         className={cn("block w-full h-full", slide.link && "cursor-pointer")}
       >
         <img
