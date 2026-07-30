@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
@@ -55,8 +55,24 @@ export default function AdminProductosPage() {
   const [loading, setLoading] = useState(true)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get("highlight")
+  const tableRef = useRef<HTMLDivElement>(null)
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
   const limit = 20
+
+  useEffect(() => {
+    if (highlightId && products.length > 0) {
+      const el = document.getElementById(`product-${highlightId}`)
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" })
+        el.classList.add("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        }, 3000)
+      }
+    }
+  }, [highlightId, products])
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
@@ -201,7 +217,7 @@ export default function AdminProductosPage() {
                   usdtRate,
                 })
                 return (
-                <TableRow key={product.id} className="border-border hover:bg-muted">
+                <TableRow id={`product-${product.id}`} key={product.id} className="border-border hover:bg-muted transition-all duration-1000">
                   <TableCell className="font-medium text-foreground cursor-pointer max-w-[280px]" onClick={() => setViewProduct(product)}><span className="truncate block" title={product.name}>{product.name}</span></TableCell>
                   <TableCell className="text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
                     {product.category?.name || "—"}

@@ -82,7 +82,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
                   {lowStockItems.map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => { setLowStockOpen(false); router.push("/admin/stock") }}
+                      onClick={() => { setLowStockOpen(false); router.push(`/admin/stock?highlight=${item.id}`) }}
                       className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted text-sm"
                     >
                       <span className="text-foreground truncate">{item.name}</span>

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { Search, Package, Plus, Minus } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
@@ -35,6 +36,9 @@ interface StockProduct {
 }
 
 export default function AdminStockPage() {
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get("highlight")
+  const tableRef = useRef<HTMLDivElement>(null)
   const [products, setProducts] = useState<StockProduct[]>([])
   const [filtered, setFiltered] = useState<StockProduct[]>([])
   const [search, setSearch] = useState("")
@@ -45,6 +49,20 @@ export default function AdminStockPage() {
   const [adjustField, setAdjustField] = useState<"stock" | "minStock">("stock")
   const [saving, setSaving] = useState(false)
   const [viewProduct, setViewProduct] = useState<StockProduct | null>(null)
+
+  useEffect(() => {
+    if (highlightId && products.length > 0) {
+      const el = document.getElementById(`stock-${highlightId}`)
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" })
+        el.classList.add("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        }, 3000)
+      }
+    }
+  }, [highlightId, products])
+
   async function loadStock() {
     try {
       const res = await fetch("/api/stock")
@@ -182,7 +200,7 @@ export default function AdminStockPage() {
                   </TableRow>
                 ) : (
                   filtered.map((product) => (
-                    <TableRow key={product.id} className="border-border hover:bg-muted">
+                    <TableRow id={`stock-${product.id}`} key={product.id} className="border-border hover:bg-muted transition-all duration-1000">
                       <TableCell className="font-medium text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{product.name}</TableCell>
                       <TableCell className="text-muted-foreground text-sm cursor-pointer" onClick={() => setViewProduct(product)}>
                         {product.category?.name || "—"}

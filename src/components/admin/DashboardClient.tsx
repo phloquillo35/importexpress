@@ -167,7 +167,11 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
           {data.lowStockProducts.length > 0 ? (
             <div className="space-y-3">
               {data.lowStockProducts.slice(0, 5).map((product) => (
-                <div key={product.id} className="flex items-center justify-between p-3 bg-red-500/5 border border-red-500/10 rounded-lg">
+                <div
+                  key={product.id}
+                  onClick={() => router.push(`/admin/stock?highlight=${product.id}`)}
+                  className="flex items-center justify-between p-3 bg-red-500/5 border border-red-500/10 rounded-lg cursor-pointer hover:bg-red-500/10 transition-colors"
+                >
                   <span className="text-sm text-foreground">{product.name}</span>
                   <span className="text-sm font-medium text-red-400">{product.stock} / {product.minStock}</span>
                 </div>
@@ -186,7 +190,11 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
           {data.orders.length > 0 ? (
             <div className="space-y-3">
               {data.orders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div
+                  key={order.id}
+                  onClick={() => router.push(`/admin/pedidos?highlight=${order.id}`)}
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
+                >
                   <div>
                     <p className="text-sm text-foreground">{order.clientName}</p>
                     <p className="text-xs text-muted-foreground">{order.items.length} producto(s)</p>
@@ -232,7 +240,11 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
                 </thead>
                 <tbody>
                   {data.recentProducts.map((product) => (
-                    <tr key={product.id} className="border-b border-border">
+                    <tr
+                      key={product.id}
+                      onClick={() => router.push(`/admin/productos?highlight=${product.id}`)}
+                      className="border-b border-border cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
                       <td className="py-2.5 text-foreground">{product.name}</td>
                       <td className="py-2.5 text-muted-foreground">{product.category?.name || "—"}</td>
                       <td className="py-2.5 text-foreground text-right">{formatUSD(product.priceUSD)}</td>
@@ -264,7 +276,11 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
                 </thead>
                 <tbody>
                   {data.transactions.map((t) => (
-                    <tr key={t.id} className="border-b border-border">
+                    <tr
+                      key={t.id}
+                      onClick={() => router.push(`/admin/finanzas?highlight=${t.id}`)}
+                      className="border-b border-border cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
                       <td className="py-2.5 text-foreground">{t.concept}</td>
                       <td className="py-2.5">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${t.type === "income" ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-red-500/10 text-red-400"}`}>

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useState, useCallback, useMemo, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
@@ -177,6 +178,9 @@ export default function PedidosPage() {
   const [editingOrder, setEditingOrder] = useState(false)
   const [editForm, setEditForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", clientContact: "", storeId: "", status: "", notes: "" })
   const [savingEdit, setSavingEdit] = useState(false)
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get("highlight")
+  const tableRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const limit = 50
@@ -317,6 +321,19 @@ export default function PedidosPage() {
     })
     return filtered
   }, [orders, statusFilter])
+
+  useEffect(() => {
+    if (highlightId && flatItems.length > 0) {
+      const el = document.getElementById(`order-${highlightId}`)
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" })
+        el.classList.add("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        }, 3000)
+      }
+    }
+  }, [highlightId, flatItems])
 
   function addToCart(product: Product) {
     const existing = cart.find(c => c.productId === product.id)
@@ -478,8 +495,9 @@ export default function PedidosPage() {
                 const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
                 return (
                   <TableRow
+                    id={`order-${item.id}`}
                     key={item.id}
-                    className="border-border hover:bg-muted"
+                    className="border-border hover:bg-muted transition-all duration-1000"
                   >
                     <TableCell className="text-center text-xs text-muted-foreground font-mono cursor-pointer" onClick={() => setProductDetail({ item, order })}>
                       #{order.internalNumber}

@@ -17,11 +17,11 @@ async function getDashboardData(periodDays: number = 30) {
     ] = await Promise.all([
       prisma.product.count({ where: { deletedAt: null } }),
       prisma.product.findMany({ where: { deletedAt: null }, select: { id: true, name: true, stock: true, minStock: true, slug: true } }),
-      prisma.product.findMany({ where: { deletedAt: null }, orderBy: { createdAt: "desc" }, take: 5, include: { category: { select: { name: true } } } }),
+      prisma.product.findMany({ where: { deletedAt: null, createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, take: 5, include: { category: { select: { name: true } } } }),
       prisma.transaction.findMany({ where: { deletedAt: null, date: { gte: since } }, orderBy: { date: "desc" } }),
-      prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
+      prisma.order.findMany({ where: { deletedAt: null, createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
       prisma.category.findMany({ include: { _count: { select: { products: true } } } }),
-      prisma.order.findMany({ where: { paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
+      prisma.order.findMany({ where: { deletedAt: null, paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
     ])
 
     const incomeAgg = await prisma.transaction.aggregate({

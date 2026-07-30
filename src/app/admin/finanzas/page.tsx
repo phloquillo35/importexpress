@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { DollarSign, TrendingDown, Plus, ArrowUpDown, Trash2 } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
@@ -75,6 +76,22 @@ export default function FinanzasPage() {
   const [expense, setExpense] = useState(0)
   const [orderOptions, setOrderOptions] = useState<OrderOption[]>([])
   const [orderSearch, setOrderSearch] = useState("")
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get("highlight")
+  const tableRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (highlightId && transactions.length > 0) {
+      const el = document.getElementById(`transaction-${highlightId}`)
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" })
+        el.classList.add("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-[#F59E0B]", "bg-[#F59E0B]/5")
+        }, 3000)
+      }
+    }
+  }, [highlightId, transactions])
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -264,7 +281,7 @@ export default function FinanzasPage() {
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12"><DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" /><p>Sin transacciones</p></TableCell></TableRow>
             ) : (
               transactions.map((t) => (
-                <TableRow key={t.id} className="border-border hover:bg-muted">
+                <TableRow id={`transaction-${t.id}`} key={t.id} className="border-border hover:bg-muted transition-all duration-1000">
                   <TableCell className="text-foreground">
                     {t.concept}
                     {t.order && (
