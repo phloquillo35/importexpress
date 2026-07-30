@@ -84,9 +84,11 @@ export async function GET(request: NextRequest) {
           { subtotalARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
           { profitARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
           { shippingCost: { gte: searchNumber - 1, lte: searchNumber + 1 } },
-          // Stock: búsqueda exacta
-          { stock: { equals: searchNumber } },
         )
+        // Stock: búsqueda exacta solo si el número es entero (stock es Int en Prisma)
+        if (Number.isInteger(searchNumber)) {
+          searchConditions.push({ stock: { equals: searchNumber } })
+        }
       }
 
       where.OR = searchConditions
