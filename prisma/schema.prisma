@@ -68,6 +68,8 @@ model Product {
   profitValue   Float       @default(0)
   finalPriceUSD Float       @default(0)
   finalPriceARS Float       @default(0)
+  subtotalARS   Float       @default(0)
+  profitARS     Float       @default(0)
   stock         Int         @default(0)
   minStock      Int         @default(5)
   isAvailable   Boolean     @default(true)

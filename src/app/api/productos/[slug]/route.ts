@@ -130,6 +130,8 @@ export async function PUT(
 
     data.finalPriceUSD = pricing.finalPriceUSD
     data.finalPriceARS = pricing.finalPriceARS
+    data.subtotalARS = pricing.subtotalARS
+    data.profitARS = pricing.profitARS
     data.priceUSD = pricing.finalPriceUSD
     data.priceARS = pricing.finalPriceARS
 

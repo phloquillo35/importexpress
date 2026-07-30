@@ -31,14 +31,29 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      // Soporte para formato argentino: "32.000" = 32000, "32.000,50" = 32000.50
+      // Soporte para formato argentino y decimal estándar
       let cleanNumber = search.replace(/[$]/g, "").trim()
+
       if (cleanNumber.includes(",")) {
         // Formato argentino con coma decimal: "32.000,50" → sacar puntos → "32000,50" → coma a punto → "32000.50"
         cleanNumber = cleanNumber.replace(/\./g, "").replace(",", ".")
       } else {
-        // Sin coma: sacar puntos (separador de miles argentino): "32.000" → "32000"
-        cleanNumber = cleanNumber.replace(/\./g, "")
+        // Sin coma: detectar si el punto es decimal o de miles
+        const dotCount = (cleanNumber.match(/\./g) || []).length
+
+        if (dotCount >= 2) {
+          // Múltiples puntos: seguro es separador de miles: "1.000.000" → "1000000"
+          cleanNumber = cleanNumber.replace(/\./g, "")
+        } else if (dotCount === 1) {
+          // Un solo punto: puede ser decimal (721.25) o de miles (32.000)
+          const afterDot = cleanNumber.split(".")[1] || ""
+          if (afterDot.length === 3) {
+            // "32.000" → 3 dígitos después del punto = separador de miles argentino
+            cleanNumber = cleanNumber.replace(/\./g, "")
+          }
+          // Si tiene 1-2 dígitos → es decimal: "721.25", "90.5" → mantener punto
+        }
+        // Si no tiene puntos (dotCount === 0) → usar tal cual
       }
       const searchNumber = parseFloat(cleanNumber)
       const isNumeric = !isNaN(searchNumber)
@@ -66,6 +81,8 @@ export async function GET(request: NextRequest) {
           { priceARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
           { finalPriceUSD: { gte: searchNumber - 1, lte: searchNumber + 1 } },
           { finalPriceARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { subtotalARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
+          { profitARS: { gte: searchNumber - 1, lte: searchNumber + 1 } },
           { shippingCost: { gte: searchNumber - 1, lte: searchNumber + 1 } },
           // Stock: búsqueda exacta
           { stock: { equals: searchNumber } },
@@ -188,6 +205,8 @@ export async function POST(request: Request) {
         profitValue,
         finalPriceUSD: pricing.finalPriceUSD,
         finalPriceARS: pricing.finalPriceARS,
+        subtotalARS: pricing.subtotalARS,
+        profitARS: pricing.profitARS,
         stock: data.stock ?? 0,
         minStock: data.minStock ?? 5,
         isAvailable: data.isAvailable ?? true,
