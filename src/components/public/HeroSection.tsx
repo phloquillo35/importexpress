@@ -45,7 +45,7 @@ export function HeroSection() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="hidden lg:grid grid-cols-[220px_3fr_2fr] gap-4">
             <div className="row-span-2 rounded-2xl bg-muted animate-pulse" />
-            <div className="row-span-2 rounded-2xl bg-muted animate-pulse" />
+            <div className="row-span-2 aspect-square rounded-2xl bg-muted animate-pulse" />
             <div className="grid grid-cols-2 gap-2">
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
@@ -78,10 +78,10 @@ export function HeroSection() {
     <section className="py-8 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="hidden lg:grid grid-cols-[220px_3fr_2fr] gap-4">
-          <div className="row-span-2">
+          <div className="row-span-2 h-full">
             <HeroSidebar />
           </div>
-          <div className="row-span-2">
+          <div className="row-span-2 aspect-square">
             <HeroCarousel slides={carousel} />
           </div>
           <div>
