@@ -43,9 +43,9 @@ export function HeroSection() {
     return (
       <section className="py-8 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-4">
-            <div className="rounded-2xl bg-muted animate-pulse" />
-            <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
+          <div className="hidden lg:grid grid-cols-[220px_3fr_2fr] gap-4">
+            <div className="row-span-2 rounded-2xl bg-muted animate-pulse" />
+            <div className="row-span-2 rounded-2xl bg-muted animate-pulse" />
             <div className="grid grid-cols-2 gap-2">
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
               <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
@@ -77,14 +77,16 @@ export function HeroSection() {
   return (
     <section className="py-8 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-4">
-          <HeroSidebar />
-          <div className="min-h-full">
-          <div className="aspect-square w-full">
+        <div className="hidden lg:grid grid-cols-[220px_3fr_2fr] gap-4">
+          <div className="row-span-2">
+            <HeroSidebar />
+          </div>
+          <div className="row-span-2">
             <HeroCarousel slides={carousel} />
           </div>
+          <div>
+            {flyersGrid}
           </div>
-          {flyersGrid}
         </div>
 
         <div className="lg:hidden space-y-4">
@@ -102,7 +104,9 @@ export function HeroSection() {
             />
           </form>
 
-          <HeroCarousel slides={carousel} />
+          <div className="aspect-square w-full">
+            <HeroCarousel slides={carousel} />
+          </div>
 
           {flyersGrid}
         </div>
