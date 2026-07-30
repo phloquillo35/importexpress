@@ -21,6 +21,7 @@ interface ProductData {
   minStock: number
   isAvailable: boolean
   isFeatured: boolean
+  freeShipping: boolean
   categoryId: string | null
   storeId: string | null
   images: string[] | { url: string; color: string }[]
@@ -88,6 +89,7 @@ export default function EditarProductoPage() {
     minStock: String(product.minStock ?? "5"),
     isAvailable: product.isAvailable,
     isFeatured: product.isFeatured,
+    freeShipping: product.freeShipping,
     categoryId: product.categoryId ?? "",
     storeId: product.storeId ?? "",
     images,
