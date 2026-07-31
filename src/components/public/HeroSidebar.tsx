@@ -20,6 +20,10 @@ interface Category {
   children: SubCategory[]
 }
 
+function isTouchDevice() {
+  return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches
+}
+
 export function HeroSidebar() {
   const [categories, setCategories] = useState<Category[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -48,11 +52,29 @@ export function HeroSidebar() {
             <div key={cat.id}>
               <div
                 className="group relative"
-                onMouseEnter={() => hasChildren && setExpanded(cat.id)}
-                onMouseLeave={() => setExpanded(null)}
+                onMouseEnter={
+                  hasChildren
+                    ? () => {
+                        if (!isTouchDevice()) setExpanded(cat.id)
+                      }
+                    : undefined
+                }
+                onMouseLeave={() => {
+                  if (!isTouchDevice()) setExpanded(null)
+                }}
               >
                 <Link
                   href={`/categorias/${cat.slug}`}
+                  onClick={
+                    hasChildren
+                      ? (e) => {
+                          if (isTouchDevice() && !isExpanded) {
+                            e.preventDefault()
+                            setExpanded(cat.id)
+                          }
+                        }
+                      : undefined
+                  }
                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <Package className="w-3.5 h-3.5 text-primary flex-shrink-0" />

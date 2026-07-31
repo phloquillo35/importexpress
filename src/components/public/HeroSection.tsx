@@ -100,11 +100,11 @@ export function HeroSection() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar productos..."
-              className="w-full pl-9 pr-4 py-2.5 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+              className="w-full pl-9 pr-4 py-2.5 bg-muted border border-border/60 rounded-full text-[16px] text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
             />
           </form>
 
-          <div className="aspect-square w-full">
+          <div className="w-full aspect-square md:aspect-[4/3] max-lg:landscape:aspect-auto max-lg:landscape:h-[55dvh] max-lg:landscape:max-h-[560px]">
             <HeroCarousel slides={carousel} />
           </div>
 

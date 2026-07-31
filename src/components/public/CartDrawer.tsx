@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react"
 import { useCart } from "@/context/CartContext"
+import { lockScroll, unlockScroll } from "@/lib/utils"
 
 interface CartDrawerProps {
   open: boolean
@@ -13,6 +14,13 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, clearCart, total } = useCart()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: "", phone: "", address: "" })
+
+  useEffect(() => {
+    if (open) {
+      lockScroll()
+      return unlockScroll
+    }
+  }, [open])
 
   const whatsappNumber = "5491123456789"
 
@@ -49,11 +57,11 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         <div className="fixed inset-0 z-[60] bg-black/40" onClick={onClose} />
       )}
       <div
-        className={`fixed top-0 right-0 z-[70] h-full w-full sm:w-[420px] bg-background shadow-2xl transition-transform duration-300 flex flex-col ${
+        className={`fixed top-0 right-0 z-[70] h-screen h-dvh w-full sm:w-[420px] bg-background shadow-2xl transition-transform duration-300 flex flex-col touch-manipulation ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+        <div className="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-4 border-b border-border/50">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-primary" />
             <h2 className="font-heading font-semibold text-foreground text-lg">Carrito</h2>
@@ -63,7 +71,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-3">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <ShoppingBag className="w-12 h-12 mb-3 opacity-50" />
@@ -90,20 +98,20 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity - 1, item.color)}
-                      className="p-1 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity + 1, item.color)}
-                      className="p-1 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => removeItem(item.slug, item.color)}
-                      className="p-1 ml-1 text-[#ff3b30] hover:text-red-600 transition-colors"
+                      className="flex items-center justify-center w-10 h-10 ml-1 text-[#ff3b30] hover:text-red-600 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -120,7 +128,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         </div>
 
         {items.length > 0 && (
-          <div className="px-5 py-4 border-t border-border/50 space-y-3">
+          <div className="px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-border/50 space-y-3">
             {!showForm ? (
               <>
                 <button
@@ -144,7 +152,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   required
-                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
                 <input
                   type="tel"
@@ -152,7 +160,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   required
-                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
                 <input
                   type="text"
@@ -160,7 +168,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   value={form.address}
                   onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
                   required
-                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
                 <button
                   type="submit"

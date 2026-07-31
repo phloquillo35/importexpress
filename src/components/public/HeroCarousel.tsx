@@ -44,7 +44,7 @@ export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
 
   return (
     <div
-      className="relative w-full h-full overflow-hidden rounded-2xl group"
+      className="relative w-full h-full overflow-hidden rounded-2xl group touch-manipulation"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
@@ -74,14 +74,14 @@ export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
         <>
           <button
             onClick={() => setCurrent((prev) => (prev - 1 + slides.length) % slides.length)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 lg:w-8 lg:h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
             aria-label="Anterior"
           >
             ‹
           </button>
           <button
             onClick={next}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 lg:w-8 lg:h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
             aria-label="Siguiente"
           >
             ›
@@ -92,12 +92,16 @@ export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={cn(
-                  "w-2 h-2 rounded-full transition-all",
-                  i === current ? "bg-white w-4" : "bg-white/50 hover:bg-white/70"
-                )}
+                className="p-3 -m-3 flex items-center justify-center"
                 aria-label={`Ir a slide ${i + 1}`}
-              />
+              >
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all",
+                    i === current ? "bg-white w-4" : "bg-white/50 hover:bg-white/70"
+                  )}
+                />
+              </button>
             ))}
           </div>
         </>

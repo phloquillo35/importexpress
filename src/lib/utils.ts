@@ -51,3 +51,21 @@ export function truncate(text: string, length: number): string {
   if (text.length <= length) return text
   return text.slice(0, length) + "..."
 }
+
+let scrollLockCount = 0
+let savedBodyOverflow = ""
+
+export function lockScroll(): void {
+  if (scrollLockCount === 0) {
+    savedBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+  }
+  scrollLockCount++
+}
+
+export function unlockScroll(): void {
+  scrollLockCount = Math.max(0, scrollLockCount - 1)
+  if (scrollLockCount === 0) {
+    document.body.style.overflow = savedBodyOverflow
+  }
+}

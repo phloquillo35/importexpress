@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useTheme } from "next-themes"
 
 export function HeroBackground() {
@@ -9,10 +10,13 @@ export function HeroBackground() {
   return (
     <div className="fixed inset-0 -z-10">
       <div className="relative w-full h-full">
-        <img
+        <Image
           src={isDark ? "/images/hero-dark.webp" : "/images/hero-light.webp"}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover object-center"
         />
         <div
           className={`absolute inset-0 ${

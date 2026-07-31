@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
 import { MessageCircle, Menu, X, ShoppingBag, Sun, Moon, Search } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useCart } from "@/context/CartContext"
+import { lockScroll, unlockScroll } from "@/lib/utils"
 import { CartDrawer } from "./CartDrawer"
 import { HeroSidebar } from "./HeroSidebar"
 
@@ -19,22 +21,29 @@ export function Navbar() {
   const { count } = useCart()
   const { theme, setTheme } = useTheme()
 
+  useEffect(() => {
+    if (menuOpen || cartOpen) {
+      lockScroll()
+      return unlockScroll
+    }
+  }, [menuOpen, cartOpen])
+
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-background/70 dark:bg-background/85 backdrop-blur-xl border-b border-border/50 rounded-b-2xl overflow-hidden">
+      <nav className="sticky top-0 z-50 bg-background/70 dark:bg-background/85 backdrop-blur-xl border-b border-border/50 rounded-b-2xl overflow-hidden pt-[env(safe-area-inset-top)] touch-manipulation">
         <div className="px-4 sm:px-6">
           {/* Mobile */}
           <div className="flex md:hidden items-center justify-between h-12">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Menú"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
             <Link href="/" className="flex items-center gap-2 flex-1 justify-center">
-              <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-7 h-7 rounded-lg object-cover" />
+              <Image src="/logo.jpg" alt="Lo Pedís, Lo Tenes" width={28} height={28} className="rounded-lg object-cover" />
               <span className="font-heading font-semibold text-foreground text-sm">Lo Pedís, Lo Tenes</span>
             </Link>
 
@@ -42,7 +51,7 @@ export function Navbar() {
               href="https://wa.me/5491123456789"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-9 h-9 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-colors"
+              className="flex items-center justify-center w-11 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-colors"
             >
               <MessageCircle className="w-4 h-4" />
             </a>
@@ -51,7 +60,7 @@ export function Navbar() {
           {/* Desktop */}
           <div className="hidden md:flex items-center justify-between h-12 lg:h-14">
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-7 h-7 rounded-lg object-cover" />
+              <Image src="/logo.jpg" alt="Lo Pedís, Lo Tenes" width={28} height={28} className="rounded-lg object-cover" />
               <span className="font-heading font-semibold text-foreground text-sm">Lo Pedís, Lo Tenes</span>
             </Link>
 
@@ -79,7 +88,7 @@ export function Navbar() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Buscar productos..."
-                    className="w-full pl-9 pr-4 py-2 bg-muted border border-border/60 rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                    className="w-full pl-9 pr-4 py-2 bg-muted border border-border/60 rounded-full text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
                   />
                 </div>
               </form>
@@ -88,14 +97,14 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors"
                 title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
               >
                 {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <button
                 onClick={() => setCartOpen(true)}
-                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="relative flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Carrito"
               >
                 <ShoppingBag className="w-5 h-5" />
@@ -119,7 +128,23 @@ export function Navbar() {
         </div>
 
         {menuOpen && (
-          <div className="md:hidden border-t border-border/50 bg-background/90 dark:bg-background/95 backdrop-blur-xl rounded-b-2xl overflow-hidden">
+          <div className="md:hidden border-t border-border/50 bg-background/90 dark:bg-background/95 backdrop-blur-xl rounded-b-2xl overflow-y-auto overscroll-contain max-h-[calc(100vh-3rem)] max-h-[calc(100dvh-3rem)]">
+            <form
+              onSubmit={(e) => { e.preventDefault(); router.push(`/productos?search=${encodeURIComponent(search)}`); setSearch(""); setMenuOpen(false) }}
+              className="px-4 pt-3"
+            >
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar productos..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-muted border border-border/60 rounded-full text-[16px] text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                />
+              </div>
+            </form>
+
             <div className="px-4 py-4 space-y-1">
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
