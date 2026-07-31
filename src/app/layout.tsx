@@ -15,8 +15,26 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Lo Pedís, Lo Tenes",
+  title: {
+    default: "Lo Pedís, Lo Tenes",
+    template: "%s | Lo Pedís, Lo Tenes",
+  },
   description: "Importación directa desde Ciudad del Este, Paraguay",
+  openGraph: {
+    title: "Lo Pedís, Lo Tenes",
+    description: "Importación directa desde Ciudad del Este, Paraguay",
+    url: "https://lopedislotenes.com",
+    siteName: "Lo Pedís, Lo Tenes",
+    locale: "es_AR",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Lo Pedís, Lo Tenes" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lo Pedís, Lo Tenes",
+    description: "Importación directa desde Ciudad del Este, Paraguay",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function RootLayout({
