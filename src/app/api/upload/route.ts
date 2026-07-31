@@ -1,10 +1,14 @@
 import { NextRequest } from "next/server"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
 import { randomUUID } from "crypto"
 import { requireRole } from "@/lib/auth"
+import { v2 as cloudinary } from "cloudinary"
 
-const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(process.cwd(), "public", "uploads")
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
+
 const MAX_SIZE = 10 * 1024 * 1024
 const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"]
 
@@ -31,16 +35,19 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    await mkdir(UPLOADS_DIR, { recursive: true })
+    // Subir a Cloudinary como base64 (más compatible con serverless)
+    const base64 = buffer.toString("base64")
+    const dataUri = `data:${file.type};base64,${base64}`
 
-    const ext = file.name.split(".").pop()
-    const filename = `${randomUUID()}.${ext}`
-    const filepath = path.join(UPLOADS_DIR, filename)
-    await writeFile(filepath, buffer)
+    const result = await cloudinary.uploader.upload(dataUri, {
+      folder: "importexpress",
+      public_id: randomUUID(),
+      resource_type: "auto",
+    })
 
     return Response.json({
-      url: `/api/uploads/${filename}`,
-      filename,
+      url: result.secure_url,
+      public_id: result.public_id,
     })
   } catch (error) {
     console.error("Upload error:", error)
