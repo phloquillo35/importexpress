@@ -1,13 +1,6 @@
 import { NextRequest } from "next/server"
 import { randomUUID } from "crypto"
 import { requireRole } from "@/lib/auth"
-import { v2 as cloudinary } from "cloudinary"
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
 
 const MAX_SIZE = 10 * 1024 * 1024
 const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"]
@@ -34,6 +27,15 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+
+    // Import dinámico de Cloudinary (solo se carga cuando se usa esta ruta)
+    const { v2: cloudinary } = await import("cloudinary")
+
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    })
 
     // Subir a Cloudinary como base64 (más compatible con serverless)
     const base64 = buffer.toString("base64")
