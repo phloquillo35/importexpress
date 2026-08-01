@@ -5,7 +5,7 @@ export async function fetchExchangeRate(): Promise<number> {
   if (typeof window === "undefined") throw new Error("fetchExchangeRate solo puede usarse desde el cliente");
   if (cachedRate !== null) return cachedRate
   if (ratePromise) return ratePromise
-  ratePromise = fetch("/api/configuracion")
+  ratePromise = fetch("/api/configuracion/public")
     .then((r) => r.json())
     .then((data) => {
       cachedRate = Number(data.exchange_rate) || 1

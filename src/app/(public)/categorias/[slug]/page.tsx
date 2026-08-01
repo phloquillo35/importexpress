@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { Package, ArrowLeft, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { ProductCard } from "@/components/public/ProductCard"
@@ -31,8 +31,10 @@ interface Product {
   category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
-export default function CategoryPage() {
+function CategoryContent() {
   const { slug } = useParams<{ slug: string }>()
+  const searchParams = useSearchParams()
+  const sub = searchParams.get("sub") || ""
   const [category, setCategory] = useState<Category | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,8 +45,10 @@ export default function CategoryPage() {
     async function load() {
       setLoading(true)
       setError(false)
+      setNotFound(false)
       try {
-        const res = await fetch(`/api/productos?categoria=${slug}&limit=50`)
+        const apiSlug = sub || slug
+        const res = await fetch(`/api/productos?categoria=${apiSlug}&limit=50`)
         if (!res.ok) throw new Error("Error al cargar productos")
         const data = await res.json()
 
@@ -67,7 +71,7 @@ export default function CategoryPage() {
       }
     }
     load()
-  }, [slug])
+  }, [slug, sub])
 
   if (loading) {
     return (
@@ -126,30 +130,34 @@ export default function CategoryPage() {
     )
   }
 
+  const displayName = sub
+    ? category?.children?.find((c) => c.slug === sub)?.name || sub
+    : category?.name || slug
+
   return (
     <div>
       <div className="border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
           <Link
-            href="/productos"
+            href={sub ? `/categorias/${category?.slug || slug}` : "/productos"}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-4 transition-colors font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
-            Todos los productos
+            {sub ? (category?.name || slug) : "Todos los productos"}
           </Link>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-heading">
-            {category?.name || slug}
+            {displayName}
           </h1>
-          {category?.description && (
+          {category?.description && !sub && (
             <p className="text-muted-foreground mt-2 max-w-xl">{category.description}</p>
           )}
           <p className="text-sm text-muted-foreground mt-2">{products.length} productos</p>
-          {category?.children && category.children.length > 0 && (
+          {!sub && category?.children && category.children.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {category.children.map((child) => (
                 <Link
                   key={child.id}
-                  href={`/categorias/${child.slug}`}
+                  href={`/categorias/${category.slug}?sub=${child.slug}`}
                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground text-sm rounded-full transition-colors"
                 >
                   {child.name}
@@ -171,14 +179,14 @@ export default function CategoryPage() {
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Package className="w-16 h-16 mb-4 opacity-50" />
             <p className="text-lg font-medium text-foreground mb-1">No hay productos en esta categoría</p>
-            {category?.children && category.children.length > 0 && (
+            {!sub && category?.children && category.children.length > 0 && (
               <div className="mt-4 text-center">
                 <p className="text-sm text-muted-foreground mb-3">Explorá sus subcategorías:</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {category.children.map((child) => (
                     <Link
                       key={child.id}
-                      href={`/categorias/${child.slug}`}
+                      href={`/categorias/${category.slug}?sub=${child.slug}`}
                       className="inline-flex items-center gap-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground text-sm rounded-full transition-colors"
                     >
                       {child.name}
@@ -192,4 +200,8 @@ export default function CategoryPage() {
       </div>
     </div>
   )
+}
+
+export default function CategoryPage() {
+  return <CategoryContent />
 }
