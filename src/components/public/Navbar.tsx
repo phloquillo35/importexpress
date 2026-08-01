@@ -195,7 +195,7 @@ export function Navbar() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
                 Categorías
               </p>
-              <HeroSidebar />
+              <HeroSidebar onNavigate={() => setMenuOpen(false)} />
             </div>
           </div>
         )}

@@ -24,7 +24,7 @@ function isTouchDevice() {
   return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches
 }
 
-export function HeroSidebar() {
+export function HeroSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
 
@@ -65,16 +65,7 @@ export function HeroSidebar() {
               >
                 <Link
                   href={`/categorias/${cat.slug}`}
-                  onClick={
-                    hasChildren
-                      ? (e) => {
-                          if (isTouchDevice() && !isExpanded) {
-                            e.preventDefault()
-                            setExpanded(cat.id)
-                          }
-                        }
-                      : undefined
-                  }
+                  onClick={() => onNavigate?.()}
                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <Package className="w-3.5 h-3.5 text-primary flex-shrink-0" />
@@ -100,6 +91,7 @@ export function HeroSidebar() {
                         <Link
                           key={child.id}
                           href={`/categorias/${cat.slug}?sub=${child.slug}`}
+                          onClick={() => onNavigate?.()}
                           className="flex items-center gap-2 px-2 py-1 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                         >
                           <span className="w-1 h-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
