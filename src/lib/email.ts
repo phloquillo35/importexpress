@@ -1,12 +1,7 @@
 import nodemailer from "nodemailer"
 import { prisma } from "./prisma"
 
-let transporter: nodemailer.Transporter | null = null
-let cachedFrom = ""
-
 async function getTransporter() {
-  if (transporter) return { transporter, from: cachedFrom }
-
   const settings = await prisma.setting.findMany({
     where: { key: { in: ["smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"] } },
   })
@@ -23,15 +18,18 @@ async function getTransporter() {
     return null
   }
 
-  cachedFrom = from
-  transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  })
-
-  return { transporter, from }
+  return {
+    transporter: nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 15000,
+    }),
+    from,
+  }
 }
 
 type SendEmailParams = {
