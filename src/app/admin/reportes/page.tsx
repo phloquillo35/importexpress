@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { FileText, Loader2, CheckCircle2, AlertCircle, Mail, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,22 @@ export default function ReportesPage() {
   const [fechaDesde, setFechaDesde] = useState("")
   const [fechaHasta, setFechaHasta] = useState("")
   const [tipo, setTipo] = useState("completo")
+  const [smtpConfigurado, setSmtpConfigurado] = useState(true)
+  const sentEmailRef = useRef("")
+  const sentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (sentTimeoutRef.current) clearTimeout(sentTimeoutRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetch("/api/configuracion")
+      .then((r) => r.json())
+      .then((data) => setSmtpConfigurado(Boolean(data.smtp_host)))
+      .catch(() => setSmtpConfigurado(true))
+  }, [])
 
   async function handleSend() {
     if (!email.trim()) {
@@ -30,6 +46,10 @@ export default function ReportesPage() {
 
     setSending(true)
     setSent(false)
+    if (sentTimeoutRef.current) {
+      clearTimeout(sentTimeoutRef.current)
+      sentTimeoutRef.current = null
+    }
 
     try {
       const res = await fetch("/api/reportes/enviar", {
@@ -46,8 +66,13 @@ export default function ReportesPage() {
 
       if (!res.ok) throw new Error(data.error || "Error al enviar reporte")
 
+      sentEmailRef.current = email.trim()
       setSent(true)
+      setEmail("")
+      setFechaDesde("")
+      setFechaHasta("")
       toast.success(data.message || "Reporte enviado")
+      sentTimeoutRef.current = setTimeout(() => setSent(false), 3000)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al enviar reporte")
     } finally {
@@ -180,25 +205,27 @@ export default function ReportesPage() {
         {sent && (
           <div className="flex items-center gap-2 text-sm text-[#22C55E] bg-primary/5 rounded-lg p-3">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-            Reporte enviado exitosamente a {email}.
+            Reporte enviado exitosamente a {sentEmailRef.current}.
           </div>
         )}
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">Configuración de email requerida</p>
-            <p>
-              Para que funcione el envío de reportes, primero configurá los datos SMTP en
-              {" "}<a href="/admin/configuracion" className="text-primary underline hover:text-primary/80 inline-flex items-center gap-1">
-                <Settings className="w-3.5 h-3.5" /> Admin → Configuración
-              </a>.
-            </p>
+      {!smtpConfigurado && (
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium text-foreground mb-1">Configuración de email requerida</p>
+              <p>
+                Para que funcione el envío de reportes, primero configurá los datos SMTP en
+                {" "}<a href="/admin/configuracion" className="text-primary underline hover:text-primary/80 inline-flex items-center gap-1">
+                  <Settings className="w-3.5 h-3.5" /> Admin → Configuración
+                </a>.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

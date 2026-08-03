@@ -274,7 +274,11 @@ export async function POST(request: Request) {
       tipo: body.tipo || "completo",
     })
     const html = buildReportHTML(data)
-    await sendEmail({ to: email, subject: `Reporte ${data.businessName}`, text: `Reporte adjunto de ${data.businessName}`, html })
+    const sent = await sendEmail({ to: email, subject: `Reporte ${data.businessName}`, text: `Reporte adjunto de ${data.businessName}`, html })
+
+    if (!sent) {
+      return Response.json({ error: "No se pudo enviar el reporte. Revisá la configuración SMTP en Admin → Configuración." }, { status: 500 })
+    }
 
     return Response.json({ success: true, message: "Reporte enviado a " + email })
   } catch (err) {

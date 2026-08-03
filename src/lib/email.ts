@@ -41,10 +41,10 @@ type SendEmailParams = {
   html?: string
 }
 
-export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
+export async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<boolean> {
   try {
     const instance = await getTransporter()
-    if (!instance) return
+    if (!instance) return false
     await instance.transporter.sendMail({
       from: instance.from,
       to,
@@ -52,7 +52,9 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
       text,
       html,
     })
+    return true
   } catch (error) {
     console.error("[email] Failed to send:", error)
+    return false
   }
 }
