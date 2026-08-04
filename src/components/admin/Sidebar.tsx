@@ -65,7 +65,10 @@ export function Sidebar({ onClose }: SidebarProps) {
       <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
         {links.map((link) => {
           const Icon = link.icon
-          const isActive = pathname === link.href || pathname.startsWith(link.href + "/")
+          const isActive =
+            link.href === "/admin"
+              ? pathname === link.href
+              : pathname === link.href || pathname.startsWith(link.href + "/")
 
           return (
             <Link

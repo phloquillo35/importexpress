@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff, X, Loader2, Star } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import {
@@ -16,6 +16,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -44,22 +51,116 @@ interface Product {
   category: { name: string; slug: string } | null
 }
 
+interface Category {
+  id: string
+  name: string
+  slug: string
+  children?: { id: string; name: string; slug: string }[]
+}
+
 export default function AdminProductosPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [total, setTotal] = useState(0)
+  const [totalAll, setTotalAll] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
-  const [page, setPage] = useState(1)
-  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(() => {
+    const raw = parseInt(searchParams.get("page") || "1", 10)
+    return Number.isNaN(raw) ? 1 : Math.max(1, raw)
+  })
+  const [search, setSearch] = useState(searchParams.get("q") || "")
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("q") || "")
+  const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") || "")
+  const [disponible, setDisponible] = useState(searchParams.get("disponible") || "")
+  const [destacados, setDestacados] = useState(searchParams.get("destacados") === "true")
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [isSearching, setIsSearching] = useState(false)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
-  const searchParams = useSearchParams()
   const highlightId = searchParams.get("highlight")
   const tableRef = useRef<HTMLDivElement>(null)
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
   const limit = 20
   const [refreshKey, setRefreshKey] = useState(0)
+
+  const categoryOptions = categories.flatMap((cat) => [
+    { id: cat.id, name: cat.name },
+    ...(cat.children || []).map((child) => ({ id: child.id, name: `${cat.name} / ${child.name}` })),
+  ])
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (debouncedSearch) params.set("q", debouncedSearch)
+    else params.delete("q")
+    if (page > 1) params.set("page", String(page))
+    else params.delete("page")
+    if (categoriaId) params.set("categoriaId", categoriaId)
+    else params.delete("categoriaId")
+    if (disponible) params.set("disponible", disponible)
+    else params.delete("disponible")
+    if (destacados) params.set("destacados", "true")
+    else params.delete("destacados")
+    const qs = params.toString()
+    if (qs !== searchParams.toString()) {
+      router.replace(`/admin/productos${qs ? `?${qs}` : ""}`, { scroll: false })
+    }
+  }, [debouncedSearch, page, categoriaId, disponible, destacados, searchParams, router])
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchProducts() {
+      setLoading(true)
+      setIsSearching(true)
+      try {
+        const params = new URLSearchParams()
+        if (debouncedSearch) params.set("search", debouncedSearch)
+        params.set("admin", "1")
+        params.set("page", String(page))
+        params.set("limit", String(limit))
+        if (categoriaId) params.set("categoriaId", categoriaId)
+        if (disponible) params.set("disponible", disponible)
+        if (destacados) params.set("destacados", "true")
+
+        const res = await fetch(`/api/productos?${params}`)
+        const data = await res.json()
+        if (!cancelled) {
+          setProducts(data.products || [])
+          setTotal(data.total || 0)
+          setTotalAll(data.totalAll || 0)
+          setTotalPages(data.totalPages || 0)
+        }
+      } catch {
+        if (!cancelled) toast.error("Error al cargar productos")
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+          setIsSearching(false)
+        }
+      }
+    }
+    fetchProducts()
+    return () => { cancelled = true }
+  }, [debouncedSearch, page, categoriaId, disponible, destacados, refreshKey])
+
+  useEffect(() => {
+    fetch("/api/categorias").then(r => r.json()).then(data => {
+      setCategories(Array.isArray(data) ? data : [])
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetch("/api/configuracion").then(r => r.json()).then(data => {
+      setExchangeRate(Number(data.exchange_rate) || 1)
+      setUsdtRate(Number(data.usdt_rate) || 1)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (highlightId && products.length > 0) {
@@ -74,43 +175,15 @@ export default function AdminProductosPage() {
     }
   }, [highlightId, products])
 
-  useEffect(() => {
-    let cancelled = false
-    async function fetchProducts() {
-      setLoading(true)
-      try {
-        const params = new URLSearchParams()
-        if (search) params.set("search", search)
-        params.set("admin", "1")
-        params.set("page", String(page))
-        params.set("limit", String(limit))
-
-        const res = await fetch(`/api/productos?${params}`)
-        const data = await res.json()
-        if (!cancelled) {
-          setProducts(data.products || [])
-          setTotal(data.total || 0)
-          setTotalPages(data.totalPages || 0)
-        }
-      } catch {
-        if (!cancelled) toast.error("Error al cargar productos")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    fetchProducts()
-    return () => { cancelled = true }
-  }, [search, page, refreshKey])
-
-  useEffect(() => {
-    fetch("/api/configuracion").then(r => r.json()).then(data => {
-      setExchangeRate(Number(data.exchange_rate) || 1)
-      setUsdtRate(Number(data.usdt_rate) || 1)
-    }).catch(() => {})
-  }, [])
-
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
+    setDebouncedSearch(search)
+    setPage(1)
+  }
+
+  function handleClearSearch() {
+    setSearch("")
+    setDebouncedSearch("")
     setPage(1)
   }
 
@@ -157,20 +230,85 @@ export default function AdminProductosPage() {
         </Button>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, categoría, costo USDT, envío ARS, final USD, final ARS, stock, disponibilidad"
-            className="pl-9 bg-muted border-border text-foreground placeholder-muted-foreground"
-          />
+      <form onSubmit={handleSearch} className="mb-6 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              placeholder="Buscar por nombre, categoría, costo USDT, envío ARS, final USD, final ARS, stock, disponibilidad"
+              className="pl-9 pr-9 bg-muted border-border text-foreground placeholder-muted-foreground"
+            />
+            {isSearching ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+            ) : search ? (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            ) : null}
+          </div>
+          <Button type="submit" variant="secondary" className="bg-muted text-muted-foreground hover:bg-zinc-700">
+            Buscar
+          </Button>
+          <PapeleraModal model="products" sectionLabel="Productos" onRestore={() => setRefreshKey(k => k + 1)} />
         </div>
-        <Button type="submit" variant="secondary" className="bg-muted text-muted-foreground hover:bg-zinc-700">
-          Buscar
-        </Button>
-        <PapeleraModal model="products" sectionLabel="Productos" onRestore={() => setRefreshKey(k => k + 1)} />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={categoriaId || "__all"}
+            onValueChange={(v) => { setCategoriaId(v === "__all" ? "" : v || ""); setPage(1) }}
+          >
+            <SelectTrigger className="w-52 bg-muted border-border text-foreground">
+              <SelectValue placeholder="Todas las categorías">
+                {categoriaId ? categoryOptions.find((c) => c.id === categoriaId)?.name || "Todas las categorías" : "Todas las categorías"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all">Todas las categorías</SelectItem>
+              {categoryOptions.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={disponible || "__all"}
+            onValueChange={(v) => { setDisponible(v === "__all" ? "" : v || ""); setPage(1) }}
+          >
+            <SelectTrigger className="w-44 bg-muted border-border text-foreground">
+              <SelectValue placeholder="Disponibilidad">
+                {disponible === "true" ? "Disponible" : disponible === "false" ? "No disponible" : "Disponibilidad"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all">Todos</SelectItem>
+              <SelectItem value="true">Disponible</SelectItem>
+              <SelectItem value="false">No disponible</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            type="button"
+            variant={destacados ? "default" : "outline"}
+            onClick={() => { setDestacados(d => !d); setPage(1) }}
+            className={destacados ? "bg-primary text-primary-foreground" : "border-border text-muted-foreground"}
+          >
+            <Star className="w-4 h-4 mr-2" />
+            Destacados
+          </Button>
+        </div>
+
+        <p aria-live="polite" className="text-sm text-muted-foreground">
+          {debouncedSearch
+            ? `${total} resultados para "${debouncedSearch}" de ${totalAll} total`
+            : `${total} de ${totalAll} productos`}
+        </p>
       </form>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">

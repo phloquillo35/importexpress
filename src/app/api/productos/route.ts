@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     const categoria = searchParams.get("categoria") || ""
     const destacados = searchParams.get("destacados") || ""
     const disponible = searchParams.get("disponible") || ""
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"))
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")))
+    const rawPage = parseInt(searchParams.get("page") || "1", 10)
+    const page = Number.isNaN(rawPage) ? 1 : Math.max(1, rawPage)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)))
 
     const admin = searchParams.get("admin") || ""
     const showDeleted = searchParams.get("showDeleted") === "true"
@@ -115,20 +116,26 @@ export async function GET(request: NextRequest) {
 
     if (disponible === "true") {
       where.isAvailable = true
+    } else if (disponible === "false") {
+      where.isAvailable = false
     }
 
-    const [products, total] = await Promise.all([
+    const total = await prisma.product.count({ where })
+    const totalPages = Math.ceil(total / limit)
+    const safePage = Math.min(page, Math.max(1, totalPages))
+
+    const [products, totalAll] = await Promise.all([
       prisma.product.findMany({
         where,
         include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } } },
-        skip: (page - 1) * limit,
+        skip: (safePage - 1) * limit,
         take: limit,
         orderBy: { createdAt: "desc" },
       }),
-      prisma.product.count({ where }),
+      prisma.product.count({ where: { deletedAt: null, ...(!admin ? { isAvailable: true } : {}) } }),
     ])
 
-    return Response.json({ products, total, page, totalPages: Math.ceil(total / limit) })
+    return Response.json({ products, total, totalAll, page: safePage, totalPages })
   } catch (error) {
     console.error("Error fetching products:", error)
     return Response.json({ error: "Error al cargar productos" }, { status: 500 })
