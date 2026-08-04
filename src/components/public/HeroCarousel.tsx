@@ -15,7 +15,7 @@ interface HeroCarouselProps {
   interval?: number
 }
 
-export function HeroCarousel({ slides, interval = 5000 }: HeroCarouselProps) {
+export function HeroCarousel({ slides, interval = 3000 }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const touchStartX = useRef(0)
