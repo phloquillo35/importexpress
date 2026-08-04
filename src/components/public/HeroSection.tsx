@@ -15,14 +15,29 @@ interface HeroBanner {
   link: string | null
 }
 
-export function HeroSection() {
+interface InitialHero {
+  carousel: HeroBanner[]
+  flyers: HeroBanner[]
+}
+
+interface Category {
+  id: string
+  name: string
+  slug: string
+  parent: { id: string; name: string; slug: string } | null
+  _count: { products: number }
+  children: { id: string; name: string; slug: string; _count: { products: number } }[]
+}
+
+export function HeroSection({ initialCategories, initialHero }: { initialCategories?: Category[]; initialHero?: InitialHero }) {
   const router = useRouter()
-  const [carousel, setCarousel] = useState<HeroBanner[]>([])
-  const [flyers, setFlyers] = useState<HeroBanner[]>([])
-  const [loading, setLoading] = useState(true)
+  const [carousel, setCarousel] = useState<HeroBanner[]>(initialHero?.carousel ?? [])
+  const [flyers, setFlyers] = useState<HeroBanner[]>(initialHero?.flyers ?? [])
+  const [loading, setLoading] = useState(initialHero ? false : true)
   const [search, setSearch] = useState("")
 
   useEffect(() => {
+    if (initialHero) return
     async function load() {
       try {
         const res = await fetch("/api/hero")
@@ -37,7 +52,7 @@ export function HeroSection() {
       }
     }
     load()
-  }, [])
+  }, [initialHero])
 
   if (loading) {
     return (
@@ -79,7 +94,7 @@ export function HeroSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="hidden lg:grid grid-cols-[220px_3fr_2fr] gap-4">
           <div className="row-span-2 h-full">
-            <HeroSidebar />
+            <HeroSidebar showVerTodas initialCategories={initialCategories} />
           </div>
           <div className="row-span-2 aspect-square">
             <HeroCarousel slides={carousel} />
