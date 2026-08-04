@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
 import { updateCategorySchema } from "@/lib/validators"
 import { genId, slugify } from "@/lib/utils"
+import { revalidateTag } from "next/cache"
 
 export async function PUT(
   request: Request,
@@ -79,6 +80,8 @@ export async function PUT(
       include: { _count: { select: { products: true } }, children: { select: { id: true, name: true, slug: true, _count: { select: { products: true } } } }, parent: { select: { id: true, name: true, slug: true } } },
     })
 
+    revalidateTag("categorias", "max")
+
     return Response.json(updated)
   } catch (error) {
     console.error("Error updating category:", error)
@@ -105,6 +108,8 @@ export async function DELETE(
     }
 
     await prisma.category.update({ where: { id }, data: { deletedAt: new Date() } })
+
+    revalidateTag("categorias", "max")
 
     return Response.json({ success: true })
   } catch (error) {

@@ -3,6 +3,8 @@ import { NextRequest } from "next/server"
 import { genId, slugify } from "@/lib/utils"
 import { requireRole } from "@/lib/auth"
 import { createCategorySchema } from "@/lib/validators"
+import { getCategories } from "@/lib/categories"
+import { revalidateTag } from "next/cache"
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,17 +14,16 @@ export async function GET(request: NextRequest) {
     if (showDeleted) {
       const session = await requireRole("admin")
       if (session instanceof Response) return session
+
+      const categories = await prisma.category.findMany({
+        where: {},
+        include: { _count: { select: { products: true } }, children: { select: { id: true, name: true, slug: true, _count: { select: { products: true } } } }, parent: { select: { id: true, name: true, slug: true } } },
+        orderBy: { name: "asc" },
+      })
+      return Response.json(categories)
     }
 
-    const where: Record<string, unknown> = {}
-    if (!showDeleted) where.deletedAt = null
-
-    const categories = await prisma.category.findMany({
-      where,
-      include: { _count: { select: { products: true } }, children: { select: { id: true, name: true, slug: true, _count: { select: { products: true } } } }, parent: { select: { id: true, name: true, slug: true } } },
-      orderBy: { name: "asc" },
-    })
-    return Response.json(categories)
+    return Response.json(await getCategories())
   } catch (error) {
     console.error("Error fetching categories:", error)
     return Response.json({ error: "Error al cargar categorías" }, { status: 500 })
@@ -71,6 +72,8 @@ export async function POST(request: Request) {
       }))
       await prisma.category.createMany({ data: childData })
     }
+
+    revalidateTag("categorias", "max")
 
     return Response.json(category, { status: 201 })
   } catch (error) {

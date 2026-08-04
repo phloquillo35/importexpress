@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
+import { revalidateTag } from "next/cache"
 
 type PrismaDelegate = {
   findUnique: (args: { where: { id: string } }) => Promise<Record<string, unknown> | null>
@@ -45,6 +46,8 @@ export async function PATCH(
       data: { deletedAt: null },
     })
 
+    if (model === "categorias") revalidateTag("categorias", "max")
+
     return Response.json({ success: true })
   } catch (error) {
     console.error("Error restoring item:", error)
@@ -76,6 +79,8 @@ export async function DELETE(
     }
 
     await db.delete({ where: { id } })
+
+    if (model === "categorias") revalidateTag("categorias", "max")
 
     return Response.json({ success: true })
   } catch (error) {

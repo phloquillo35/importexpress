@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Navbar } from "@/components/public/Navbar"
 import { HeroBackground } from "@/components/public/HeroBackground"
 import { CartProvider } from "@/context/CartContext"
+import { getCategories } from "@/lib/categories"
 
 export const metadata: Metadata = {
   title: "Lo Pedís, Lo Tenes - Importación directa desde Ciudad del Este, Paraguay",
@@ -14,12 +15,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+  const categories = await getCategories().catch(() => [])
   return (
     <CartProvider>
     <div className="min-h-screen flex flex-col">
       <HeroBackground />
-      <Navbar />
+      <Navbar initialCategories={categories} />
       <main className="flex-1"><Suspense fallback={null}>{children}</Suspense></main>
       <Footer />
     </div>

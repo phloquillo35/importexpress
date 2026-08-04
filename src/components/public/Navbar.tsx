@@ -11,7 +11,16 @@ import { lockScroll, unlockScroll } from "@/lib/utils"
 import { CartDrawer } from "./CartDrawer"
 import { HeroSidebar } from "./HeroSidebar"
 
-export function Navbar() {
+interface Category {
+  id: string
+  name: string
+  slug: string
+  parent: { id: string; name: string; slug: string } | null
+  _count: { products: number }
+  children: { id: string; name: string; slug: string; _count: { products: number } }[]
+}
+
+export function Navbar({ initialCategories }: { initialCategories?: Category[] }) {
   const router = useRouter()
   const pathname = usePathname()
   const isProductos = pathname.startsWith("/productos")
@@ -192,10 +201,7 @@ export function Navbar() {
             </div>
 
             <div className="border-t border-border/50 px-4 py-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
-                Categorías
-              </p>
-              <HeroSidebar onNavigate={() => setMenuOpen(false)} />
+              <HeroSidebar onNavigate={() => setMenuOpen(false)} initialCategories={initialCategories} />
             </div>
           </div>
         )}
