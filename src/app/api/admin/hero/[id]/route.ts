@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
+import { revalidateTag } from "next/cache"
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,6 +28,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
 
+    revalidateTag("hero", "max")
+
     return Response.json(banner)
   } catch (error) {
     console.error("Error updating hero banner:", error)
@@ -47,6 +50,8 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     }
 
     await prisma.heroBanner.delete({ where: { id } })
+
+    revalidateTag("hero", "max")
 
     return Response.json({ success: true })
   } catch (error) {

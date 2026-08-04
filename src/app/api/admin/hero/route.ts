@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { genId } from "@/lib/utils"
 import { requireRole } from "@/lib/auth"
+import { revalidateTag } from "next/cache"
 
 export async function GET() {
   try {
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest) {
         isActive: true,
       },
     })
+
+    revalidateTag("hero", "max")
 
     return Response.json(banner, { status: 201 })
   } catch (error) {
