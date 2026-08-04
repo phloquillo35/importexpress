@@ -22,7 +22,7 @@ cloudinary.config({
 })
 
 const DRY_RUN = process.argv.includes("--dry-run")
-const BASE = "https://lopedis-lotenes.up.railway.app"
+const BASE = process.env.NEXT_PUBLIC_URL || "https://lopedis-lotenes.up.railway.app"
 const FOLDER = "importexpress"
 const MAX_CONCURRENT = 2 // Baja concurrencia: no saturar el servidor de producción
 const MAX_RETRIES = 3

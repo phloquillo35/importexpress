@@ -2,7 +2,7 @@
 
 Sistema de gestión de stock, catálogo público y panel administrador para negocios de importación.
 
-**URL:** https://importexpress-production.up.railway.app/
+**URL:** https://lopedis-lotenes.up.railway.app/
 
 ---
 

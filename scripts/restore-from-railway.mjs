@@ -3,7 +3,7 @@ import Database from "better-sqlite3"
 import { randomUUID } from "crypto"
 import fs from "fs"
 
-const RAILWAY_URL = "https://importexpress-production.up.railway.app"
+const RAILWAY_URL = process.env.NEXT_PUBLIC_URL || "https://lopedis-lotenes.up.railway.app"
 const DB_PATH = "./prisma/dev.db"
 const TOKEN_FILE = "/tmp/railway-session.txt"
 

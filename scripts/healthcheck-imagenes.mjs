@@ -4,7 +4,7 @@ import https from "https"
 
 const { Pool } = pg
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const BASE = "https://lopedis-lotenes.up.railway.app"
+const BASE = process.env.NEXT_PUBLIC_URL || "https://lopedis-lotenes.up.railway.app"
 
 function checkUrl(u) {
   return new Promise((resolve) => {

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         <p>Has sido registrado en el sistema de ImportExpress.</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Contraseña:</strong> ${password}</p>
-        <p>Podés iniciar sesión en: <a href="${process.env.NEXT_PUBLIC_URL || "https://importexpress-production.up.railway.app"}/login">${process.env.NEXT_PUBLIC_URL || "https://importexpress-production.up.railway.app"}/login</a></p>
+        <p>Podés iniciar sesión en: <a href="${process.env.NEXT_PUBLIC_URL || "https://lopedis-lotenes.up.railway.app"}/login">${process.env.NEXT_PUBLIC_URL || "https://lopedis-lotenes.up.railway.app"}/login</a></p>
         <p>Saludos,<br/>Equipo ImportExpress</p>
       `,
     }).catch(() => console.warn("[invitar-miembro] SMTP no configurado — miembro creado sin email"))
