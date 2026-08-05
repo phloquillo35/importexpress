@@ -17,12 +17,12 @@ const tiposReporte = [
 export default function ReportesPage() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [sentEmail, setSentEmail] = useState("")
   const [email, setEmail] = useState("")
   const [fechaDesde, setFechaDesde] = useState("")
   const [fechaHasta, setFechaHasta] = useState("")
   const [tipo, setTipo] = useState("completo")
   const [smtpConfigurado, setSmtpConfigurado] = useState(true)
-  const sentEmailRef = useRef("")
   const sentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -66,13 +66,13 @@ export default function ReportesPage() {
 
       if (!res.ok) throw new Error(data.error || "Error al enviar reporte")
 
-      sentEmailRef.current = email.trim()
+      setSentEmail(email.trim())
       setSent(true)
       setEmail("")
       setFechaDesde("")
       setFechaHasta("")
       toast.success(data.message || "Reporte enviado")
-      sentTimeoutRef.current = setTimeout(() => setSent(false), 3000)
+      sentTimeoutRef.current = setTimeout(() => { setSent(false); setSentEmail("") }, 3000)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al enviar reporte")
     } finally {
@@ -205,7 +205,7 @@ export default function ReportesPage() {
         {sent && (
           <div className="flex items-center gap-2 text-sm text-[#22C55E] bg-primary/5 rounded-lg p-3">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-            Reporte enviado exitosamente a {sentEmailRef.current}.
+            Reporte enviado exitosamente a {sentEmail}.
           </div>
         )}
       </div>
