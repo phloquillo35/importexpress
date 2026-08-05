@@ -94,9 +94,10 @@ export function Sidebar({ onClose }: SidebarProps) {
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 transition-colors"
+          title={collapsed ? "Expandir barra" : undefined}
         >
           {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-          {!collapsed && <span>Colapsar</span>}
+          {!collapsed && <span>Contraer barra</span>}
         </button>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
