@@ -15,7 +15,7 @@ async function getDashboardData(periodDays: number = 30) {
       categories,
       pendingOrders,
     ] = await Promise.all([
-      prisma.product.count({ where: { deletedAt: null } }),
+      prisma.product.count({ where: { deletedAt: null, createdAt: { gte: since } } }),
       prisma.product.findMany({ where: { deletedAt: null }, select: { id: true, name: true, stock: true, minStock: true, slug: true } }),
       prisma.product.findMany({ where: { deletedAt: null, createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, take: 5, include: { category: { select: { name: true } } } }),
       prisma.transaction.findMany({ where: { deletedAt: null, date: { gte: since } }, orderBy: { date: "desc" } }),

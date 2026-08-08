@@ -53,6 +53,10 @@ interface ViewProduct {
   isAvailable: boolean
 }
 
+function isTouchDevice() {
+  return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches
+}
+
 export default function AdminCategoriasPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +72,8 @@ export default function AdminCategoriasPage() {
   const [categoryProducts, setCategoryProducts] = useState<ViewProduct[]>([])
   const [viewLoading, setViewLoading] = useState(false)
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
+  const hoverExpandedRef = useRef<Set<string>>(new Set())
+  const hoverTimerRef = useRef<{ id: string; timer: number } | null>(null)
 
   async function loadCategories() {
     try {
@@ -105,6 +111,28 @@ export default function AdminCategoriasPage() {
       else next.add(id)
       return next
     })
+  }
+
+  function clearHoverTimer() {
+    if (hoverTimerRef.current !== null) {
+      window.clearTimeout(hoverTimerRef.current.timer)
+      hoverTimerRef.current = null
+    }
+  }
+
+  function scheduleHoverCollapse(parentId: string) {
+    if (hoverTimerRef.current?.id === parentId) return
+    clearHoverTimer()
+    hoverTimerRef.current = {
+      id: parentId,
+      timer: window.setTimeout(() => {
+        hoverTimerRef.current = null
+        if (hoverExpandedRef.current.has(parentId)) {
+          hoverExpandedRef.current.delete(parentId)
+          toggleParent(parentId)
+        }
+      }, 250),
+    }
   }
 
   function openNew() {
@@ -345,17 +373,17 @@ export default function AdminCategoriasPage() {
       </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+      <div className="bg-card rounded-2xl border border-border/60 overflow-x-auto shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <Table>
           <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead className="text-muted-foreground">Nombre</TableHead>
-              <TableHead className="text-muted-foreground">Slug</TableHead>
-              <TableHead className="text-muted-foreground">Descripción</TableHead>
-              <TableHead className="text-muted-foreground">Subcategorías</TableHead>
-              <TableHead className="text-muted-foreground text-center">Productos</TableHead>
-              <TableHead className="text-muted-foreground">Creada</TableHead>
-              <TableHead className="text-muted-foreground text-right">Acciones</TableHead>
+            <TableRow className="border-border bg-muted/40 hover:bg-transparent transition-colors">
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Nombre</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Slug</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Descripción</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Subcategorías</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold text-center">Productos</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Creada</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -377,8 +405,8 @@ export default function AdminCategoriasPage() {
                 const isExpanded = expandedParents.has(cat.id)
                 const hasChildren = cat.children.length > 0
                 const parentRow = (
-                  <TableRow key={cat.id} className="border-border hover:bg-muted cursor-pointer" onClick={() => hasChildren ? toggleParent(cat.id) : openEdit(cat)}>
-                    <TableCell className="font-medium text-foreground">
+                  <TableRow key={cat.id} className="border-border/60 hover:bg-muted/60 hover:shadow-sm transition-all duration-150 cursor-pointer" onClick={() => { hoverExpandedRef.current.delete(cat.id); if (hasChildren) toggleParent(cat.id); else openEdit(cat) }} onMouseEnter={() => { if (!hasChildren || isTouchDevice()) return; if (hoverTimerRef.current?.id === cat.id) clearHoverTimer(); if (!expandedParents.has(cat.id)) { hoverExpandedRef.current.add(cat.id); toggleParent(cat.id) } }} onMouseLeave={() => { if (hasChildren && !isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
+                    <TableCell className="font-semibold text-foreground py-3">
                       <span className="flex items-center gap-2">
                         {hasChildren ? (
                           isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -388,11 +416,11 @@ export default function AdminCategoriasPage() {
                         {cat.name}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{cat.slug}</TableCell>
-                    <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                    <TableCell className="text-sm text-muted-foreground py-3">{cat.slug}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate py-3">
                       {cat.description || "—"}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3">
                       {cat.children.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {cat.children.map((child) => (
@@ -405,11 +433,11 @@ export default function AdminCategoriasPage() {
                         <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center text-muted-foreground">{cat._count.products}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="text-center text-foreground font-medium py-3">{cat._count.products}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground py-3">
                       {formatDate(cat.createdAt)}
                     </TableCell>
-                    <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                    <TableCell className="text-right py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => openView(cat)} className="text-muted-foreground hover:text-blue-400"><Eye className="w-4 h-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
@@ -422,21 +450,23 @@ export default function AdminCategoriasPage() {
                   ? cat.children.map((child) => {
                       const fullChild = categories.find((c: Category) => c.id === child.id)
                       return (
-                        <TableRow key={child.id} className="border-border hover:bg-muted/50 cursor-pointer bg-muted/20" onClick={() => fullChild && openEdit(fullChild)}>
-                          <TableCell className="font-medium text-foreground pl-10">
-                            <span className="text-muted-foreground text-xs mr-2">└─</span>
-                            {child.name}
+                        <TableRow key={child.id} className="border-border/60 hover:bg-muted/40 cursor-pointer bg-muted/20 transition-colors animate-in fade-in slide-in-from-top-1 duration-150" onClick={() => fullChild && openEdit(fullChild)} onMouseEnter={() => { if (hoverTimerRef.current?.id === cat.id) clearHoverTimer() }} onMouseLeave={() => { if (!isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
+                          <TableCell className="font-medium text-foreground/90 py-3">
+                            <span className="inline-flex items-center gap-2 border-l-2 border-border/40 pl-2 ml-6 animate-in fade-in slide-in-from-top-1 duration-150">
+                              <span className="w-1 h-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
+                              {child.name}
+                            </span>
                           </TableCell>
-                          <TableCell className="text-muted-foreground">{child.slug}</TableCell>
-                          <TableCell className="text-muted-foreground max-w-[200px] truncate">—</TableCell>
-                          <TableCell>
+                          <TableCell className="text-sm text-muted-foreground py-3">{child.slug}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate py-3">—</TableCell>
+                          <TableCell className="py-3">
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                               ← {cat.name}
                             </span>
                           </TableCell>
-                          <TableCell className="text-center text-muted-foreground">{child._count?.products || 0}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">—</TableCell>
-                          <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                          <TableCell className="text-center text-foreground font-medium py-3">{child._count?.products || 0}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground py-3">—</TableCell>
+                          <TableCell className="text-right py-3" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
                               <Button variant="ghost" size="icon" onClick={() => fullChild && openView(fullChild)} className="text-muted-foreground hover:text-blue-400"><Eye className="w-4 h-4" /></Button>
                               <Button variant="ghost" size="icon" onClick={() => fullChild && openEdit(fullChild)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
