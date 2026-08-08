@@ -1,13 +1,14 @@
 # AGENTS.md (Workflow Context) — importexpress
-> Generado: 2026-08-08 11:00:00 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
+> Generado: 2026-08-08 23:50:00 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
 
-## ���� �� �� 🎯 Objetivo actual
-Mejoras completas del buscador de productos (verificar Test B: paginación, búsqueda desde páginas altas, filtros, limpiar) + implementación de flyers delegada a JOACO + auditorías móviles home y admin.
+## 🎯 Objetivo actual
+Fix completo de la sección Pedidos — búsqueda de productos server-side con paginación al crear pedidos (antes solo cargaba 100 productos y mostraba 10 resultados client-side). Verificado con Playwright: "xiaomi" devuelve 22 productos de todas las categorías, "celular"/"samsung" multi-marca PASS. Pendiente: continuar reparación sección pedidos (zero bugs).
 
-## ���� �� �� 📍 Estado actual
+## 📍 Estado actual
   Branch: main · Working tree: LIMPIO (0 archivos sin commit)
 
   Últimos commits:
+  195e6c6 feat(admin): búsqueda server-side con paginación en creación de pedidos
   5c40e80 feat(categorias): agregar soporte para categorías padre/hijo en tabla de productos
   35083f6 fix(dashboard): Total Productos filtra por periodo 7d/30d/90d + feat(admin): endpoint cambiar contrasena
   caa7f9f fix(security): restringir CORS a dominio real + limpiar header obsoleto x-register-secret
@@ -18,14 +19,13 @@ Mejoras completas del buscador de productos (verificar Test B: paginación, bús
   65ef726 fix(hero): invalidar cache al crear/editar/eliminar banners (revalidateTag hero)
   454fa32 perf(hero): precarga banners server-side con cache + transformaciones Cloudinary f_auto/q_auto (carga instantanea del contenedor)
 
-## ���� �� �� 🧭 Próximo paso
-Continuar con Test B — Buscador: completar validación de paginación, búsqueda desde páginas altas, filtros combinados y botón limpiar.
+## 🧭 Próximo paso
+Reparar sección pedidos: revisar/fixear demás deuda técnica detectada (pricing client/server duplicado, estado masivo, responsive). También hay un dato sucio en BD: Samsung Galaxy A37 con precio US$ 389.138,71 (costo mal cargado).
 
-## ���� � �� ✅ Tareas activas
-  [in_progress/high] Test B — Buscador: paginación, búsqueda desde páginas altas, filtros, limpiar
-  [in_progress/high] Delegar implementación flyers a JOACO (endpoint generate + template + admin UI)
-  [in_progress/high] Auditar home móvil (Playwright 390×844): botones/CTAs que no se ven
-  [in_progress/high] Auditar admin móvil: botones ocultos (necesita login o análisis de código responsive)
+## ✅ Tareas activas
+  [in_progress/high] Reparar sección pedidos hasta zero bugs/fix pendientes
+  [completed] Fix buscador productos en creación de pedidos (server-side + paginación, admin=1, sin slice limit)
+  [pending/high] Revisar deuda técnica pedidos: fetch duplicado, pricing duplicado (computeItemPricing client vs pricing.ts server), 22 useStates, dialog gigante
 
 ## ���� �� �� 🟡 Tareas pendientes (high priority)
   [pending/high] Tomar screenshots de pasos clave
