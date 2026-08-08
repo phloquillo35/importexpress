@@ -48,7 +48,7 @@ interface Product {
   stock: number
   minStock: number
   isAvailable: boolean
-  category: { name: string; slug: string } | null
+  category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
 interface Category {
@@ -359,8 +359,8 @@ export default function AdminProductosPage() {
                 return (
                 <TableRow id={`product-${product.id}`} key={product.id} className="border-border hover:bg-muted transition-all duration-1000">
                   <TableCell className="font-medium text-foreground cursor-pointer max-w-[280px]" onClick={() => setViewProduct(product)}><span className="truncate block" title={product.name}>{product.name}</span></TableCell>
-                  <TableCell className="text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
-                    {product.category?.name || "—"}
+                  <TableCell className="text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)} title={product.category?.parent ? `${product.category.parent.name} / ${product.category.name}` : (product.category?.name || "")}>
+                    {product.category?.parent?.name || product.category?.name || "—"}
                   </TableCell>
                   <TableCell className="text-right text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>${(product.costUSDT || 0).toFixed(2)}</TableCell>
                   <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
