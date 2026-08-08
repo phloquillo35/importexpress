@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { useSearchParams } from "next/navigation"
-import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react"
+import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD } from "@/lib/utils"
@@ -131,7 +131,7 @@ interface Product {
   name: string
   priceUSD: number
   stock: number
-  category?: { name: string } | null
+  category?: { name: string; parent?: { name: string } | null } | null
   costUSDT?: number
   shippingCost?: number
   finalPriceUSD?: number
@@ -167,8 +167,13 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [products, setProducts] = useState<Product[]>([])
-  const [searchProd, setSearchProd] = useState("")
+  // Product search states (server-side with pagination)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [searchPage, setSearchPage] = useState(1)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchHasMore, setSearchHasMore] = useState(false)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number }[]>([])
   const [stores, setStores] = useState<StoreType[]>([])
   const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
@@ -316,12 +321,78 @@ export default function PedidosPage() {
   }
 
   useEffect(() => {
-    fetch("/api/productos?limit=100").then(r => r.json()).then(d => setProducts(d.products || [])).catch(() => toast.error("Error al cargar productos"))
     fetch("/api/tiendas").then(r => r.json()).then(d => setStores(Array.isArray(d) ? d : [])).catch(() => toast.error("Error al cargar tiendas"))
     fetch("/api/configuracion").then(r => r.json()).then(data => {
       setExchangeRate(Number(data.exchange_rate) || 1)
       setUsdtRate(Number(data.usdt_rate) || 1)
     }).catch(() => {})
+  }, [])
+
+  // Search functions for server-side product search with pagination
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    setSearchPage(1) // Reset to first page on new search
+    setSearchHasMore(true)
+
+    // Clear previous debounce
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+
+    // Debounce 300ms before hitting the API
+    debounceRef.current = setTimeout(() => {
+      searchProducts(query, 1)
+    }, 300)
+  }
+
+  const searchProducts = async (query: string, page: number) => {
+    // Empty query: clear results and stop
+    if (!query.trim()) {
+      setSearchResults([])
+      setSearchHasMore(false)
+      return
+    }
+
+    setSearchLoading(true)
+    try {
+      const res = await fetch(`/api/productos?admin=1&search=${encodeURIComponent(query)}&page=${page}&limit=50`)
+      if (!res.ok) {
+        throw new Error("Error al buscar productos")
+      }
+      const data = await res.json()
+      const products: Product[] = data.products || []
+
+      // First page replaces results; subsequent pages append
+      if (page === 1) {
+        setSearchResults(products)
+      } else {
+        setSearchResults(prev => [...prev, ...products])
+      }
+
+      // More pages exist if current page < total pages
+      setSearchHasMore(data.page < data.totalPages)
+    } catch (err) {
+      console.error(err)
+      toast.error("Error al buscar productos")
+      setSearchHasMore(false)
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const loadMoreSearch = () => {
+    const nextPage = searchPage + 1
+    setSearchPage(nextPage)
+    searchProducts(searchQuery, nextPage)
+  }
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
   }, [])
 
   const statusPriority: Record<string, number> = {
@@ -378,25 +449,6 @@ export default function PedidosPage() {
   function removeFromCart(productId: string) {
     setCart(cart.filter(c => c.productId !== productId))
   }
-
-  const filteredProducts = products.filter(p => {
-    const q = searchProd.toLowerCase().trim()
-    if (!q) return true
-    if (p.name.toLowerCase().includes(q)) return true
-    if (p.category?.name?.toLowerCase().includes(q)) return true
-    const num = parseFloat(q.replace(/[$,.]/g, ""))
-    const isNumeric = !isNaN(num)
-    if (isNumeric) {
-      if (p.costUSDT === num) return true
-      if (p.shippingCost === num) return true
-      if (p.finalPriceUSD === num) return true
-      if (p.finalPriceARS === num) return true
-      if (p.stock === num) return true
-    }
-    if ((q === "disponible" || q === "si" || q === "sí") && p.isAvailable) return true
-    if ((q === "no" || q === "oculto") && p.isAvailable === false) return true
-    return false
-  })
 
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
 
@@ -884,14 +936,33 @@ export default function PedidosPage() {
               <Label>Productos</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={searchProd} onChange={(e) => setSearchProd(e.target.value)} placeholder="Buscar por nombre, categoría, costos, stock, disponibilidad" className="pl-9 bg-muted border-border text-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Buscar por nombre, marca, categoría, precio, stock..."
+                  className="pl-9 bg-muted border-border text-foreground"
+                  autoFocus
+                />
+                {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />}
               </div>
-              <div className="max-h-40 overflow-y-auto space-y-1">
-                {filteredProducts.slice(0, 10).map((p) => (
-                  <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors">
-                    {p.name} <span className="text-muted-foreground">({formatUSD(p.priceUSD)})</span>
+
+              <div className="max-h-60 overflow-y-auto space-y-1">
+                {searchResults.map((p) => (
+                  <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between gap-2">
+                    <span className="truncate">
+                      {p.name}{p.category?.parent?.name && ` (${p.category.parent.name} / ${p.category.name})`}
+                    </span>
+                    <span className="text-muted-foreground text-xs whitespace-nowrap">{formatUSD(p.priceUSD)}</span>
                   </button>
                 ))}
+                {searchHasMore && (
+                  <button type="button" onClick={loadMoreSearch} className="w-full text-center py-2 text-sm text-primary hover:underline">
+                    Cargar más resultados...
+                  </button>
+                )}
+                {!searchLoading && searchQuery && searchResults.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">Sin resultados para &quot;{searchQuery}&quot;</p>
+                )}
               </div>
             </div>
             {cart.length > 0 && (
