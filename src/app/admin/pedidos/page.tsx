@@ -946,7 +946,7 @@ export default function PedidosPage() {
                 {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />}
               </div>
 
-              <div className="max-h-60 overflow-y-auto space-y-1">
+              <div className="max-h-40 overflow-y-auto space-y-1">
                 {searchResults.map((p) => (
                   <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between gap-2">
                     <span className="truncate">
