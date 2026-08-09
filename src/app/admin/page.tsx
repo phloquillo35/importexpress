@@ -20,7 +20,13 @@ async function getDashboardData(periodDays: number = 30) {
       prisma.product.findMany({ where: { deletedAt: null, createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, take: 5, include: { category: { select: { name: true } } } }),
       prisma.transaction.findMany({ where: { deletedAt: null, date: { gte: since } }, orderBy: { date: "desc" } }),
       prisma.order.findMany({ where: { deletedAt: null, createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
-      prisma.category.findMany({ include: { _count: { select: { products: true } } } }),
+      prisma.category.findMany({
+        where: { deletedAt: null },
+        include: {
+          _count: { select: { products: { where: { deletedAt: null } } } },
+          children: { select: { _count: { select: { products: { where: { deletedAt: null } } } } } },
+        },
+      }),
       prisma.order.findMany({ where: { deletedAt: null, paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
     ])
 
@@ -48,10 +54,12 @@ async function getDashboardData(periodDays: number = 30) {
       incomeUSD: incomeAgg._sum.amountUSD ?? 0,
       expenseUSD: expenseAgg._sum.amountUSD ?? 0,
       recentTransactions,
-      categories: categories.map((c) => ({
-        name: c.name,
-        count: c._count.products,
-      })),
+      categories: categories
+        .filter((c) => !c.parentId)
+        .map((c) => ({
+          name: c.name,
+          count: c._count.products + c.children.reduce((sum, child) => sum + child._count.products, 0),
+        })),
       pendingPaymentsCount,
       totalPendingUSD,
     }

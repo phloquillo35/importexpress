@@ -99,12 +99,12 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={<Package className="w-5 h-5" />} label="Total Productos" value={data.totalProducts} color="text-[#F59E0B]" bg="bg-[#F59E0B]/10" />
-        <KpiCard icon={<AlertTriangle className="w-5 h-5" />} label="Stock Bajo" value={data.lowStockProducts.length} color="text-red-400" bg="bg-red-500/10" />
-        <KpiCard icon={<DollarSign className="w-5 h-5" />} label="Ingresos del Período" value={formatUSD(data.incomeUSD)} color="text-[#22C55E]" bg="bg-[#0071e3]/10" />
-        <KpiCard icon={<TrendingDown className="w-5 h-5" />} label="Egresos del Período" value={formatUSD(data.expenseUSD)} color="text-red-400" bg="bg-red-500/10" />
-        <KpiCard icon={<DollarSign className="w-5 h-5" />} label="Cuentas por cobrar" value={formatUSD(data.totalPendingUSD)} color="text-orange-400" bg="bg-orange-500/10" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <KpiCard icon={<Package className="w-5 h-5" />} label="Total Productos" value={data.totalProducts} color="text-[#F59E0B]" bg="bg-[#F59E0B]/10" href="/admin/productos" />
+        <KpiCard icon={<AlertTriangle className="w-5 h-5" />} label="Stock Bajo" value={data.lowStockProducts.length} color="text-red-400" bg="bg-red-500/10" href="/admin/stock" />
+        <KpiCard icon={<DollarSign className="w-5 h-5" />} label="Ingresos del Período" value={formatUSD(data.incomeUSD)} color="text-[#22C55E]" bg="bg-[#0071e3]/10" href="/admin/finanzas" />
+        <KpiCard icon={<TrendingDown className="w-5 h-5" />} label="Egresos del Período" value={formatUSD(data.expenseUSD)} color="text-red-400" bg="bg-red-500/10" href="/admin/finanzas" />
+        <KpiCard icon={<DollarSign className="w-5 h-5" />} label="Cuentas por cobrar" value={formatUSD(data.totalPendingUSD)} color="text-orange-400" bg="bg-orange-500/10" href="/admin/pedidos" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -131,26 +131,28 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
         <div className="bg-card border border-border rounded-xl p-4 lg:p-6">
           <h2 className="text-lg font-semibold text-foreground font-heading mb-4">Productos por categoría</h2>
           {pieData.length > 0 ? (
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="count" nameKey="name" paddingAngle={2}>
-                    {pieData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--foreground)" }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
+            <>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="count" nameKey="name" paddingAngle={2}>
+                      {pieData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--foreground)" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex flex-wrap gap-1.5 justify-center mt-3 max-w-full">
                 {pieData.slice(0, 5).map((c, i) => (
-                  <span key={c.name} className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                    {c.name}
+                  <span key={c.name} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[45%]">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                    <span className="truncate">{c.name}</span>
                   </span>
                 ))}
               </div>
-            </div>
+            </>
           ) : (
             <div className="h-72 flex items-center justify-center text-muted-foreground text-sm">Sin categorías</div>
           )}
@@ -320,15 +322,22 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
   )
 }
 
-function KpiCard({ icon, label, value, color, bg }: {
+function KpiCard({ icon, label, value, color, bg, href }: {
   icon: React.ReactNode
   label: string
   value: string | number
   color: string
   bg: string
+  href?: string
 }) {
+  const router = useRouter()
+
   return (
-    <div className="bg-card border border-border rounded-xl p-4 lg:p-5">
+    <div
+      onClick={() => href && router.push(href)}
+      className={`bg-card border border-border rounded-xl p-4 lg:p-5 ${href ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}`}
+      aria-label={href ? `Ir a ${label}` : undefined}
+    >
       <div className="flex items-center gap-3">
         <div className={`p-2.5 rounded-lg ${bg}`}>
           <div className={color}>{icon}</div>
