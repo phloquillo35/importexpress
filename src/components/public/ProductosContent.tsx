@@ -172,10 +172,10 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
 
           <div className="flex-1 min-w-0">
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="bg-card rounded-2xl border border-border/60 overflow-hidden">
-                    <Skeleton className="aspect-[4/3] !rounded-none bg-muted" />
+                    <Skeleton className="aspect-square sm:aspect-[4/3] !rounded-none bg-muted" />
                     <div className="p-5 space-y-3">
                       <Skeleton className="h-3 w-16 bg-muted" />
                       <Skeleton className="h-4 w-3/4 bg-muted" />
@@ -192,7 +192,7 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
               </div>
             ) : products.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+<div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {colorVariants.map(({ product, colorName }) => (
                     <ProductCard key={colorName ? `${product.id}-${colorName}` : product.id} product={product} colorName={colorName} />
                   ))}
