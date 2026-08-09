@@ -24,7 +24,7 @@ async function getDashboardData(periodDays: number = 30) {
         where: { deletedAt: null },
         include: {
           _count: { select: { products: { where: { deletedAt: null } } } },
-          children: { select: { _count: { select: { products: { where: { deletedAt: null } } } } } },
+          children: { where: { deletedAt: null }, select: { _count: { select: { products: { where: { deletedAt: null } } } } } },
         },
       }),
       prisma.order.findMany({ where: { deletedAt: null, paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
