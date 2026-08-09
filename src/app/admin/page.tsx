@@ -25,6 +25,7 @@ async function getDashboardData(periodDays: number = 30) {
         include: {
           _count: { select: { products: { where: { deletedAt: null } } } },
           children: { where: { deletedAt: null }, select: { _count: { select: { products: { where: { deletedAt: null } } } } } },
+          parent: { select: { name: true } },
         },
       }),
       prisma.order.findMany({ where: { deletedAt: null, paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
@@ -54,12 +55,10 @@ async function getDashboardData(periodDays: number = 30) {
       incomeUSD: incomeAgg._sum.amountUSD ?? 0,
       expenseUSD: expenseAgg._sum.amountUSD ?? 0,
       recentTransactions,
-      categories: categories
-        .filter((c) => !c.parentId)
-        .map((c) => ({
-          name: c.name,
-          count: c._count.products + c.children.reduce((sum, child) => sum + child._count.products, 0),
-        })),
+      categories: categories.map((c) => ({
+        name: c.parent ? `${c.name} (${c.parent.name})` : c.name,
+        count: c._count.products,
+      })),
       pendingPaymentsCount,
       totalPendingUSD,
     }
