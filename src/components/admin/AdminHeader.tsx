@@ -1,11 +1,13 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { Bell, Menu, Sun, Moon } from "lucide-react"
+import { Bell, Menu, Sun, Moon, KeyRound } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { ChangePasswordDialog } from "@/components/admin/ChangePasswordDialog"
 
 interface AdminHeaderProps {
   onMenuClick: () => void
@@ -17,6 +19,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const router = useRouter()
   const [lowStockOpen, setLowStockOpen] = useState(false)
   const [lowStockItems, setLowStockItems] = useState<{ id: string; name: string; stock: number; minStock: number }[]>([])
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false)
 
   useEffect(() => {
     async function loadNotifications() {
@@ -95,18 +98,30 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           </PopoverContent>
         </Popover>
 
-        <div className="flex items-center gap-3 ml-2 pl-3 border-l border-border">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-foreground">{session?.user?.name || "Admin"}</p>
-            <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-[#F59E0B]/20 border-2 border-[#F59E0B]/30 flex items-center justify-center">
-            <span className="text-sm font-bold text-[#F59E0B]">
-              {(session?.user?.name || "A").charAt(0).toUpperCase()}
-            </span>
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="flex items-center gap-3 ml-2 pl-3 border-l border-border cursor-pointer rounded-lg hover:bg-muted transition-colors px-1 py-1"
+            aria-label="Opciones de usuario"
+          >
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-foreground">{session?.user?.name || "Admin"}</p>
+              <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#F59E0B]/20 border-2 border-[#F59E0B]/30 flex items-center justify-center">
+              <span className="text-sm font-bold text-[#F59E0B]">
+                {(session?.user?.name || "A").charAt(0).toUpperCase()}
+              </span>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-card text-foreground">
+            <DropdownMenuItem onClick={() => setChangePasswordOpen(true)} className="cursor-pointer">
+              <KeyRound className="w-4 h-4 mr-2" /> Cambiar contraseña
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </header>
   )
 }
