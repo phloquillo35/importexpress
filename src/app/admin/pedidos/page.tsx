@@ -895,66 +895,73 @@ export default function PedidosPage() {
       </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className=" bg-card text-foreground max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Nuevo pedido</DialogTitle></DialogHeader>
-          <form className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nombre</Label>
-                <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="bg-muted border-border text-foreground" />
+<DialogContent className="bg-card text-foreground max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Nuevo pedido</DialogTitle>
+          </DialogHeader>
+          <form className="flex-1 min-h-0 flex flex-col">
+            <div className="space-y-3 overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Nombre</Label>
+                  <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="bg-muted border-border text-foreground" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Apellido</Label>
+                  <Input value={form.clientSurname} onChange={(e) => setForm({ ...form, clientSurname: e.target.value })} className="bg-muted border-border text-foreground" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Apellido</Label>
-                <Input value={form.clientSurname} onChange={(e) => setForm({ ...form, clientSurname: e.target.value })} className="bg-muted border-border text-foreground" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Teléfono</Label>
+                  <Input value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} className="bg-muted border-border text-foreground" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Email</Label>
+                  <Input type="email" value={form.clientEmail} onChange={(e) => setForm({ ...form, clientEmail: e.target.value })} className="bg-muted border-border text-foreground" />
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Teléfono</Label>
-                <Input value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} className="bg-muted border-border text-foreground" />
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Tienda</Label>
+                <Select value={form.storeId} onValueChange={(v: string | null) => setForm({ ...form, storeId: v === "__none" ? "" : v || "" })}>
+                  <SelectTrigger className="bg-muted border-border text-foreground">
+                    <SelectValue placeholder="Seleccionar tienda" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card text-foreground">
+                    <SelectItem value="__none">Sin tienda</SelectItem>
+                    {stores.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={form.clientEmail} onChange={(e) => setForm({ ...form, clientEmail: e.target.value })} className="bg-muted border-border text-foreground" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Tienda</Label>
-              <Select value={form.storeId} onValueChange={(v: string | null) => setForm({ ...form, storeId: v === "__none" ? "" : v || "" })}>
-                <SelectTrigger className="bg-muted border-border text-foreground">
-                  <SelectValue placeholder="Seleccionar tienda" />
-                </SelectTrigger>
-                <SelectContent className=" bg-card text-foreground">
-                  <SelectItem value="__none">Sin tienda</SelectItem>
-                  {stores.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Productos</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Buscar por nombre, marca, categoría, precio, stock..."
-                  className="pl-9 bg-muted border-border text-foreground"
-                  autoFocus
-                />
-                {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Productos</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    placeholder="Buscar por nombre, marca, categoría, precio, stock..."
+                    className="pl-9 bg-muted border-border text-foreground"
+                    autoFocus
+                  />
+                  {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />}
+                </div>
               </div>
 
-              <div className="max-h-40 overflow-y-auto space-y-1">
-                {searchResults.map((p) => (
-                  <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between gap-2">
-                    <span className="truncate">
-                      {p.name}{p.category?.parent?.name && ` (${p.category.parent.name} / ${p.category.name})`}
-                    </span>
-                    <span className="text-muted-foreground text-xs whitespace-nowrap">{formatUSD(p.priceUSD)}</span>
-                  </button>
-                ))}
+              <div className="max-h-40 overflow-y-auto rounded-lg border border-border">
+                {searchResults.map((p) => {
+                  const displayName = p.name.split(" / ")[0]
+                  return (
+                    <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between gap-2 border-b border-border last:border-b-0">
+                      <span className="truncate" title={p.name}>
+                        {displayName}
+                      </span>
+                      <span className="text-muted-foreground text-xs whitespace-nowrap shrink-0">{formatUSD(p.priceUSD)}</span>
+                    </button>
+                  )
+                })}
                 {searchHasMore && (
                   <button type="button" onClick={loadMoreSearch} className="w-full text-center py-2 text-sm text-primary hover:underline">
                     Cargar más resultados...
@@ -964,24 +971,26 @@ export default function PedidosPage() {
                   <p className="text-center text-muted-foreground py-4">Sin resultados para &quot;{searchQuery}&quot;</p>
                 )}
               </div>
-            </div>
-            {cart.length > 0 && (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                {cart.map((item) => (
-                  <div key={item.productId} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
-                    <button type="button" onClick={() => removeFromCart(item.productId)} className="text-red-400 text-xs hover:text-red-300">Quitar</button>
+
+              {cart.length > 0 && (
+                <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 max-h-40 overflow-y-auto">
+                  {cart.map((item) => (
+                    <div key={item.productId} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate text-muted-foreground">{item.name} × {item.quantity}</span>
+                      <button type="button" onClick={() => removeFromCart(item.productId)} className="text-red-400 text-xs hover:text-red-300 whitespace-nowrap shrink-0">Quitar</button>
+                    </div>
+                  ))}
+                  <div className="border-t border-border pt-2 flex justify-between font-medium">
+                    <span className="text-foreground">Total</span>
+                    <span className="text-[#F59E0B]">{formatUSD(totalUSD)}</span>
                   </div>
-                ))}
-                <div className="border-t border-border pt-2 flex justify-between font-medium">
-                  <span className="text-foreground">Total</span>
-                  <span className="text-[#F59E0B]">{formatUSD(totalUSD)}</span>
                 </div>
-              </div>
-            )}
-            <div className="flex justify-end gap-3 pt-2">
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 mt-3 border-t border-border shrink-0">
               <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
-                <Button type="button" disabled={saving} onClick={handleCreateOrder} className="bg-primary hover:bg-primary/90 text-primary-foreground">{saving ? "Guardando..." : "Crear pedido"}</Button>
+                <Button type="button" disabled={saving} onClick={handleCreateOrder} className="bg-primary hover:bg-primary/90 text-primary-foreground" data-testid="guardar-pedido">{saving ? "Guardando..." : "Crear pedido"}</Button>
             </div>
           </form>
         </DialogContent>
