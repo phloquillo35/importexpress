@@ -29,6 +29,9 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
   const [cartOpen, setCartOpen] = useState(false)
   const [whatsAppOpen, setWhatsAppOpen] = useState(false)
   const [search, setSearch] = useState("")
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  )
   const { count } = useCart()
   const { theme, setTheme } = useTheme()
 
@@ -38,6 +41,12 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
       return unlockScroll
     }
   }, [menuOpen, cartOpen])
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   return (
     <>
@@ -161,18 +170,6 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
                 {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 {theme === "dark" ? "Modo claro" : "Modo oscuro"}
               </button>
-              <button
-                onClick={() => { setCartOpen(true); setMenuOpen(false) }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-foreground rounded-xl hover:bg-muted transition-colors"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                Carrito
-                {count > 0 && (
-                  <span className="ml-auto w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {count > 9 ? "9+" : count}
-                  </span>
-                )}
-              </button>
             </div>
 
             <div className="border-t border-border/50 px-4 py-3 space-y-1">
@@ -205,6 +202,18 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
           </div>
         )}
       </nav>
+      {isMobile && count > 0 && (
+        <button
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 z-[55] flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 touch-manipulation"
+          aria-label={`Carrito (${count} items)`}
+        >
+          <ShoppingBag className="w-6 h-6" />
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            {count > 9 ? "9+" : count}
+          </span>
+        </button>
+      )}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
       <WhatsAppAgentSelector
         open={whatsAppOpen}
