@@ -25,6 +25,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   }, [open])
 
   function buildMessage() {
+    const origin = typeof window !== "undefined" ? window.location.origin : ""
     const lines: string[] = ["¡Hola! Quiero hacer un pedido:\n"]
     lines.push("🛒 *Productos:*")
     items.forEach((item, i) => {
@@ -32,6 +33,10 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
       lines.push(
         `${i + 1}. ${item.name} - $${item.price.toLocaleString("es-AR")} ARS x ${item.quantity} = $${subtotal.toLocaleString("es-AR")} ARS`
       )
+      const productUrl = origin ? `${origin}/productos/${item.slug}` : ""
+      if (productUrl) {
+        lines.push(`   🔗 ${productUrl}`)
+      }
     })
     lines.push(`\n💰 *Total:* $${total.toLocaleString("es-AR")} ARS`)
     lines.push(`\n👤 *Datos:*`)
