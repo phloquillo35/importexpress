@@ -1,3 +1,14 @@
+type VirtualRect = {
+  left: number
+  top: number
+  right: number
+  bottom: number
+  width: number
+  height: number
+  x: number
+  y: number
+}
+
 export function flyToCart(sourceElement: HTMLElement, container?: HTMLElement | null) {
   if (typeof window === "undefined") return
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
@@ -10,11 +21,35 @@ export function flyToCart(sourceElement: HTMLElement, container?: HTMLElement | 
     const rect = el.getBoundingClientRect()
     return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0
   }) ?? null
-  if (!target) return
+
+  let targetRect: DOMRect | VirtualRect
+
+  if (target) {
+    targetRect = target.getBoundingClientRect()
+  } else if (window.innerWidth < 768) {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const safeBottom = 34
+    const fabWidth = 56
+    const fabHeight = 56
+    const fabRight = 16
+    const fabBottom = 20
+    targetRect = {
+      left: vw - fabRight - fabWidth,
+      top: vh - safeBottom - fabBottom - fabHeight,
+      right: vw - fabRight,
+      bottom: vh - safeBottom - fabBottom,
+      width: fabWidth,
+      height: fabHeight,
+      x: vw - fabRight - fabWidth,
+      y: vh - safeBottom - fabBottom - fabHeight,
+    }
+  } else {
+    return
+  }
 
   const card = container ?? sourceElement.closest(".group") ?? sourceElement.closest('div[class*="grid"]') ?? sourceElement
   const cardRect = card.getBoundingClientRect()
-  const targetRect = target.getBoundingClientRect()
 
   const clone = card.cloneNode(true) as HTMLElement
   clone.style.position = "fixed"
