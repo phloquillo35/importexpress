@@ -133,7 +133,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         </div>
 
         {items.length > 0 && (
-          <div className="px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-border/50 space-y-3">
+          <div className="px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] border-t border-border/50 space-y-3">
             {!showForm ? (
               <>
                 <button
