@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
@@ -10,6 +10,7 @@ import { WhatsAppAgentSelector } from "@/components/public/WhatsAppAgentSelector
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCart } from "@/context/CartContext"
 import { swatchStyle } from "@/lib/colors"
+import { flyToCart } from "@/lib/flyToCart"
 
 interface Product {
   id: string
@@ -41,6 +42,7 @@ function ProductDetailContent() {
   const [selectedColor, setSelectedColor] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [whatsAppOpen, setWhatsAppOpen] = useState(false)
+  const imagePanelRef = useRef<HTMLDivElement>(null)
 
   function parseProductImages(images: unknown): { colors: string[]; byColor: Record<string, string[]> } {
     if (!images || !Array.isArray(images) || images.length === 0) {
@@ -175,7 +177,7 @@ function ProductDetailContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
         <div className="space-y-4">
-          <div className="aspect-square bg-muted rounded-2xl flex items-center justify-center overflow-hidden relative">
+          <div ref={imagePanelRef} className="aspect-square bg-muted rounded-2xl flex items-center justify-center overflow-hidden relative">
             {currentImages.length > 0 ? (
               <>
                 <img
@@ -280,7 +282,11 @@ function ProductDetailContent() {
 
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => addItem({ slug: product.slug, color: parsed.colors.length <= 1 ? null : selectedColor, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[currentIndex] || product.images?.[0]) ?? null })}
+              onClick={(e) => {
+                e.preventDefault()
+                flyToCart(e.currentTarget, imagePanelRef.current)
+                addItem({ slug: product.slug, color: parsed.colors.length <= 1 ? null : selectedColor, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[currentIndex] || product.images?.[0]) ?? null })
+              }}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
             >
               <Plus className="w-5 h-5" />

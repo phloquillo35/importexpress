@@ -6,6 +6,7 @@ import { Package, ShoppingBag } from "lucide-react"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { useCart } from "@/context/CartContext"
 import { colorSwatch, swatchStyle } from "@/lib/colors"
+import { flyToCart } from "@/lib/flyToCart"
 
 interface ProductCardProps {
   product: {
@@ -61,9 +62,10 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
   const price = Math.round(displayPrice)
   const href = colorName ? `/productos/${product.slug}?color=${encodeURIComponent(colorName)}` : `/productos/${product.slug}`
 
-  function handleAdd(e: React.MouseEvent) {
+  function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
     e.stopPropagation()
+    flyToCart(e.currentTarget)
     addItem({
       slug: product.slug,
       color: colorName || null,
