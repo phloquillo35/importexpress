@@ -2,7 +2,14 @@ export function flyToCart(sourceElement: HTMLElement, container?: HTMLElement | 
   if (typeof window === "undefined") return
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-  const target = document.querySelector<HTMLButtonElement>('button[aria-label="Carrito"], button[aria-label^="Carrito "]')
+  const candidates = document.querySelectorAll<HTMLButtonElement>(
+    'button[aria-label="Carrito"], button[aria-label^="Carrito "]'
+  )
+  const target = Array.from(candidates).find(el => {
+    const style = window.getComputedStyle(el)
+    const rect = el.getBoundingClientRect()
+    return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0
+  }) ?? null
   if (!target) return
 
   const card = container ?? sourceElement.closest(".group") ?? sourceElement.closest('div[class*="grid"]') ?? sourceElement
