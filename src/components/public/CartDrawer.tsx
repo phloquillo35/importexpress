@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react"
 import { useCart } from "@/context/CartContext"
 import { lockScroll, unlockScroll } from "@/lib/utils"
+import { WhatsAppAgentSelector } from "./WhatsAppAgentSelector"
 
 interface CartDrawerProps {
   open: boolean
@@ -14,6 +15,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, clearCart, total } = useCart()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: "", phone: "", address: "" })
+  const [pendingWhatsAppMessage, setPendingWhatsAppMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -21,8 +23,6 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
       return unlockScroll
     }
   }, [open])
-
-  const whatsappNumber = "5491123456789"
 
   function buildMessage() {
     const lines: string[] = ["¡Hola! Quiero hacer un pedido:\n"]
@@ -45,7 +45,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const msg = buildMessage()
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank")
+    setPendingWhatsAppMessage(msg)
     setForm({ name: "", phone: "", address: "" })
     setShowForm(false)
     onClose()
@@ -172,7 +172,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 />
                 <button
                   type="submit"
-                  className="w-full py-3 bg-[#34c759] hover:bg-[#28a745] text-white text-sm font-medium rounded-full transition-colors"
+                  className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
                 >
                   Enviar pedido por WhatsApp
                 </button>
@@ -188,6 +188,12 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           </div>
         )}
       </div>
+
+      <WhatsAppAgentSelector
+        open={pendingWhatsAppMessage !== null}
+        onClose={() => setPendingWhatsAppMessage(null)}
+        message={pendingWhatsAppMessage ?? ""}
+      />
     </>
   )
 }

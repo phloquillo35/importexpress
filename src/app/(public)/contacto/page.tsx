@@ -1,20 +1,12 @@
 "use client"
 
 import { MessageCircle, Camera, Mail, MapPin } from "lucide-react"
-import Link from "next/link"
+import { useWhatsAppConfig } from "@/hooks/useWhatsAppConfig"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const contactInfo = [
+const staticCards = [
   {
-    icon: MessageCircle,
-    label: "WhatsApp",
-    value: "+54 9 11 2345-6789",
-    href: "https://wa.me/5491123456789",
-    action: "Escribinos",
-    color: "text-[#34c759]",
-    bg: "bg-[#34c759]/10",
-    hover: "hover:bg-[#34c759]/20",
-  },
-  {
+    key: "instagram",
     icon: Camera,
     label: "Instagram",
     value: "@lopedis_lotenes.01",
@@ -25,6 +17,7 @@ const contactInfo = [
     hover: "hover:bg-[#0071e3]/20",
   },
   {
+    key: "email",
     icon: Mail,
     label: "Email",
     value: "info@importexpress.com",
@@ -37,6 +30,22 @@ const contactInfo = [
 ]
 
 export default function ContactoPage() {
+  const { agents, loading } = useWhatsAppConfig()
+
+  const whatsAppCards = agents.map((agent) => ({
+    key: `whatsapp-${agent.id}`,
+    icon: MessageCircle,
+    label: agent.name,
+    value: agent.displayNumber,
+    href: `https://wa.me/${agent.number}`,
+    action: "Escribinos",
+    color: "text-[#0071e3]",
+    bg: "bg-[#0071e3]/10",
+    hover: "hover:bg-[#0071e3]/20",
+  }))
+
+  const cards = [...whatsAppCards, ...staticCards]
+
   return (
     <div>
       <div className="border-b border-border/50">
@@ -51,12 +60,27 @@ export default function ContactoPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-16">
-          {contactInfo.map((item) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-16">
+          {loading && (
+            <>
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col items-center gap-4 p-8 bg-card rounded-2xl border border-border/60">
+                  <Skeleton className="w-16 h-16 rounded-xl bg-muted" />
+                  <div className="text-center space-y-2">
+                    <Skeleton className="h-5 w-24 bg-muted mx-auto" />
+                    <Skeleton className="h-4 w-32 bg-muted mx-auto" />
+                  </div>
+                  <Skeleton className="h-4 w-20 bg-muted" />
+                </div>
+              ))}
+            </>
+          )}
+
+          {!loading && cards.map((item) => {
             const Icon = item.icon
             return (
               <a
-                key={item.label}
+                key={item.key}
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"

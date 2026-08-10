@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext"
 import { lockScroll, unlockScroll } from "@/lib/utils"
 import { CartDrawer } from "./CartDrawer"
 import { HeroSidebar } from "./HeroSidebar"
+import { WhatsAppAgentSelector } from "./WhatsAppAgentSelector"
 
 interface Category {
   id: string
@@ -26,6 +27,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
   const isProductos = pathname.startsWith("/productos")
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false)
   const [search, setSearch] = useState("")
   const { count } = useCart()
   const { theme, setTheme } = useTheme()
@@ -56,14 +58,13 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
               <span className="font-heading font-semibold text-foreground text-sm">Lo Pedís, Lo Tenes</span>
             </Link>
 
-            <a
-              href="https://wa.me/5491123456789"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setWhatsAppOpen(true)}
               className="flex items-center justify-center w-11 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-colors"
+              aria-label="Contactar por WhatsApp"
             >
               <MessageCircle className="w-4 h-4" />
-            </a>
+            </button>
           </div>
 
           {/* Desktop */}
@@ -123,15 +124,13 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
                   </span>
                 )}
               </button>
-              <a
-                href="https://wa.me/5491123456789"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => setWhatsAppOpen(true)}
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">WhatsApp</span>
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -207,6 +206,11 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
         )}
       </nav>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <WhatsAppAgentSelector
+        open={whatsAppOpen}
+        onClose={() => setWhatsAppOpen(false)}
+        message="Hola, quiero hacer una consulta por WhatsApp."
+      />
     </>
   )
 }

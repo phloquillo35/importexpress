@@ -6,6 +6,7 @@ import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus,
 import Link from "next/link"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { ProductCard } from "@/components/public/ProductCard"
+import { WhatsAppAgentSelector } from "@/components/public/WhatsAppAgentSelector"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCart } from "@/context/CartContext"
 import { swatchStyle } from "@/lib/colors"
@@ -39,6 +40,7 @@ function ProductDetailContent() {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
   const [selectedColor, setSelectedColor] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false)
 
   function parseProductImages(images: unknown): { colors: string[]; byColor: Record<string, string[]> } {
     if (!images || !Array.isArray(images) || images.length === 0) {
@@ -161,7 +163,8 @@ function ProductDetailContent() {
   const arsPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
+    <>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
       <Link
         href="/productos"
         className="inline-flex items-center gap-2 text-sm text-foreground/70 dark:text-muted-foreground hover:text-primary mb-8 transition-colors font-medium"
@@ -283,15 +286,13 @@ function ProductDetailContent() {
               <Plus className="w-5 h-5" />
               Agregar al carrito
             </button>
-            <a
-              href={`https://wa.me/5491123456789?text=${encodeURIComponent(`Hola! Me interesa el producto: ${product.name} (${arsPrice ? "$" + Math.round(arsPrice).toLocaleString("es-AR") + " ARS" : "consultar precio"})`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setWhatsAppOpen(true)}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
             >
               <ShoppingBag className="w-5 h-5" />
               Consultar por WhatsApp
-            </a>
+            </button>
           </div>
 
           {product.costUSD && (
@@ -330,7 +331,14 @@ function ProductDetailContent() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+
+      <WhatsAppAgentSelector
+        open={whatsAppOpen}
+        onClose={() => setWhatsAppOpen(false)}
+        message={`Hola! Me interesa el producto: ${product.name} (${arsPrice ? "$" + Math.round(arsPrice).toLocaleString("es-AR") + " ARS" : "consultar precio"})`}
+      />
+    </>
   )
 }
 

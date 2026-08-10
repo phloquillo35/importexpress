@@ -2,12 +2,17 @@ import { prisma } from "@/lib/prisma"
 import { requireRole } from "@/lib/auth"
 import { calculateFinalPrice } from "@/lib/pricing"
 
-const DEFAULT_KEYS = ["exchange_rate", "usdt_rate", "business_name", "whatsapp", "instagram", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"] as const
+const DEFAULT_KEYS = ["exchange_rate", "usdt_rate", "business_name", "whatsapp", "whatsapp_david", "whatsapp_david_name", "whatsapp_brian", "whatsapp_brian_name", "instagram", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"] as const
 const DEFAULTS: Record<string, string> = {
   exchange_rate: "1350",
   usdt_rate: "1400",
   business_name: "Lo Pedís, Lo Tenes",
+  // Legacy/fallback: se mantiene por compatibilidad, el front usa whatsapp_david/whatsapp_brian
   whatsapp: "5491123456789",
+  whatsapp_david: "5493813360558",
+  whatsapp_david_name: "David Adbes",
+  whatsapp_brian: "5493816658420",
+  whatsapp_brian_name: "Brian Carrizo",
   instagram: "@lopedis_lotenes.01",
   smtp_host: "",
   smtp_port: "587",

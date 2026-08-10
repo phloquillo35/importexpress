@@ -62,7 +62,22 @@ function Footer() {
           <div>
             <h3 className="text-xs font-semibold text-secondary-foreground uppercase tracking-wider mb-4">Contacto</h3>
             <div className="space-y-2.5 text-xs text-muted-foreground">
-              <p>WhatsApp: +54 9 11 2345-6789</p>
+              <Link
+                href="https://wa.me/5493813360558"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:text-primary transition-colors"
+              >
+                WhatsApp: David — +54 9 381 336-0558
+              </Link>
+              <Link
+                href="https://wa.me/5493816658420"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:text-primary transition-colors"
+              >
+                WhatsApp: Brian — +54 9 381 665-8420
+              </Link>
               <p>Instagram: @lopedis_lotenes.01</p>
               <p>Tucumán, Argentina</p>
             </div>

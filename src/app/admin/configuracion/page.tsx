@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { clearExchangeRateCache } from "@/lib/exchange-rate"
-import { Settings, Save, Mail } from "lucide-react"
+import { Save, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,10 @@ export default function ConfiguracionPage() {
     usdt_rate: "",
     business_name: "",
     whatsapp: "",
+    whatsapp_david: "",
+    whatsapp_david_name: "",
+    whatsapp_brian: "",
+    whatsapp_brian_name: "",
     instagram: "",
     smtp_host: "",
     smtp_port: "587",
@@ -33,6 +37,10 @@ export default function ConfiguracionPage() {
           usdt_rate: data.usdt_rate || "",
           business_name: data.business_name || "",
           whatsapp: data.whatsapp || "",
+          whatsapp_david: data.whatsapp_david || "",
+          whatsapp_david_name: data.whatsapp_david_name || "",
+          whatsapp_brian: data.whatsapp_brian || "",
+          whatsapp_brian_name: data.whatsapp_brian_name || "",
           instagram: data.instagram || "",
           smtp_host: data.smtp_host || "",
           smtp_port: data.smtp_port || "587",
@@ -45,14 +53,26 @@ export default function ConfiguracionPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Normaliza un número de WhatsApp: quita todo lo no numérico y antepone 549 si falta.
+  function normalizeWhatsAppNumber(input: string): string {
+    const digits = input.replace(/\D/g, "")
+    if (!digits) return ""
+    return digits.startsWith("549") ? digits : `549${digits}`
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     try {
+      const payload = {
+        ...form,
+        whatsapp_david: normalizeWhatsAppNumber(form.whatsapp_david),
+        whatsapp_brian: normalizeWhatsAppNumber(form.whatsapp_brian),
+      }
       const res = await fetch("/api/configuracion", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) throw new Error()
       clearExchangeRateCache()
@@ -128,15 +148,49 @@ export default function ConfiguracionPage() {
           <h2 className="text-lg font-semibold text-foreground font-heading">Contacto</h2>
 
           <div className="space-y-2">
-            <Label htmlFor="whatsapp" className="text-muted-foreground">WhatsApp</Label>
+            <Label htmlFor="whatsapp_david" className="text-muted-foreground">WhatsApp — David Adbes</Label>
             <Input
-              id="whatsapp"
-              value={form.whatsapp}
-              onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+              id="whatsapp_david"
+              value={form.whatsapp_david}
+              onChange={(e) => setForm({ ...form, whatsapp_david: e.target.value })}
               className="bg-muted border-border text-foreground"
-              placeholder="5491123456789"
+              placeholder="3813360558"
             />
-            <p className="text-xs text-muted-foreground">Número sin + ni espacios. Ej: 5491123456789</p>
+            <p className="text-xs text-muted-foreground">Número sin + ni espacios. Se guarda con prefijo 549 automáticamente.</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp_david_name" className="text-muted-foreground">Nombre — David Adbes</Label>
+            <Input
+              id="whatsapp_david_name"
+              value={form.whatsapp_david_name}
+              onChange={(e) => setForm({ ...form, whatsapp_david_name: e.target.value })}
+              className="bg-muted border-border text-foreground"
+              placeholder="David Adbes"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp_brian" className="text-muted-foreground">WhatsApp — Brian Carrizo</Label>
+            <Input
+              id="whatsapp_brian"
+              value={form.whatsapp_brian}
+              onChange={(e) => setForm({ ...form, whatsapp_brian: e.target.value })}
+              className="bg-muted border-border text-foreground"
+              placeholder="3816658420"
+            />
+            <p className="text-xs text-muted-foreground">Número sin + ni espacios. Se guarda con prefijo 549 automáticamente.</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp_brian_name" className="text-muted-foreground">Nombre — Brian Carrizo</Label>
+            <Input
+              id="whatsapp_brian_name"
+              value={form.whatsapp_brian_name}
+              onChange={(e) => setForm({ ...form, whatsapp_brian_name: e.target.value })}
+              className="bg-muted border-border text-foreground"
+              placeholder="Brian Carrizo"
+            />
           </div>
 
           <div className="space-y-2">

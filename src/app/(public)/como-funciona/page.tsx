@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Search, Ship, CreditCard, ChevronDown, MessageCircle } from "lucide-react"
-import Link from "next/link"
+import { WhatsAppAgentSelector } from "@/components/public/WhatsAppAgentSelector"
 
 const faqs = [
   {
@@ -33,6 +33,7 @@ const faqs = [
 
 export default function ComoFuncionaPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false)
 
   return (
     <div>
@@ -99,15 +100,13 @@ export default function ComoFuncionaPage() {
           <p className="text-foreground/70 dark:text-muted-foreground mb-8 max-w-lg mx-auto">
             Contactanos por WhatsApp y te asesoramos sin compromiso
           </p>
-          <Link
-            href="https://wa.me/5491123456789"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setWhatsAppOpen(true)}
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors"
           >
             <MessageCircle className="w-5 h-5" />
             Escribinos por WhatsApp
-          </Link>
+          </button>
         </div>
 
         <div className="max-w-2xl mx-auto">
@@ -141,6 +140,12 @@ export default function ComoFuncionaPage() {
           </div>
         </div>
       </div>
+
+      <WhatsAppAgentSelector
+        open={whatsAppOpen}
+        onClose={() => setWhatsAppOpen(false)}
+        message="Hola, quiero hacer una consulta por WhatsApp."
+      />
     </div>
   )
 }
