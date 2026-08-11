@@ -6,6 +6,7 @@ import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, Package, AlertCir
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
 import { HeroSidebar } from "@/components/public/HeroSidebar"
+import { getProductColorVariants } from "@/lib/colors"
 
 interface Product {
   id: string
@@ -29,13 +30,6 @@ interface Category {
   parent: { id: string; name: string; slug: string } | null
   _count: { products: number }
   children: { id: string; name: string; slug: string; _count: { products: number } }[]
-}
-
-function getProductColors(images: unknown): string[] {
-  if (!images || !Array.isArray(images) || images.length === 0) return []
-  if (typeof images[0] === "string") return []
-  const colors = [...new Set(images.map((img: unknown) => (img as { color?: string }).color).filter(Boolean))] as string[]
-  return colors
 }
 
 export function ProductosContent({ initialCategories = [] }: { initialCategories?: Category[] }) {
@@ -106,20 +100,7 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
     setShowFilters(false)
   }
 
-  const colorVariants = useMemo(() => {
-    const variants: Array<{ product: Product; colorName: string | null }> = []
-    for (const product of products) {
-      const colors = getProductColors(product.images)
-      if (colors.length > 1) {
-        for (const color of colors) {
-          variants.push({ product, colorName: color })
-        }
-      } else {
-        variants.push({ product, colorName: null })
-      }
-    }
-    return variants
-  }, [products])
+  const colorVariants = useMemo(() => getProductColorVariants(products), [products])
   const displayTotal = total || products.length
 
   return (
@@ -161,12 +142,13 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
         </div>
 
         <div className="flex gap-8">
-          <div className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-56 flex-shrink-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:overscroll-contain no-scrollbar`}>
+          <div className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-56 flex-shrink-0 lg:sticky lg:top-24`}>
             <HeroSidebar
               initialCategories={categories}
               activeCategory={searchParams.get("categoria") || undefined}
               onSelectCategory={handleSelectCategory}
               onReset={() => { updateParams({ categoria: undefined, search: undefined }); setSearch(""); setShowFilters(false) }}
+              overlayDropdown
             />
           </div>
 

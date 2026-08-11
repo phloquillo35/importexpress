@@ -93,8 +93,8 @@ export function HeroSection({ initialCategories, initialHero }: { initialCategor
     <section className="py-8 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="hidden lg:grid grid-cols-[220px_3fr_2fr] gap-4">
-          <div className="row-span-2 h-full">
-            <HeroSidebar showVerTodas initialCategories={initialCategories} />
+          <div className="row-span-2 h-full min-h-0">
+            <HeroSidebar overlayDropdown showVerTodas initialCategories={initialCategories} />
           </div>
           <div className="row-span-2 aspect-square">
             <HeroCarousel slides={carousel} />

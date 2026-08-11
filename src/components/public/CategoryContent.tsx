@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams, useSearchParams, useRouter } from "next/navigation"
 import { Package, ArrowLeft, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getProductColorVariants } from "@/lib/colors"
 
 interface Category {
   id: string
@@ -42,6 +43,8 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState(false)
 
+  const colorVariants = useMemo(() => getProductColorVariants(products), [products])
+
   useEffect(() => {
     async function load() {
       setLoading(true)
@@ -49,7 +52,7 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
       setNotFound(false)
       try {
         const apiSlug = sub || slug
-        const res = await fetch(`/api/productos?categoria=${apiSlug}&limit=50`)
+        const res = await fetch(`/api/productos?categoria=${apiSlug}&limit=100`)
         if (!res.ok) throw new Error("Error al cargar productos")
         const data = await res.json()
 
@@ -186,8 +189,8 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {products.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {colorVariants.map(({ product, colorName }) => (
+              <ProductCard key={colorName ? `${product.id}-${colorName}` : product.id} product={product} colorName={colorName} />
             ))}
           </div>
         ) : (

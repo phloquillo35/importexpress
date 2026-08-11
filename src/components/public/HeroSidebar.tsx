@@ -27,13 +27,14 @@ interface HeroSidebarProps {
   initialCategories?: Category[]
   activeCategory?: string
   showVerTodas?: boolean
+  overlayDropdown?: boolean
 }
 
 function isTouchDevice() {
   return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches
 }
 
-export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCategories, activeCategory, showVerTodas }: HeroSidebarProps) {
+export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCategories, activeCategory, showVerTodas, overlayDropdown }: HeroSidebarProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories ?? [])
   const [expanded, setExpanded] = useState<string | null>(null)
 
@@ -64,7 +65,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
   }
 
   return (
-    <aside className="w-full bg-card rounded-2xl border border-border/60 p-3 overflow-hidden">
+    <aside className={`w-full bg-card rounded-2xl border border-border/60 p-3 ${overlayDropdown ? "overflow-visible" : "overflow-hidden"}`}>
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
         Categorías
       </h3>
@@ -108,7 +109,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
                   <button
                     onClick={(e) => handleParentClick(e, cat)}
                     aria-current={isParentActive ? "true" : undefined}
-                    className={`${parentClasses} w-full`}
+                    className={`${parentClasses} w-full text-left`}
                   >
                     <Package className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                     <span className="truncate flex-1">{cat.name}</span>
@@ -141,11 +142,11 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
 
                 {hasChildren && (
                   <div
-                    className={`overflow-hidden transition-all duration-200 ${
+                    className={`${overlayDropdown ? "absolute left-0 right-0 top-full z-50" : ""} overflow-hidden transition-all duration-200 ${
                       isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
-                    <div className="ml-5 pl-2 border-l border-border/40 space-y-0.5 py-0.5">
+                    <div className={`${overlayDropdown ? "mt-1 rounded-xl border border-border/60 bg-card p-2 shadow-xl space-y-0.5" : "ml-5 pl-2 border-l border-border/40 space-y-0.5 py-0.5"}`}>
                       {onSelectCategory ? (
                         <button
                           onClick={() => onSelectCategory(cat.slug)}

@@ -72,3 +72,26 @@ export function swatchStyle(colorName: string): React.CSSProperties {
   const segments = hexes.map((h, i) => `${h} ${(i / hexes.length) * 100}% ${((i + 1) / hexes.length) * 100}%`).join(", ")
   return { background: `conic-gradient(${segments})` }
 }
+
+function getProductColors(images: unknown): string[] {
+  if (!images || !Array.isArray(images) || images.length === 0) return []
+  if (typeof images[0] === "string") return []
+  return [...new Set(images.map((img: unknown) => (img as { color?: string }).color).filter(Boolean))] as string[]
+}
+
+export function getProductColorVariants<T extends { id: string; images: unknown }>(
+  products: T[]
+): Array<{ product: T; colorName: string | null }> {
+  const variants: Array<{ product: T; colorName: string | null }> = []
+  for (const product of products) {
+    const colors = getProductColors(product.images)
+    if (colors.length > 1) {
+      for (const color of colors) {
+        variants.push({ product, colorName: color })
+      }
+    } else {
+      variants.push({ product, colorName: null })
+    }
+  }
+  return variants
+}
