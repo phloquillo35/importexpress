@@ -1,15 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, act, waitFor } from "@testing-library/react"
+import { render, screen, act } from "@testing-library/react"
 import { CartProvider, useCart } from "@/context/CartContext"
 import type { CartItem } from "@/context/CartContext"
 
 const STORAGE_KEY = "lopedis_cart"
 
+// Create a proper localStorage mock
+const createLocalStorageMock = () => {
+  const store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => { store[key] = value }),
+    removeItem: vi.fn((key: string) => { delete store[key] }),
+    clear: vi.fn(() => { Object.keys(store).forEach(k => delete store[k]) }),
+  }
+}
+
 describe("CartContext", () => {
+  let localStorageMock: ReturnType<typeof createLocalStorageMock>
+
   beforeEach(() => {
     vi.clearAllMocks()
-    localStorage.clear()
-    localStorage.getItem.mockReturnValue(null)
+    localStorageMock = createLocalStorageMock()
+    Object.defineProperty(window, "localStorage", { value: localStorageMock, writable: true })
   })
 
   afterEach(() => {
@@ -363,16 +376,16 @@ describe("CartContext", () => {
 
   describe("useCart hook", () => {
     it("should throw error when used outside provider", () => {
-      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
-
       const BadComponent = () => {
         useCart()
         return <div>Bad</div>
       }
 
-      expect(() => render(<BadComponent />)).toThrow("useCart must be used within CartProvider")
-
-      consoleError.mockRestore()
+      // The hook should throw when used outside provider
+      // This is tested by rendering without CartProvider and expecting an error
+      expect(() => {
+        render(<BadComponent />)
+      }).toThrow("useCart must be used within CartProvider")
     })
   })
 })

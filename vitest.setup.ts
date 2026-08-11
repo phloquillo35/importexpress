@@ -1,14 +1,5 @@
 import "@testing-library/jest-dom"
-import { vi, beforeAll, afterAll } from "vitest"
-
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-}
-Object.defineProperty(window, "localStorage", { value: localStorageMock })
+import { vi, beforeAll, afterAll, beforeEach } from "vitest"
 
 // Mock matchMedia
 Object.defineProperty(window, "matchMedia", {
@@ -50,18 +41,12 @@ HTMLElement.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
   y: 0,
 })
 
-// Mock document.body.appendChild
-document.body.appendChild = vi.fn()
-
 // Mock Element.prototype.animate
 Element.prototype.animate = vi.fn().mockReturnValue({
   onfinish: null,
   finished: Promise.resolve(),
   cancel: vi.fn(),
 })
-
-// Mock querySelectorAll for cart button
-document.querySelectorAll = vi.fn().mockReturnValue([])
 
 // Suppress console.error for known warnings in tests
 const originalError = console.error

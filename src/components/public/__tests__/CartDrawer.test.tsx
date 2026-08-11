@@ -1,8 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
+import { render, screen, fireEvent } from "@testing-library/react"
 import { CartDrawer } from "@/components/public/CartDrawer"
-import { CartProvider, useCart } from "@/context/CartContext"
+import { CartProvider } from "@/context/CartContext"
 import type { CartItem } from "@/context/CartContext"
+
+vi.mock("@/lib/utils", () => ({ lockScroll: vi.fn(), unlockScroll: vi.fn() }))
+vi.mock("@/components/public/WhatsAppAgentSelector", () => ({
+  WhatsAppAgentSelector: () => null,
+}))
 
 const STORAGE_KEY = "lopedis_cart"
 
@@ -184,9 +189,7 @@ describe("CartDrawer", () => {
   })
 
   it("should lock scroll when open", () => {
-    const lockScroll = vi.fn()
-    const unlockScroll = vi.fn()
-    vi.mock("@/lib/utils", () => ({ lockScroll, unlockScroll }))
+    const { lockScroll, unlockScroll } = vi.hoisted(() => import("@/lib/utils"))
 
     const { unmount } = renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
