@@ -59,7 +59,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-[60] bg-black/40" onClick={onClose} />
+        <div data-testid="cart-overlay" className="fixed inset-0 z-[60] bg-black/40" onClick={onClose} />
       )}
       <div
         className={`fixed top-0 right-0 z-[70] h-screen h-dvh w-full sm:w-[420px] bg-background shadow-2xl transition-transform duration-300 flex flex-col touch-manipulation ${
@@ -71,7 +71,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             <ShoppingBag className="w-5 h-5 text-primary" />
             <h2 className="font-heading font-semibold text-foreground text-lg">Carrito</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Cerrar carrito" data-testid="close-drawer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -90,7 +90,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                     {item.image ? (
                       <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
                     ) : (
-                      <ShoppingBag className="w-6 h-6 text-muted-foreground" />
+                      <ShoppingBag data-testid="product-placeholder" className="w-6 h-6 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -104,19 +104,25 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity - 1, item.color)}
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Disminuir cantidad"
+                      data-testid="decrease-quantity"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
+                    <span data-testid="quantity" className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity + 1, item.color)}
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Aumentar cantidad"
+                      data-testid="increase-quantity"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => removeItem(item.slug, item.color)}
                       className="flex items-center justify-center w-10 h-10 ml-1 text-[#ff3b30] hover:text-red-600 transition-colors"
+                      aria-label="Eliminar producto"
+                      data-testid="remove-item"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

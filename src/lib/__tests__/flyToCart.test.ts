@@ -88,7 +88,6 @@ describe("flyToCart", () => {
 
     // Mock cloneNode
     mockClone = document.createElement("div")
-    mockClone.style = {}
     mockClone.querySelectorAll = vi.fn().mockReturnValue([])
     mockClone.remove = vi.fn()
     mockSourceElement.cloneNode = vi.fn().mockReturnValue(mockClone)
@@ -152,7 +151,7 @@ describe("flyToCart", () => {
     flyToCart(mockSourceElement)
 
     expect(document.body.appendChild).toHaveBeenCalled()
-    const clone = (document.body.appendChild as vi.Mock).mock.calls[0][0]
+    const clone = (document.body.appendChild as ReturnType<typeof vi.fn>).mock.calls[0][0]
     expect(clone.style.position).toBe("fixed")
     expect(clone.style.zIndex).toBe("9999")
   })
@@ -188,7 +187,7 @@ describe("flyToCart", () => {
   it("should set clone styles correctly", () => {
     flyToCart(mockSourceElement)
 
-    const clone = (document.body.appendChild as vi.Mock).mock.calls[0][0]
+    const clone = (document.body.appendChild as ReturnType<typeof vi.fn>).mock.calls[0][0]
     expect(clone.style.position).toBe("fixed")
     expect(clone.style.zIndex).toBe("9999")
     expect(clone.style.pointerEvents).toBe("none")
@@ -213,7 +212,7 @@ describe("flyToCart", () => {
     flyToCart(mockSourceElement)
 
     expect(Element.prototype.animate).toHaveBeenCalled()
-    const animateCall = (Element.prototype.animate as vi.Mock).mock.calls[0]
+    const animateCall = (Element.prototype.animate as ReturnType<typeof vi.fn>).mock.calls[0]
     const keyframes = animateCall[0]
     const options = animateCall[1]
 
@@ -250,7 +249,7 @@ describe("flyToCart", () => {
 
     flyToCart(mockSourceElement)
 
-    const clone = (document.body.appendChild as vi.Mock).mock.calls[0][0]
+    const clone = (document.body.appendChild as ReturnType<typeof vi.fn>).mock.calls[0][0]
     // On mobile, it should use virtual FAB position
     expect(clone.style.left).toBeDefined()
     expect(clone.style.top).toBeDefined()

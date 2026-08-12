@@ -125,6 +125,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
                 onClick={() => setCartOpen(true)}
                 className="relative flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Carrito"
+                data-testid="cart-trigger"
               >
                 <ShoppingBag className="w-5 h-5" />
                 {count > 0 && (
@@ -207,6 +208,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
           onClick={() => setCartOpen(true)}
           className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 z-[55] flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 touch-manipulation"
           aria-label={`Carrito (${count} items)`}
+          data-testid="cart-trigger"
         >
           <ShoppingBag className="w-6 h-6" />
           <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">

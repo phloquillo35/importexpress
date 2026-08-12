@@ -3,11 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import { CartDrawer } from "@/components/public/CartDrawer"
 import { CartProvider } from "@/context/CartContext"
 import type { CartItem } from "@/context/CartContext"
-
-vi.mock("@/lib/utils", () => ({ lockScroll: vi.fn(), unlockScroll: vi.fn() }))
-vi.mock("@/components/public/WhatsAppAgentSelector", () => ({
-  WhatsAppAgentSelector: () => null,
-}))
+import { lockScroll, unlockScroll } from "@/lib/utils"
 
 const STORAGE_KEY = "lopedis_cart"
 
@@ -24,7 +20,6 @@ describe("CartDrawer", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    localStorage.getItem.mockReturnValue(null)
     vi.useFakeTimers()
   })
 
@@ -35,8 +30,7 @@ describe("CartDrawer", () => {
 
   it("should not render when closed", () => {
     renderWithProvider(<CartDrawer open={false} onClose={vi.fn()} />)
-    expect(screen.queryByText("Carrito")).not.toBeInTheDocument()
-    expect(screen.queryByText("Tu carrito está vacío")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("cart-overlay")).not.toBeInTheDocument()
   })
 
   it("should render overlay when open", () => {
@@ -51,18 +45,19 @@ describe("CartDrawer", () => {
   })
 
   it("should render cart items when open with items", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
     expect(screen.getByText("Product 1 (red)")).toBeInTheDocument()
     expect(screen.getByText("Product 2")).toBeInTheDocument()
-    expect(screen.getByText("$2.000 ARS")).toBeInTheDocument() // 1000 * 2
-    expect(screen.getByText("$2.000 ARS")).toBeInTheDocument() // 2000 * 1
+    // Both items have $2.000 ARS subtotal (1000*2 and 2000*1)
+    const subtotals = screen.getAllByText("$2.000 ARS")
+    expect(subtotals.length).toBe(2)
   })
 
   it("should show correct total", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
@@ -74,7 +69,9 @@ describe("CartDrawer", () => {
     const onClose = vi.fn()
     renderWithProvider(<CartDrawer open={true} onClose={onClose} />)
 
-    fireEvent.click(screen.getByTestId("cart-overlay"))
+    // Click on the overlay (first div with fixed inset-0)
+    const overlay = screen.getByTestId("cart-overlay")
+    fireEvent.click(overlay)
 
     expect(onClose).toHaveBeenCalledTimes(1)
   })
@@ -83,53 +80,60 @@ describe("CartDrawer", () => {
     const onClose = vi.fn()
     renderWithProvider(<CartDrawer open={true} onClose={onClose} />)
 
-    fireEvent.click(screen.getByLabelText("Cerrar carrito"))
+    // Click the close button (X icon button)
+    const closeButton = screen.getByTestId("close-drawer")
+    fireEvent.click(closeButton)
 
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it("should increment quantity when plus button clicked", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
-    const plusButton = screen.getAllByRole("button", { name: /incrementar/i })[0]
-    fireEvent.click(plusButton)
+    // Find the plus button for the first item (Product 1)
+    const plusButtons = screen.getAllByTestId("increase-quantity")
+    fireEvent.click(plusButtons[0])
 
     expect(screen.getByText("3")).toBeInTheDocument() // quantity updated from 2 to 3
   })
 
   it("should decrement quantity when minus button clicked", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
-    const minusButton = screen.getAllByRole("button", { name: /decrementar/i })[0]
-    fireEvent.click(minusButton)
+    // Find the minus button for the first item
+    const minusButtons = screen.getAllByTestId("decrease-quantity")
+    fireEvent.click(minusButtons[0])
 
-    expect(screen.getByText("1")).toBeInTheDocument() // quantity updated from 2 to 1
+    // First item quantity should go from 2 to 1
+    const quantities = screen.getAllByTestId("quantity")
+    expect(quantities[0]).toHaveTextContent("1")
   })
 
   it("should remove item when quantity reaches 0", () => {
     const singleItem: CartItem[] = [
       { slug: "prod-1", color: null, name: "Product 1", price: 1000, quantity: 1, image: null },
     ]
-    localStorage.getItem.mockReturnValue(JSON.stringify(singleItem))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(singleItem))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
-    const minusButton = screen.getByRole("button", { name: /decrementar/i })
+    const minusButton = screen.getByTestId("decrease-quantity")
     fireEvent.click(minusButton)
 
     expect(screen.getByText("Tu carrito está vacío")).toBeInTheDocument()
   })
 
   it("should remove item when trash button clicked", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
-    const trashButtons = screen.getAllByRole("button", { name: /eliminar/i })
+    // Find trash buttons
+    const trashButtons = screen.getAllByTestId("remove-item")
     fireEvent.click(trashButtons[0])
 
     expect(screen.queryByText("Product 1 (red)")).not.toBeInTheDocument()
@@ -137,7 +141,7 @@ describe("CartDrawer", () => {
   })
 
   it("should show form when 'Finalizar pedido' clicked", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
@@ -149,7 +153,7 @@ describe("CartDrawer", () => {
   })
 
   it("should hide form when 'Volver' clicked", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
@@ -161,7 +165,7 @@ describe("CartDrawer", () => {
   })
 
   it("should clear cart when 'Vaciar carrito' clicked", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
@@ -171,7 +175,7 @@ describe("CartDrawer", () => {
   })
 
   it("should build WhatsApp message correctly", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     const onClose = vi.fn()
     renderWithProvider(<CartDrawer open={true} onClose={onClose} />)
@@ -189,8 +193,6 @@ describe("CartDrawer", () => {
   })
 
   it("should lock scroll when open", () => {
-    const { lockScroll, unlockScroll } = vi.hoisted(() => import("@/lib/utils"))
-
     const { unmount } = renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
     expect(lockScroll).toHaveBeenCalled()
@@ -201,7 +203,7 @@ describe("CartDrawer", () => {
   })
 
   it("should render product image when available", () => {
-    localStorage.getItem.mockReturnValue(JSON.stringify(mockItems))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockItems))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
@@ -213,10 +215,11 @@ describe("CartDrawer", () => {
     const itemsNoImage: CartItem[] = [
       { slug: "prod-1", color: null, name: "Product 1", price: 1000, quantity: 1, image: null },
     ]
-    localStorage.getItem.mockReturnValue(JSON.stringify(itemsNoImage))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(itemsNoImage))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
+    // When no image, it shows ShoppingBag icon
     expect(screen.getByTestId("product-placeholder")).toBeInTheDocument()
   })
 
@@ -224,10 +227,12 @@ describe("CartDrawer", () => {
     const itemsHighPrice: CartItem[] = [
       { slug: "prod-1", color: null, name: "Expensive", price: 1234567, quantity: 1, image: null },
     ]
-    localStorage.getItem.mockReturnValue(JSON.stringify(itemsHighPrice))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(itemsHighPrice))
 
     renderWithProvider(<CartDrawer open={true} onClose={vi.fn()} />)
 
-    expect(screen.getByText("$1.234.567 ARS")).toBeInTheDocument()
+    // Check the total price (which appears once in the total section)
+    const totalElement = screen.getByText("Total").closest("div")
+    expect(totalElement).toHaveTextContent("$1.234.567 ARS")
   })
 })

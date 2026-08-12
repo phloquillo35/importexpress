@@ -5,24 +5,11 @@ import type { CartItem } from "@/context/CartContext"
 
 const STORAGE_KEY = "lopedis_cart"
 
-// Create a proper localStorage mock
-const createLocalStorageMock = () => {
-  const store: Record<string, string> = {}
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => { store[key] = value }),
-    removeItem: vi.fn((key: string) => { delete store[key] }),
-    clear: vi.fn(() => { Object.keys(store).forEach(k => delete store[k]) }),
-  }
-}
-
 describe("CartContext", () => {
-  let localStorageMock: ReturnType<typeof createLocalStorageMock>
-
   beforeEach(() => {
     vi.clearAllMocks()
-    localStorageMock = createLocalStorageMock()
-    Object.defineProperty(window, "localStorage", { value: localStorageMock, writable: true })
+    // Clear localStorage store
+    localStorage.clear()
   })
 
   afterEach(() => {
@@ -40,9 +27,9 @@ describe("CartContext", () => {
         <span data-testid="count">{cart.count}</span>
         <span data-testid="total">{cart.total}</span>
         <span data-testid="items">{JSON.stringify(cart.items)}</span>
-        <button onClick={() => cart.addItem({ slug: "test", color: null, name: "Test", price: 100, image: null })}>Add</button>
-        <button onClick={() => cart.removeItem("test")}>Remove</button>
-        <button onClick={() => cart.updateQuantity("test", 5)}>Update</button>
+        <button onClick={() => cart.addItem({ slug: "prod-1", color: null, name: "Test", price: 100, image: null })}>Add</button>
+        <button onClick={() => cart.removeItem("prod-1")}>Remove</button>
+        <button onClick={() => cart.updateQuantity("prod-1", 5)}>Update</button>
         <button onClick={() => cart.clearCart()}>Clear</button>
       </div>
     )
@@ -60,7 +47,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: "red", name: "Product 1", price: 100, quantity: 2, image: "img1.jpg" },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -69,7 +56,7 @@ describe("CartContext", () => {
     })
 
     it("should handle corrupted localStorage gracefully", () => {
-      localStorage.getItem.mockReturnValue("invalid json")
+      localStorage.setItem(STORAGE_KEY, "invalid json")
 
       renderWithProvider(<TestComponent />)
 
@@ -108,6 +95,7 @@ describe("CartContext", () => {
         return (
           <div>
             <span data-testid="count">{cart.count}</span>
+            <span data-testid="total">{cart.total}</span>
             <button onClick={() => cart.addItem({ slug: "test", color: "red", name: "Test Red", price: 100, image: null })}>Add Red</button>
             <button onClick={() => cart.addItem({ slug: "test", color: "blue", name: "Test Blue", price: 200, image: null })}>Add Blue</button>
           </div>
@@ -132,10 +120,11 @@ describe("CartContext", () => {
         screen.getByText("Add").click()
       })
 
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        STORAGE_KEY,
-        expect.stringContaining("test")
-      )
+      // Get the last call to setItem (after the initial load)
+      const calls = (localStorage.setItem as ReturnType<typeof vi.fn>).mock.calls
+      const lastCall = calls[calls.length - 1]
+      expect(lastCall[0]).toBe(STORAGE_KEY)
+      expect(lastCall[1]).toContain("prod-1")
     })
   })
 
@@ -144,7 +133,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -161,7 +150,7 @@ describe("CartContext", () => {
         { slug: "prod-1", color: "red", name: "Product Red", price: 100, quantity: 1, image: null },
         { slug: "prod-1", color: "blue", name: "Product Blue", price: 200, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       const TestComponentWithColor = () => {
         const cart = useCart()
@@ -186,7 +175,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -194,7 +183,11 @@ describe("CartContext", () => {
         screen.getByText("Remove").click()
       })
 
-      expect(localStorage.setItem).toHaveBeenCalledWith(STORAGE_KEY, "[]")
+      // Get the last call to setItem (after the initial load and remove)
+      const calls = (localStorage.setItem as ReturnType<typeof vi.fn>).mock.calls
+      const lastCall = calls[calls.length - 1]
+      expect(lastCall[0]).toBe(STORAGE_KEY)
+      expect(lastCall[1]).toBe("[]")
     })
   })
 
@@ -203,7 +196,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -219,7 +212,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 3, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       const TestComponentUpdate = () => {
         const cart = useCart()
@@ -244,7 +237,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 3, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       const TestComponentUpdate = () => {
         const cart = useCart()
@@ -270,7 +263,7 @@ describe("CartContext", () => {
         { slug: "prod-1", color: "red", name: "Product Red", price: 100, quantity: 1, image: null },
         { slug: "prod-1", color: "blue", name: "Product Blue", price: 200, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       const TestComponentWithColor = () => {
         const cart = useCart()
@@ -289,7 +282,7 @@ describe("CartContext", () => {
         screen.getByText("Update Red").click()
       })
 
-      expect(screen.getByTestId("count").textContent).toBe("5")
+      expect(screen.getByTestId("count").textContent).toBe("6") // 5 red + 1 blue
       expect(screen.getByTestId("total").textContent).toBe("700") // 5*100 + 1*200
     })
 
@@ -297,7 +290,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -305,10 +298,11 @@ describe("CartContext", () => {
         screen.getByText("Update").click()
       })
 
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        STORAGE_KEY,
-        expect.stringContaining('"quantity":5')
-      )
+      // Get the last call to setItem (after the initial load and update)
+      const calls = (localStorage.setItem as ReturnType<typeof vi.fn>).mock.calls
+      const lastCall = calls[calls.length - 1]
+      expect(lastCall[0]).toBe(STORAGE_KEY)
+      expect(lastCall[1]).toContain('"quantity":5')
     })
   })
 
@@ -318,7 +312,7 @@ describe("CartContext", () => {
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 2, image: null },
         { slug: "prod-2", color: "red", name: "Product 2 Red", price: 200, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -335,7 +329,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -343,7 +337,11 @@ describe("CartContext", () => {
         screen.getByText("Clear").click()
       })
 
-      expect(localStorage.setItem).toHaveBeenCalledWith(STORAGE_KEY, "[]")
+      // Get the last call to setItem (after the initial load and clear)
+      const calls = (localStorage.setItem as ReturnType<typeof vi.fn>).mock.calls
+      const lastCall = calls[calls.length - 1]
+      expect(lastCall[0]).toBe(STORAGE_KEY)
+      expect(lastCall[1]).toBe("[]")
     })
   })
 
@@ -353,7 +351,7 @@ describe("CartContext", () => {
         { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 2, image: null },
         { slug: "prod-2", color: "red", name: "Product 2", price: 250, quantity: 3, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 
@@ -365,7 +363,7 @@ describe("CartContext", () => {
       const storedItems: CartItem[] = [
         { slug: "prod-1", color: null, name: "Free Product", price: 0, quantity: 5, image: null },
       ]
-      localStorage.getItem.mockReturnValue(JSON.stringify(storedItems))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
       renderWithProvider(<TestComponent />)
 

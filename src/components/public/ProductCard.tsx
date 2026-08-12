@@ -77,7 +77,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
 
   return (
     <div className="group block bg-card rounded-2xl border border-border/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <Link href={href} className="block">
+      <Link href={href} className="block" data-testid="product-link">
         <div className="aspect-[5/4] sm:aspect-[4/3] bg-muted flex items-center justify-center p-1 sm:p-8">
           {cardImage ? (
             <img
@@ -87,13 +87,14 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <Package className="w-16 h-16 text-muted-foreground" />
+            <Package data-testid="product-placeholder" className="w-16 h-16 text-muted-foreground" />
           )}
         </div>
 
         {colorName && colorStyle ? (
           <div className="flex items-center justify-center gap-1 px-2.5 pt-1.5 sm:gap-1.5 sm:px-5 sm:pt-3">
             <span
+              data-testid="color-swatch"
               className="w-3 h-3 rounded-full border border-muted-foreground/30"
               style={colorStyle}
             />
@@ -104,6 +105,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
             {cardColors.map(color => (
               <span
                 key={color}
+                data-testid="color-swatch"
                 className="w-3 h-3 rounded-full border border-muted-foreground/30"
                 style={swatchStyle(color)}
                 title={color}
@@ -116,8 +118,8 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
           {product.category && (
             <span className="hidden sm:inline-block text-[11px] font-medium uppercase tracking-wider text-primary">
               {product.category.parent
-                ? `${product.category.parent.name} - ${product.category.name}`
-                : product.category.name}
+                ? `${product.category.parent.name.toUpperCase()} - ${product.category.name.toUpperCase()}`
+                : product.category.name.toUpperCase()}
             </span>
           )}
 
@@ -150,6 +152,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
       <div className="px-2.5 pb-2.5 sm:px-5 sm:pb-5">
         <button
           onClick={handleAdd}
+          data-testid="add-to-cart"
           className="w-full flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-medium rounded-full transition-colors sm:gap-1.5 sm:py-2.5 sm:text-xs"
         >
           <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5" />

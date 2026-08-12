@@ -28,9 +28,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start",
+    command: "NEXTAUTH_URL=http://localhost:3000 npm run start",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    env: {
+      NEXTAUTH_URL: "http://localhost:3000",
+    },
   },
 })
