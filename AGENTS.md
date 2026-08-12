@@ -1,23 +1,30 @@
 # AGENTS.md (Workflow Context) — importexpress
-> Generado: 2026-08-10 00:14:29 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
+> Generado: 2026-08-11 23:01:35 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
 
 ## 🎯 Objetivo actual
-Implementación completa de mejoras en el carrito de compras móvil: carrito flotante (FAB) fuera de la hamburguesa solo en móvil, botones finalizar pedido/vaciar carrito visibles sobre la barra de Safari (+2.5rem safe-area), animación de vuelo de la card del producto hacia el carrito (desktop→navbar, móvil→FAB) sin abrir el drawer, fix del target móvil oculto y fix para que el vuelo funcione con el primer producto. Integrado y verificado en producción (HTTP 200).
+Testing completo para ImportExpress (Next.js 16 + TS estricto + Prisma/PostgreSQL).
+1) INFRA TESTING (nueva): Vitest + @testing-library/react/jsdom (vitest.config.ts con alias @→./src y coverage v8; vitest.setup.ts con mocks matchMedia/getComputedStyle/getBoundingClientRect/animate). Playwright con 3 proyectos: chromium desktop, mobile-chrome (Pixel 5), mobile-safari (iPhone 12); webServer corre build de produccion con NEXTAUTH_URL (evita UntrustedHost). Scripts nuevos: typecheck, test, test:watch, test:ui, test:coverage, test:e2e, test:e2e:ui.
+2) UNIT 117 pasando: CartContext 20, validators 44, flyToCart 13, CartDrawer 19, ProductCard 21.
+3) E2E 36 pasando (12x3): homepage, catalogo, agregar al carrito, cantidad, eliminar, checkout (form + WhatsApp), vaciar, persistencia localStorage, FAB movil, admin (redirect login + form).
+4) data-testid: CartDrawer (cart-overlay, close-drawer, decrease/increase-quantity, remove-item, quantity, product-placeholder), ProductCard (product-link, add-to-cart, color-swatch, product-placeholder; categoria UPPERCASE), Navbar (cart-trigger desktop + FAB movil).
+5) Correcciones E2E: UntrustedHost (NEXTAUTH_URL), selectores a data-testid (titulo real Lo Pedis, Lo Tenes), tests adaptados a que el drawer NO se abre solo al agregar (flyToCart), :visible para desktop/movil (FAB solo con items).
+6) Calidad: build OK, typecheck 0 errores, lint 0 errores (43 warnings previos).
+7) Integracion: rebase sin conflictos con commit de Nicolas 8b0cec1 (categorias expanden colores + overlay sidebar); push a origin/main (8b0cec1..619bf2a).
 
 ## 📍 Estado actual
   Branch: main · Working tree: SUCIO (1 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 114 +++-----------------------------------------------------------
-   1 file changed, 4 insertions(+), 110 deletions(-)
+   AGENTS.md | 109 ++++++--------------------------------------------------------
+   1 file changed, 9 insertions(+), 100 deletions(-)
    M AGENTS.md
 
   Últimos commits:
-  7ee5558 fix(carrito): vuelo al carrito tambien corre al agregar el primer producto en movil (target virtual del FAB)
-  0638112 fix(carrito): en movil la card vuela al FAB flotante y no al boton hidden del navbar
-  e8af05a feat(carrito): la card del producto vuela y se encoge hacia el carrito al agregar, sin abrirlo
-  59073e7 fix(movil): subir mas los botones del carrito sobre la barra de Safari (+2.5rem)
-  b843add fix(movil): botones finalizar pedido y vaciar carrito visibles sobre la barra de Safari con safe-area
+  619bf2a test(e2e): arreglar E2E de Playwright con selectores data-testid y vista responsive
+  a5faf59 fix(test): fix lint error in CartDrawer test
+  f0357f3 feat(test): add vitest + playwright testing infrastructure
+  f2f75c8 docs: actualizar AGENTS.md — carrito FAB móvil completado, sin tareas activas
+  8b0cec1 fix(public): categorias expanden colores (paridad con /productos) + overlay dropdown sidebar en home y productos
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -34,12 +41,17 @@ _(continuar donde quedó opencode. Si hay tareas in_progress arriba, retomar la 
 AGENTS.md
 components.json
 Dockerfile
+e2e
+e2e/critical-flows.spec.ts
 entrypoint.sh
 eslint.config.mjs
 next-env.d.ts
 next.config.ts
 package-lock.json
 package.json
+playwright-report
+playwright-report/index.html
+playwright.config.ts
 postcss.config.mjs
 prisma
 prisma.config.ts
@@ -77,6 +89,8 @@ src/generated
 src/hooks
 src/lib
 src/types
+test-results
+test-results/.last-run.json
 tsconfig.json
 tsconfig.tsbuildinfo
 
@@ -100,9 +114,16 @@ tsconfig.tsbuildinfo
     build: next build
     start: next start
     lint: eslint
+    typecheck: tsc --noEmit
+    test: vitest run
+    test:watch: vitest
+    test:ui: vitest --ui
+    test:coverage: vitest run --coverage
+    test:e2e: playwright test
+    test:e2e:ui: playwright test --ui
     postinstall: prisma generate
     seed: tsx prisma/seed.ts
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-  _(decisiones de diseño/acuerdo a registrar aquí)_
+      _(decisiones de diseño/acuerdo a registrar aquí)_
