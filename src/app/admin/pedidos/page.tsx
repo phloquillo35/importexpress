@@ -1029,7 +1029,9 @@ export default function PedidosPage() {
                       {order.clientPhone || order.clientContact}
                     </TableCell>
                     <TableCell className="text-foreground text-sm cursor-pointer" onClick={() => handleProductDetail(item, order)}>
-                      {item.productName ?? item.product?.name ?? "Producto eliminado"}
+                      <span className="block max-w-[180px] truncate" title={(item.productName ?? item.product?.name ?? "Producto eliminado")}>
+                        {(item.productName ?? item.product?.name ?? "Producto eliminado").split(" / ")[0]}
+                      </span>
                       <span className="text-muted-foreground ml-1">×{item.quantity}</span>
                     </TableCell>
                     <TableCell className="text-right text-foreground text-sm cursor-pointer" onClick={() => handleProductDetail(item, order)}>
