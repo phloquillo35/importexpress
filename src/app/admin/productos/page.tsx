@@ -69,6 +69,10 @@ export default function AdminProductosPage() {
     const raw = parseInt(searchParams.get("page") || "1", 10)
     return Number.isNaN(raw) ? 1 : Math.max(1, raw)
   })
+  const [pageInput, setPageInput] = useState(() => {
+    const raw = parseInt(searchParams.get("page") || "1", 10)
+    return String(Number.isNaN(raw) ? 1 : Math.max(1, raw))
+  })
   const [search, setSearch] = useState(searchParams.get("q") || "")
   const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("q") || "")
   const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") || "")
@@ -179,12 +183,26 @@ export default function AdminProductosPage() {
     e.preventDefault()
     setDebouncedSearch(search)
     setPage(1)
+    setPageInput("1")
+  }
+
+  function handleGoToPage(e: React.FormEvent) {
+    e.preventDefault()
+    const target = parseInt(pageInput, 10)
+    if (Number.isNaN(target) || totalPages < 1) {
+      setPageInput(String(page))
+      return
+    }
+    const clamped = Math.min(Math.max(target, 1), totalPages)
+    setPageInput(String(clamped))
+    setPage(clamped)
   }
 
   function handleClearSearch() {
     setSearch("")
     setDebouncedSearch("")
     setPage(1)
+    setPageInput("1")
   }
 
   async function handleDelete(product: Product) {
@@ -236,7 +254,7 @@ export default function AdminProductosPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); setPageInput("1") }}
               placeholder="Buscar por nombre, categoría, costo USDT, envío ARS, final USD, final ARS, stock, disponibilidad"
               className="pl-9 pr-9 bg-muted border-border text-foreground placeholder-muted-foreground"
             />
@@ -262,7 +280,7 @@ export default function AdminProductosPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Select
             value={categoriaId || "__all"}
-            onValueChange={(v) => { setCategoriaId(v === "__all" ? "" : v || ""); setPage(1) }}
+            onValueChange={(v) => { setCategoriaId(v === "__all" ? "" : v || ""); setPage(1); setPageInput("1") }}
           >
             <SelectTrigger className="w-52 bg-muted border-border text-foreground">
               <SelectValue placeholder="Todas las categorías">
@@ -279,7 +297,7 @@ export default function AdminProductosPage() {
 
           <Select
             value={disponible || "__all"}
-            onValueChange={(v) => { setDisponible(v === "__all" ? "" : v || ""); setPage(1) }}
+            onValueChange={(v) => { setDisponible(v === "__all" ? "" : v || ""); setPage(1); setPageInput("1") }}
           >
             <SelectTrigger className="w-44 bg-muted border-border text-foreground">
               <SelectValue placeholder="Disponibilidad">
@@ -296,7 +314,7 @@ export default function AdminProductosPage() {
           <Button
             type="button"
             variant={destacados ? "default" : "outline"}
-            onClick={() => { setDestacados(d => !d); setPage(1) }}
+            onClick={() => { setDestacados(d => !d); setPage(1); setPageInput("1") }}
             className={destacados ? "bg-primary text-primary-foreground" : "border-border text-muted-foreground"}
           >
             <Star className="w-4 h-4 mr-2" />
@@ -420,19 +438,31 @@ export default function AdminProductosPage() {
             variant="outline"
             size="sm"
             disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
+            onClick={() => { setPage(page - 1); setPageInput(String(page - 1)) }}
             className="border-border text-muted-foreground"
           >
             Anterior
           </Button>
-          <span className="text-sm text-muted-foreground">
-            Página {page} de {totalPages}
-          </span>
+          <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
+            <span className="text-sm text-muted-foreground">Ir a</span>
+            <Input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              className="w-16 h-8 text-center bg-muted border-border text-foreground"
+            />
+            <span className="text-sm text-muted-foreground">de {totalPages}</span>
+            <Button type="submit" size="sm" variant="outline" className="border-border text-muted-foreground">
+              Ir
+            </Button>
+          </form>
           <Button
             variant="outline"
             size="sm"
             disabled={page >= totalPages}
-            onClick={() => setPage(page + 1)}
+            onClick={() => { setPage(page + 1); setPageInput(String(page + 1)) }}
             className="border-border text-muted-foreground"
           >
             Siguiente
