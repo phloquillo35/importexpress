@@ -133,6 +133,8 @@ model OrderItem {
   shippingCost   Float   @default(0)
   profitType     String  @default("percentage")
   profitValue    Float   @default(0)
+  color          String?
+  storage        String?
   order          Order    @relation(fields: [orderId], references: [id])
   product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   bulk           Bulk?    @relation(fields: [bulkId], references: [id])

@@ -20,9 +20,28 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")))
     const skip = (page - 1) * limit
 
+    // Advanced filters
+    const dateFrom = searchParams.get("dateFrom")
+    const dateTo = searchParams.get("dateTo")
+    const store = searchParams.get("store")
+    const totalMin = searchParams.get("totalMin")
+    const totalMax = searchParams.get("totalMax")
+    const totalCurrency = searchParams.get("totalCurrency") || "USD"
+
     const where: Record<string, unknown> = {}
     if (status) where.status = status
     if (!showDeleted) where.deletedAt = null
+    if (store) where.storeId = store
+    if (dateFrom || dateTo) {
+      const dateFilter: Record<string, Date> = {}
+      if (dateFrom) dateFilter.gte = new Date(dateFrom)
+      if (dateTo) dateFilter.lte = new Date(dateTo + "T23:59:59.999Z")
+      where.createdAt = dateFilter
+    }
+
+    // For total range filtering, we need to filter after fetching since totalARS is computed
+    // We'll fetch all matching orders first, then filter by total range in memory
+    // For better performance with large datasets, this could be optimized with a database view or stored procedure
 
     const [total, orders] = await Promise.all([
       prisma.order.count({ where }),
@@ -63,12 +82,22 @@ export async function GET(request: NextRequest) {
     const defaultExchangeRate = parseFloat(exchangeRateSetting?.value || "1350")
     const defaultUsdtRate = parseFloat(usdtRateSetting?.value || "1400")
 
-    const enriched = sorted.map((order) => ({
+    let enriched = sorted.map((order) => ({
       ...order,
       totalARS: order.totalARS ?? computeOrderTotalARS(order, { exchangeRate: defaultExchangeRate, usdtRate: defaultUsdtRate }),
     }))
 
-    return Response.json({ orders: enriched, total, page, limit })
+    // Apply total range filter in memory (since totalARS is computed)
+    if (totalMin || totalMax) {
+      const min = totalMin ? parseFloat(totalMin) : 0
+      const max = totalMax ? parseFloat(totalMax) : Infinity
+      enriched = enriched.filter((order) => {
+        const total = totalCurrency === "USD" ? order.totalUSD : (order.totalARS ?? 0)
+        return total >= min && total <= max
+      })
+    }
+
+    return Response.json({ orders: enriched, total: enriched.length, page, limit })
   } catch (error) {
     console.error("Error fetching orders:", error)
     return Response.json({ error: "Error al cargar pedidos" }, { status: 500 })
@@ -128,7 +157,8 @@ export async function POST(request: Request) {
       costUSDT: number | null; yoniEnabled: boolean; yoniType: string; yoniValue: number
       shippingCost: number; profitType: string; profitValue: number
       productName: string | null; productSlug: string | null
-    }> = items.map((item: { productId: string; quantity: number; priceUSD: number }) => {
+      color: string | null; storage: string | null
+    }> = items.map((item: { productId: string; quantity: number; priceUSD: number; color?: string; storage?: string }) => {
       const product = productMap.get(item.productId)
       return {
         id: genId(),
@@ -144,6 +174,8 @@ export async function POST(request: Request) {
         profitValue: product?.profitValue ?? 0,
         productName: product?.name ?? null,
         productSlug: product?.slug ?? null,
+        color: item.color ?? null,
+        storage: item.storage ?? null,
       }
     })
 

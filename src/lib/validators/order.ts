@@ -10,6 +10,8 @@ export const createOrderSchema = z.object({
     productId: z.string(),
     quantity: z.number().int().positive(),
     priceUSD: z.number().optional().nullable(),
+    color: z.string().optional(),
+    storage: z.string().optional(),
   })),
   totalUSD: z.number().optional(),
   notes: z.string().optional(),

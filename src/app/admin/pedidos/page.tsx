@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react"
-import { useSearchParams } from "next/navigation"
-import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Loader2, MessageSquare, Calendar, Filter, X, DollarSign, Store, MoreHorizontal } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
-import { formatUSD } from "@/lib/utils"
+import { formatUSD, formatARS } from "@/lib/utils"
+import { formatWhatsAppDisplay } from "@/hooks/useWhatsAppConfig"
 import { calculateFinalPrice } from "@/lib/pricing"
 import {
   Table,
@@ -32,6 +33,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { Separator } from "@/components/ui/separator"
 
 const courierLabel: Record<string, string> = {
   buspack: "📦 Buspack",
@@ -70,10 +79,12 @@ interface OrderItem {
   profitValue: number
   productName: string | null
   productSlug: string | null
+  color: string | null
+  storage: string | null
   product?: {
     name: string
     slug: string
-    images: string[]
+    images: string[] | { url: string; color: string }[]
     categoryId: string | null
     stock: number
     costUSDT: number | null
@@ -137,6 +148,7 @@ interface Product {
   finalPriceUSD?: number
   finalPriceARS?: number
   isAvailable?: boolean
+  images?: string[] | { url: string; color: string }[]
 }
 
 function computeItemPricing(item: OrderItem, exchangeRate: number, usdtRate: number) {
@@ -162,10 +174,356 @@ function computeItemPricing(item: OrderItem, exchangeRate: number, usdtRate: num
   }
 }
 
+interface DetailDialogContentProps {
+  productDetail: { item: OrderItem; order: Order }
+  editingOrder: boolean
+  activeTab: "items" | "payments" | "notes"
+  setActiveTab: (tab: "items" | "payments" | "notes") => void
+  editForm: { clientName: string; clientSurname: string; clientPhone: string; clientEmail: string; clientContact: string; storeId: string; status: string; notes: string }
+  setEditForm: React.Dispatch<React.SetStateAction<{ clientName: string; clientSurname: string; clientPhone: string; clientEmail: string; clientContact: string; storeId: string; status: string; notes: string }>>
+  savingEdit: boolean
+  handleSaveEdit: () => Promise<void>
+  paymentAmount: string
+  setPaymentAmount: React.Dispatch<React.SetStateAction<string>>
+  paymentCurrency: string
+  setPaymentCurrency: React.Dispatch<React.SetStateAction<string>>
+  savingPay: boolean
+  handleSavePayment: () => Promise<void>
+  startEditing: (order: Order) => void
+  setEditingOrder: React.Dispatch<React.SetStateAction<boolean>>
+  setWhatsappMessage: React.Dispatch<React.SetStateAction<string>>
+  setWhatsappDialogOpen: React.Dispatch<React.SetStateAction<boolean>>
+  toast: typeof import("sonner").toast
+  formatUSD: (price: number | null | undefined) => string
+  formatARS: (price: number) => string
+  formatWhatsAppDisplay: (raw: string) => string
+  statusConfig: Record<string, { label: string; className: string }>
+  paymentConfig: Record<string, { label: string; className: string }>
+  computeItemPricing: (item: OrderItem, exchangeRate: number, usdtRate: number) => { costUSDT: number; yoniUSDT: number; shippingCost: number; subtotalARS: number; profitARS: number; finalPriceARS: number; finalPriceUSD: number }
+  exchangeRate: number
+  usdtRate: number
+  getItemStatusBadge: (status: string) => React.ReactElement
+  courierLabel: Record<string, string>
+  stores: StoreType[]
+}
+
+function DetailDialogContent({
+  productDetail,
+  editingOrder,
+  activeTab,
+  setActiveTab,
+  editForm,
+  setEditForm,
+  savingEdit,
+  handleSaveEdit,
+  paymentAmount,
+  setPaymentAmount,
+  paymentCurrency,
+  setPaymentCurrency,
+  savingPay,
+  handleSavePayment,
+  startEditing,
+  setEditingOrder,
+  setWhatsappMessage,
+  setWhatsappDialogOpen,
+  toast,
+  formatUSD,
+  formatARS,
+  formatWhatsAppDisplay,
+  statusConfig,
+  paymentConfig,
+  computeItemPricing,
+  exchangeRate,
+  usdtRate,
+  getItemStatusBadge,
+  courierLabel,
+  stores,
+}: DetailDialogContentProps) {
+  const order = productDetail.order
+  const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
+  const allPricing = order.items.map(i => ({
+    item: i,
+    pricing: computeItemPricing(i, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate),
+  }))
+  const orderTotals = allPricing.reduce((acc, { pricing: p }) => ({
+    totalUSD: Math.round((acc.totalUSD + p.finalPriceUSD) * 100) / 100,
+    totalARS: acc.totalARS + p.finalPriceARS,
+  }), { totalUSD: 0, totalARS: 0 })
+
+  return (
+    <>
+      <DialogHeader>
+        <div className="flex items-center justify-between">
+          <DialogTitle>Detalle del pedido</DialogTitle>
+          <div className="flex items-center gap-2">
+            {!editingOrder && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const phone = order.clientPhone || order.clientContact
+                  if (!phone) {
+                    toast.error("El cliente no tiene teléfono registrado")
+                    return
+                  }
+                  const itemsText = order.items.map((item, i) => {
+                    const displayName = item.productName ?? item.product?.name ?? "Producto"
+                    return `${i + 1}. ${displayName} × ${item.quantity}${item.color ? ` (${item.color})` : ""}${item.storage ? ` [${item.storage}]` : ""}`
+                  }).join("\n")
+                  const message = `Hola ${order.clientName} ${order.clientSurname},\n\nTu pedido *#${order.internalNumber}*:\n${itemsText}\n\nEstado: ${statusConfig[order.status]?.label || order.status}\nTotal: ${formatUSD(orderTotals.totalUSD)} (${formatARS(orderTotals.totalARS)})\n\n¿En qué podemos ayudarte?`
+                  setWhatsappMessage(message)
+                  setWhatsappDialogOpen(true)
+                }}
+                className="text-[#25D366] hover:bg-[#25D366]/10 border-[#25D366]/30"
+              >
+                <MessageSquare className="w-4 h-4 mr-1" /> WhatsApp
+              </Button>
+            )}
+            {!editingOrder && (
+              <Button variant="ghost" size="sm" onClick={() => startEditing(order)} className="text-muted-foreground hover:text-foreground">
+                <Pencil className="w-4 h-4 mr-1" /> Editar
+              </Button>
+            )}
+            {editingOrder && (
+              <Button variant="ghost" size="sm" onClick={() => setEditingOrder(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4 mr-1" /> Cancelar
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogHeader>
+      <div className="flex-1 overflow-hidden">
+        {editingOrder ? (
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="space-y-3 border border-border rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-foreground">Editar pedido</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Nombre</Label>
+                  <Input value={editForm.clientName} onChange={(e) => setEditForm({ ...editForm, clientName: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Apellido</Label>
+                  <Input value={editForm.clientSurname} onChange={(e) => setEditForm({ ...editForm, clientSurname: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Teléfono</Label>
+                  <Input value={editForm.clientPhone} onChange={(e) => setEditForm({ ...editForm, clientPhone: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Email</Label>
+                  <Input type="email" value={editForm.clientEmail} onChange={(e) => setEditForm({ ...editForm, clientEmail: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Contacto</Label>
+                  <Input value={editForm.clientContact} onChange={(e) => setEditForm({ ...editForm, clientContact: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Tienda</Label>
+                  <Select value={editForm.storeId || "__none"} onValueChange={(v: string | null) => setEditForm({ ...editForm, storeId: v === "__none" ? "" : v || "" })}>
+                    <SelectTrigger className="bg-muted border-border text-foreground">
+                      <SelectValue placeholder="Seleccionar tienda" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card text-foreground">
+                      <SelectItem value="__none">Sin tienda</SelectItem>
+                      {stores.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Estado</Label>
+                  <Select value={editForm.status} onValueChange={(v: string | null) => setEditForm({ ...editForm, status: v || "" })}>
+                    <SelectTrigger className="bg-muted border-border text-foreground">
+                      <SelectValue placeholder="Seleccionar estado" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card text-foreground">
+                      {Object.entries(statusConfig).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5 col-span-2">
+                  <Label className="text-xs text-muted-foreground">Notas</Label>
+                  <Textarea
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="ghost" onClick={() => setEditingOrder(false)} className="text-muted-foreground">Cancelar</Button>
+                <Button type="button" disabled={savingEdit} onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  {savingEdit ? "Guardando..." : "Guardar cambios"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
+            <TabsList className="grid w-full grid-cols-3 bg-muted">
+              <TabsTrigger value="items">Items</TabsTrigger>
+              <TabsTrigger value="payments">Pagos</TabsTrigger>
+              <TabsTrigger value="notes">Notas</TabsTrigger>
+            </TabsList>
+            <TabsContent value="items" className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{order.clientPhone || "—"}</p></div>
+                <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{order.clientEmail || "—"}</p></div>
+                <div><p className="text-muted-foreground">Contacto</p><p className="text-foreground">{order.clientContact || "—"}</p></div>
+                <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{order.store?.name || "—"}</p></div>
+              </div>
+
+              <div className="border border-border rounded-lg divide-y divide-border">
+                {allPricing.map(({ item: i, pricing: p }) => (
+                  <div key={i.id} className="p-3 space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium text-foreground">{i.productName ?? i.product?.name ?? "Producto eliminado"} × {i.quantity}</span>
+                      <span className="text-foreground">{formatUSD(i.priceUSD * i.quantity)}</span>
+                    </div>
+                    {i.bulk && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{courierLabel[i.bulk.courier] || i.bulk.courier}</span>
+                        {i.bulk.trackingCode && <span className="text-blue-400">📍 {i.bulk.trackingCode}</span>}
+                      </div>
+                    )}
+                    {i.bulkType && <p className="text-xs text-muted-foreground">Tipo bulto: {i.bulkType}</p>}
+                    {getItemStatusBadge(i.shippingStatus)}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs text-muted-foreground border-t border-border/50">
+                      <span>Costo USDT: <span className="text-foreground">${p.costUSDT.toFixed(2)}</span></span>
+                      <span>Logística: <span className="text-foreground">{i.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
+                      <span>Envío ARS: <span className="text-foreground">${p.shippingCost.toLocaleString("es-AR")}</span></span>
+                      <span>Subtotal ARS: <span className="text-foreground">${p.subtotalARS.toLocaleString("es-AR")}</span></span>
+                      <span>Ganancia ARS: <span className="text-[#0071e3]">${p.profitARS.toLocaleString("es-AR")}</span></span>
+                      <span>Final ARS: <span className="text-[#22C55E]">${p.finalPriceARS.toLocaleString("es-AR")}</span></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border border-border rounded-lg p-4 space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">Totales del pedido</h3>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${orderTotals.totalUSD.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${orderTotals.totalARS.toLocaleString("es-AR")}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Pagado</span><span className="text-[#22C55E]">${order.amountPaidUSD.toFixed(2)} USD</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Saldo pendiente</span><span className={orderTotals.totalUSD - order.amountPaidUSD > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>${Math.max(0, orderTotals.totalUSD - order.amountPaidUSD).toFixed(2)} USD</span></div>
+                </div>
+              </div>
+
+              {order.notes && (
+                <div className="border-t border-border pt-3">
+                  <p className="text-xs text-muted-foreground mb-1">Notas</p>
+                  <p className="text-sm text-foreground">{order.notes}</p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="payments" className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
+                  <span className={`text-xs font-medium ${payCfg.className}`}>
+                    {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${orderTotals.totalUSD.toFixed(2)} USD
+                  </span>
+                </div>
+                <div className="flex items-end gap-3">
+                  <div className="flex-1 space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Monto</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    />
+                  </div>
+                  <div className="w-24 space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Moneda</Label>
+                    <Select value={paymentCurrency} onValueChange={(v) => v && setPaymentCurrency(v as "USD" | "ARS")}>
+                      <SelectTrigger className="bg-muted border-border text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card text-foreground">
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="ARS">ARS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    disabled={savingPay || !paymentAmount || Number(paymentAmount) <= 0}
+                    onClick={handleSavePayment}
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    {savingPay ? "Guardando..." : "Registrar pago"}
+                  </Button>
+                </div>
+              </div>
+
+              {order.payments && order.payments.length > 0 && (
+                <div className="border-t border-border pt-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">Historial de pagos</h3>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {order.payments.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-2">
+                        <span className="text-muted-foreground">
+                          {new Date(p.date).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <span className="text-foreground font-medium">
+                          {p.amountARS ? `$${p.amountARS.toLocaleString("es-AR")} ARS` : `$${p.amountUSD.toFixed(2)} USD`}
+                        </span>
+                        <span className="text-muted-foreground">{p.concept || "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground text-right">
+                    Total pagado: <span className="text-[#22C55E] font-medium">${order.amountPaidUSD.toFixed(2)} USD</span>
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="notes" className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="space-y-3">
+                {order.notes ? (
+                  <div className="border-t border-border pt-3">
+                    <p className="text-xs text-muted-foreground mb-1">Notas del pedido</p>
+                    <p className="text-sm text-foreground">{order.notes}</p>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">Sin notas</p>
+                )}
+                <div className="border-t border-border pt-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-2">Agregar nota</h3>
+                  <Textarea
+                    placeholder="Escribir nota interna..."
+                    className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    rows={3}
+                  />
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="sm">
+                    Guardar nota
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
+    </>
+  )
+}
+
 export default function PedidosPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "")
   const [dialogOpen, setDialogOpen] = useState(false)
   // Product search states (server-side with pagination)
   const [searchQuery, setSearchQuery] = useState("")
@@ -174,7 +532,8 @@ export default function PedidosPage() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchHasMore, setSearchHasMore] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
-  const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number }[]>([])
+  // Cart with color and storage
+  const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number; color?: string; storage?: string }[]>([])
   const [stores, setStores] = useState<StoreType[]>([])
   const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
   const [saving, setSaving] = useState(false)
@@ -189,18 +548,45 @@ export default function PedidosPage() {
   const [editingOrder, setEditingOrder] = useState(false)
   const [editForm, setEditForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", clientContact: "", storeId: "", status: "", notes: "" })
   const [savingEdit, setSavingEdit] = useState(false)
-  const searchParams = useSearchParams()
   const highlightId = searchParams.get("highlight")
   const tableRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const limit = 50
 
+  // WhatsApp dialog state
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false)
+  const [whatsappMessage, setWhatsappMessage] = useState("")
+  const [whatsappSending, setWhatsappSending] = useState(false)
+
+  // Tabs state for detail dialog
+  const [activeTab, setActiveTab] = useState<"items" | "payments" | "notes">("items")
+
+  // Advanced filters state
+  const [dateFrom, setDateFrom] = useState(searchParams.get("dateFrom") || "")
+  const [dateTo, setDateTo] = useState(searchParams.get("dateTo") || "")
+  const [storeFilter, setStoreFilter] = useState(searchParams.get("store") || "")
+  const [totalMin, setTotalMin] = useState(searchParams.get("totalMin") || "")
+  const [totalMax, setTotalMax] = useState(searchParams.get("totalMax") || "")
+  const [totalCurrency, setTotalCurrency] = useState<"USD" | "ARS">((searchParams.get("totalCurrency") as "USD" | "ARS") || "USD")
+
+  // Color/Storage selection for product being added
+  const [selectedProductColor, setSelectedProductColor] = useState<string>("")
+  const [selectedProductStorage, setSelectedProductStorage] = useState<string>("")
+  const [selectedProductForColor, setSelectedProductForColor] = useState<Product | null>(null)
+
   const fetchOrders = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       params.set("page", String(page))
       params.set("limit", String(limit))
+      if (statusFilter) params.set("status", statusFilter)
+      if (dateFrom) params.set("dateFrom", dateFrom)
+      if (dateTo) params.set("dateTo", dateTo)
+      if (storeFilter) params.set("store", storeFilter)
+      if (totalMin) params.set("totalMin", totalMin)
+      if (totalMax) params.set("totalMax", totalMax)
+      if (totalCurrency) params.set("totalCurrency", totalCurrency)
       const res = await fetch(`/api/pedidos?${params}`)
       const data = await res.json()
       if (data.orders) {
@@ -213,7 +599,7 @@ export default function PedidosPage() {
     } catch {
       toast.error("Error al cargar pedidos")
     } finally { setLoading(false) }
-  }, [page])
+  }, [page, statusFilter, dateFrom, dateTo, storeFilter, totalMin, totalMax, totalCurrency])
 
   useEffect(() => {
     let cancelled = false
@@ -222,6 +608,13 @@ export default function PedidosPage() {
         const params = new URLSearchParams()
         params.set("page", String(page))
         params.set("limit", String(limit))
+        if (statusFilter) params.set("status", statusFilter)
+        if (dateFrom) params.set("dateFrom", dateFrom)
+        if (dateTo) params.set("dateTo", dateTo)
+        if (storeFilter) params.set("store", storeFilter)
+        if (totalMin) params.set("totalMin", totalMin)
+        if (totalMax) params.set("totalMax", totalMax)
+        if (totalCurrency) params.set("totalCurrency", totalCurrency)
         const res = await fetch(`/api/pedidos?${params}`)
         const data = await res.json()
         if (!cancelled) {
@@ -239,7 +632,32 @@ export default function PedidosPage() {
     }
     fetchOrdersEffect()
     return () => { cancelled = true }
-  }, [page])
+  }, [page, statusFilter, dateFrom, dateTo, storeFilter, totalMin, totalMax, totalCurrency])
+
+  // Update URL with filters
+  const updateFiltersUrl = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (statusFilter) params.set("status", statusFilter)
+    else params.delete("status")
+    if (dateFrom) params.set("dateFrom", dateFrom)
+    else params.delete("dateFrom")
+    if (dateTo) params.set("dateTo", dateTo)
+    else params.delete("dateTo")
+    if (storeFilter) params.set("store", storeFilter)
+    else params.delete("store")
+    if (totalMin) params.set("totalMin", totalMin)
+    else params.delete("totalMin")
+    if (totalMax) params.set("totalMax", totalMax)
+    else params.delete("totalMax")
+    if (totalCurrency) params.set("totalCurrency", totalCurrency)
+    else params.delete("totalCurrency")
+    router.push(`/admin/pedidos?${params.toString()}`, { scroll: false })
+  }, [router, searchParams, statusFilter, dateFrom, dateTo, storeFilter, totalMin, totalMax, totalCurrency])
+
+  // Sync filters to URL when they change
+  useEffect(() => {
+    updateFiltersUrl()
+  }, [updateFiltersUrl])
 
   function handleProductDetail(item: OrderItem, order: Order) {
     setPaymentAmount("")
@@ -435,19 +853,19 @@ export default function PedidosPage() {
     }
   }, [highlightId, flatItems])
 
-  function addToCart(product: Product) {
-    const existing = cart.find(c => c.productId === product.id)
+  function addToCart(product: Product, color?: string, storage?: string) {
+    const existing = cart.find(c => c.productId === product.id && c.color === color && c.storage === storage)
     if (existing) {
-      setCart(cart.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c))
+      setCart(cart.map(c => c.productId === product.id && c.color === color && c.storage === storage ? { ...c, quantity: c.quantity + 1 } : c))
       toast.success(`${product.name} — cantidad: ${existing.quantity + 1}`)
     } else {
-      setCart([...cart, { productId: product.id, name: product.name, quantity: 1, priceUSD: product.priceUSD }])
+      setCart([...cart, { productId: product.id, name: product.name, quantity: 1, priceUSD: product.priceUSD, color, storage }])
       toast.success(`${product.name} agregado`)
     }
   }
 
-  function removeFromCart(productId: string) {
-    setCart(cart.filter(c => c.productId !== productId))
+  function removeFromCart(productId: string, color?: string, storage?: string) {
+    setCart(cart.filter(c => !(c.productId === productId && c.color === color && c.storage === storage)))
   }
 
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
@@ -466,7 +884,7 @@ export default function PedidosPage() {
         clientEmail: form.clientEmail,
         storeId: form.storeId || null,
         clientContact: form.clientContact,
-        items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD })),
+        items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD, color: c.color, storage: c.storage })),
         totalUSD,
       }
       const res = await fetch("/api/pedidos", {
@@ -529,7 +947,8 @@ export default function PedidosPage() {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2 items-end">
+          {/* Status Filter */}
           <Select value={statusFilter} onValueChange={(v: string | null) => setStatusFilter(v === "all" ? "" : v || "")}>
             <SelectTrigger className="w-40 bg-muted border-border text-foreground">
               <SelectValue placeholder="Filtrar estado">{!statusFilter ? "Filtrar estado" : statusConfig[statusFilter]?.label || statusFilter}</SelectValue>
@@ -541,6 +960,93 @@ export default function PedidosPage() {
               ))}
             </SelectContent>
           </Select>
+
+          {/* Date From */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Fecha desde</Label>
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            />
+          </div>
+
+          {/* Date To */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Fecha hasta</Label>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            />
+          </div>
+
+          {/* Store Filter */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Tienda</Label>
+            <Select value={storeFilter} onValueChange={(v: string | null) => setStoreFilter(v === "all" ? "" : v || "")}>
+              <SelectTrigger className="w-48 bg-muted border-border text-foreground">
+                <SelectValue placeholder="Todas">{!storeFilter ? "Todas" : stores.find(s => s.id === storeFilter)?.name || storeFilter}</SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-card text-foreground">
+                <SelectItem value="all">Todas</SelectItem>
+                {stores.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Total Range */}
+          <div className="flex items-center gap-2 space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Total ({totalCurrency})</Label>
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                placeholder="Mín"
+                value={totalMin}
+                onChange={(e) => setTotalMin(e.target.value)}
+                className="w-24 px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                step="0.01"
+                min="0"
+              />
+              <span className="text-muted-foreground">–</span>
+              <Input
+                type="number"
+                placeholder="Máx"
+                value={totalMax}
+                onChange={(e) => setTotalMax(e.target.value)}
+                className="w-24 px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <Select value={totalCurrency} onValueChange={(v) => v && setTotalCurrency(v as "USD" | "ARS")}>
+              <SelectTrigger className="w-24 bg-muted border-border text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card text-foreground">
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="ARS">ARS</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Clear Filters */}
+          {(statusFilter || dateFrom || dateTo || storeFilter || totalMin || totalMax) && (
+            <Button variant="ghost" size="sm" onClick={() => {
+              setStatusFilter("")
+              setDateFrom("")
+              setDateTo("")
+              setStoreFilter("")
+              setTotalMin("")
+              setTotalMax("")
+            }} className="text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4 mr-1" /> Limpiar
+            </Button>
+          )}
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
@@ -663,239 +1169,49 @@ export default function PedidosPage() {
         </div>
       )}
 
-      <Dialog open={!!productDetail} onOpenChange={(o) => { if (!o) setProductDetail(null) }}>
-        <DialogContent className="bg-card text-foreground max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Detalle del pedido</DialogTitle>
-              {productDetail && !editingOrder && (
-                <Button variant="ghost" size="sm" onClick={() => startEditing(productDetail.order)} className="text-muted-foreground hover:text-foreground">
-                  <Pencil className="w-4 h-4 mr-1" /> Editar
-                </Button>
-              )}
-            </div>
-          </DialogHeader>
-          {productDetail && (() => {
-            const order = productDetail.order
-            const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
-            const allPricing = order.items.map(i => ({
-              item: i,
-              pricing: computeItemPricing(i, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate),
-            }))
-            const orderTotals = allPricing.reduce((acc, { pricing: p }) => ({
-              totalUSD: Math.round((acc.totalUSD + p.finalPriceUSD) * 100) / 100,
-              totalARS: acc.totalARS + p.finalPriceARS,
-            }), { totalUSD: 0, totalARS: 0 })
+      {/* Detail Dialog */}
+      {productDetail && (
+        <Dialog open onOpenChange={(o) => { if (!o) { setProductDetail(null); setActiveTab("items") } }}>
+          <DialogContent className="bg-card text-foreground max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DetailDialogContent
+              productDetail={productDetail}
+              editingOrder={editingOrder}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              editForm={editForm}
+              setEditForm={setEditForm}
+              savingEdit={savingEdit}
+              handleSaveEdit={handleSaveEdit}
+              paymentAmount={paymentAmount}
+              setPaymentAmount={setPaymentAmount}
+              paymentCurrency={paymentCurrency}
+              setPaymentCurrency={setPaymentCurrency}
+              savingPay={savingPay}
+              handleSavePayment={handleSavePayment}
+              startEditing={startEditing}
+              setEditingOrder={setEditingOrder}
+              setWhatsappMessage={setWhatsappMessage}
+              setWhatsappDialogOpen={setWhatsappDialogOpen}
+              toast={toast}
+              formatUSD={formatUSD}
+              formatARS={formatARS}
+              formatWhatsAppDisplay={formatWhatsAppDisplay}
+              statusConfig={statusConfig}
+              paymentConfig={paymentConfig}
+              computeItemPricing={computeItemPricing}
+              exchangeRate={exchangeRate}
+              usdtRate={usdtRate}
+              getItemStatusBadge={getItemStatusBadge}
+              courierLabel={courierLabel}
+              stores={stores}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
-            return (
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-lg font-semibold text-foreground">
-                      #{order.internalNumber} — <span className={payCfg.className}>{order.clientName} {order.clientSurname}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString("es-AR", { dateStyle: "long" })}</p>
-                  </div>
-                  <Badge className={`${(statusConfig[order.status] || statusConfig.pending).className} border-0`}>
-                    {(statusConfig[order.status] || statusConfig.pending).label}
-                  </Badge>
-                </div>
-
-                {editingOrder ? (
-                  <div className="space-y-3 border border-border rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-foreground">Editar pedido</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Nombre</Label>
-                        <Input value={editForm.clientName} onChange={(e) => setEditForm({ ...editForm, clientName: e.target.value })} className="bg-muted border-border text-foreground" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Apellido</Label>
-                        <Input value={editForm.clientSurname} onChange={(e) => setEditForm({ ...editForm, clientSurname: e.target.value })} className="bg-muted border-border text-foreground" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Teléfono</Label>
-                        <Input value={editForm.clientPhone} onChange={(e) => setEditForm({ ...editForm, clientPhone: e.target.value })} className="bg-muted border-border text-foreground" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Email</Label>
-                        <Input type="email" value={editForm.clientEmail} onChange={(e) => setEditForm({ ...editForm, clientEmail: e.target.value })} className="bg-muted border-border text-foreground" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Contacto</Label>
-                        <Input value={editForm.clientContact} onChange={(e) => setEditForm({ ...editForm, clientContact: e.target.value })} className="bg-muted border-border text-foreground" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Tienda</Label>
-                        <Select value={editForm.storeId || "__none"} onValueChange={(v: string | null) => setEditForm({ ...editForm, storeId: v === "__none" ? "" : v || "" })}>
-                          <SelectTrigger className="bg-muted border-border text-foreground">
-                            <SelectValue placeholder="Seleccionar tienda" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card text-foreground">
-                            <SelectItem value="__none">Sin tienda</SelectItem>
-                            {stores.map((s) => (
-                              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Estado</Label>
-                        <Select value={editForm.status} onValueChange={(v: string | null) => setEditForm({ ...editForm, status: v || "" })}>
-                          <SelectTrigger className="bg-muted border-border text-foreground">
-                            <SelectValue placeholder="Seleccionar estado" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card text-foreground">
-                            {Object.entries(statusConfig).map(([k, v]) => (
-                              <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1.5 col-span-2">
-                        <Label className="text-xs text-muted-foreground">Notas</Label>
-                        <textarea
-                          value={editForm.notes}
-                          onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                          className="w-full bg-muted border border-border rounded-lg p-2 text-sm text-foreground resize-none"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button type="button" variant="ghost" onClick={() => setEditingOrder(false)} className="text-muted-foreground">Cancelar</Button>
-                      <Button type="button" disabled={savingEdit} onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        {savingEdit ? "Guardando..." : "Guardar cambios"}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{order.clientPhone || "—"}</p></div>
-                      <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{order.clientEmail || "—"}</p></div>
-                      <div><p className="text-muted-foreground">Contacto</p><p className="text-foreground">{order.clientContact || "—"}</p></div>
-                      <div><p className="text-muted-foreground">Tienda</p><p className="text-foreground">{order.store?.name || "—"}</p></div>
-                    </div>
-
-                    <div className="border border-border rounded-lg divide-y divide-border">
-                      {allPricing.map(({ item: i, pricing: p }) => (
-                        <div key={i.id} className="p-3 space-y-1.5">
-                          <div className="flex justify-between text-sm">
-                            <span className="font-medium text-foreground">{i.productName ?? i.product?.name ?? "Producto eliminado"} × {i.quantity}</span>
-                            <span className="text-foreground">{formatUSD(i.priceUSD * i.quantity)}</span>
-                          </div>
-                          {i.bulk && (
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>{courierLabel[i.bulk.courier] || i.bulk.courier}</span>
-                              {i.bulk.trackingCode && <span className="text-blue-400">📍 {i.bulk.trackingCode}</span>}
-                            </div>
-                          )}
-                          {i.bulkType && <p className="text-xs text-muted-foreground">Tipo bulto: {i.bulkType}</p>}
-                          {getItemStatusBadge(i.shippingStatus)}
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs text-muted-foreground border-t border-border/50">
-                            <span>Costo USDT: <span className="text-foreground">${p.costUSDT.toFixed(2)}</span></span>
-                            <span>Logística: <span className="text-foreground">{i.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
-                            <span>Envío ARS: <span className="text-foreground">${p.shippingCost.toLocaleString("es-AR")}</span></span>
-                            <span>Subtotal ARS: <span className="text-foreground">${p.subtotalARS.toLocaleString("es-AR")}</span></span>
-                            <span>Ganancia ARS: <span className="text-[#0071e3]">${p.profitARS.toLocaleString("es-AR")}</span></span>
-                            <span>Final ARS: <span className="text-[#22C55E]">${p.finalPriceARS.toLocaleString("es-AR")}</span></span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="border border-border rounded-lg p-4 space-y-2">
-                      <h3 className="text-sm font-semibold text-foreground">Totales del pedido</h3>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-                        <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${orderTotals.totalUSD.toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${orderTotals.totalARS.toLocaleString("es-AR")}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Pagado</span><span className="text-[#22C55E]">${order.amountPaidUSD.toFixed(2)} USD</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Saldo pendiente</span><span className={orderTotals.totalUSD - order.amountPaidUSD > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>${Math.max(0, orderTotals.totalUSD - order.amountPaidUSD).toFixed(2)} USD</span></div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border pt-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
-                        <span className={`text-xs font-medium ${payCfg.className}`}>
-                          {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${orderTotals.totalUSD.toFixed(2)} USD
-                        </span>
-                      </div>
-                      <div className="flex items-end gap-3">
-                        <div className="flex-1 space-y-1.5">
-                          <Label className="text-xs text-muted-foreground">Monto</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            step={0.01}
-                            value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(e.target.value)}
-                            className="bg-muted border-border text-foreground"
-                          />
-                        </div>
-                        <div className="w-24 space-y-1.5">
-                          <Label className="text-xs text-muted-foreground">Moneda</Label>
-                          <Select value={paymentCurrency} onValueChange={(v) => v && setPaymentCurrency(v)}>
-                            <SelectTrigger className="bg-muted border-border text-foreground">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card text-foreground">
-                              <SelectItem value="USD">USD</SelectItem>
-                              <SelectItem value="ARS">ARS</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button
-                          type="button"
-                          disabled={savingPay || !paymentAmount || Number(paymentAmount) <= 0}
-                          onClick={handleSavePayment}
-                          size="sm"
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        >
-                          {savingPay ? "Guardando..." : "Registrar pago"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {order.payments && order.payments.length > 0 && (
-                      <div className="border-t border-border pt-4 space-y-2">
-                        <h3 className="text-sm font-semibold text-foreground">Historial de pagos</h3>
-                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                          {order.payments.map((p) => (
-                            <div key={p.id} className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-2">
-                              <span className="text-muted-foreground">
-                                {new Date(p.date).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                              <span className="text-foreground font-medium">
-                                {p.amountARS ? `$${p.amountARS.toLocaleString("es-AR")} ARS` : `$${p.amountUSD.toFixed(2)} USD`}
-                              </span>
-                              <span className="text-muted-foreground">{p.concept || "—"}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground text-right">
-                          Total pagado: <span className="text-[#22C55E] font-medium">${order.amountPaidUSD.toFixed(2)} USD</span>
-                        </p>
-                      </div>
-                    )}
-
-                    {order.notes && (
-                      <div className="border-t border-border pt-3">
-                        <p className="text-xs text-muted-foreground mb-1">Notas</p>
-                        <p className="text-sm text-foreground">{order.notes}</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )
-          })()}
-        </DialogContent>
-      </Dialog>
-
+      {/* Nuevo pedido Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-<DialogContent className="bg-card text-foreground max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="bg-card text-foreground max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Nuevo pedido</DialogTitle>
           </DialogHeader>
@@ -904,21 +1220,21 @@ export default function PedidosPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Nombre</Label>
-                  <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="bg-muted border-border text-foreground" />
+                  <Input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Apellido</Label>
-                  <Input value={form.clientSurname} onChange={(e) => setForm({ ...form, clientSurname: e.target.value })} className="bg-muted border-border text-foreground" />
+                  <Input value={form.clientSurname} onChange={(e) => setForm({ ...form, clientSurname: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Teléfono</Label>
-                  <Input value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} className="bg-muted border-border text-foreground" />
+                  <Input value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Email</Label>
-                  <Input type="email" value={form.clientEmail} onChange={(e) => setForm({ ...form, clientEmail: e.target.value })} className="bg-muted border-border text-foreground" />
+                  <Input type="email" value={form.clientEmail} onChange={(e) => setForm({ ...form, clientEmail: e.target.value })} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
                 </div>
               </div>
               <div className="space-y-1.5">
@@ -943,23 +1259,90 @@ export default function PedidosPage() {
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Buscar por nombre, marca, categoría, precio, stock..."
-                    className="pl-9 bg-muted border-border text-foreground"
+                    className="pl-9 w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                     autoFocus
                   />
                   {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" />}
                 </div>
               </div>
 
-              <div className="max-h-40 overflow-y-auto rounded-lg border border-border">
+<div className="max-h-40 overflow-y-auto rounded-lg border border-border">
                 {searchResults.map((p) => {
                   const displayName = p.name.split(" / ")[0]
+                  // Extract colors from images
+                  const colors = Array.isArray(p.images)
+                    ? [...new Set(p.images.filter((img): img is { url: string; color: string } => {
+                        if (typeof img !== "object" || img === null) return false
+                        if (!("color" in img)) return false
+                        const color = img.color
+                        return typeof color === "string" && color.length > 0
+                      }).map(img => img.color))]
+                    : []
+                  const hasColors = colors.length > 0
+                  const showColorSelector = hasColors && selectedProductForColor?.id === p.id
                   return (
-                    <button key={p.id} type="button" onClick={() => addToCart(p)} className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between gap-2 border-b border-border last:border-b-0">
-                      <span className="truncate" title={p.name}>
-                        {displayName}
-                      </span>
-                      <span className="text-muted-foreground text-xs whitespace-nowrap shrink-0">{formatUSD(p.priceUSD)}</span>
-                    </button>
+                    <div key={p.id} className="border-b border-border last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (hasColors && selectedProductForColor?.id !== p.id) {
+                            setSelectedProductForColor(p)
+                            setSelectedProductColor("")
+                            setSelectedProductStorage("")
+                          } else if (!hasColors) {
+                            addToCart(p)
+                          }
+                        }}
+                        className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between gap-2"
+                      >
+                        <span className="truncate" title={p.name}>
+                          {displayName}
+                        </span>
+                        <span className="text-muted-foreground text-xs whitespace-nowrap shrink-0">{formatUSD(p.priceUSD)}</span>
+                      </button>
+                      {showColorSelector && (
+                        <div className="px-3 py-2 space-y-2 bg-muted/30">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">Color</Label>
+                              <Select value={selectedProductColor} onValueChange={(v) => v && setSelectedProductColor(v)}>
+                                <SelectTrigger className="bg-muted border-border text-foreground">
+                                  <SelectValue placeholder="Seleccionar color" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card text-foreground">
+                                  {colors.map((color) => (
+                                    <SelectItem key={color} value={color}>{color}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">Almacenamiento</Label>
+                              <Input
+                                type="text"
+                                value={selectedProductStorage}
+                                onChange={(e) => setSelectedProductStorage(e.target.value)}
+                                placeholder="Ej: 128GB, 256GB"
+                                className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                              />
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                            onClick={() => {
+                              addToCart(p, selectedProductColor || undefined, selectedProductStorage || undefined)
+                              setSelectedProductForColor(null)
+                              setSelectedProductColor("")
+                              setSelectedProductStorage("")
+                            }}
+                            disabled={hasColors && !selectedProductColor}
+                          >
+                            Agregar al pedido
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   )
                 })}
                 {searchHasMore && (
@@ -975,9 +1358,13 @@ export default function PedidosPage() {
               {cart.length > 0 && (
                 <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 max-h-40 overflow-y-auto">
                   {cart.map((item) => (
-                    <div key={item.productId} className="flex items-center justify-between gap-2 text-sm">
-                      <span className="truncate text-muted-foreground">{item.name} × {item.quantity}</span>
-                      <button type="button" onClick={() => removeFromCart(item.productId)} className="text-red-400 text-xs hover:text-red-300 whitespace-nowrap shrink-0">Quitar</button>
+                    <div key={`${item.productId}-${item.color || ""}-${item.storage || ""}`} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate text-muted-foreground">
+                        {item.name} × {item.quantity}
+                        {item.color && <span className="ml-1 text-xs text-primary">({item.color})</span>}
+                        {item.storage && <span className="ml-1 text-xs text-[#0071e3]">[{item.storage}]</span>}
+                      </span>
+                      <button type="button" onClick={() => removeFromCart(item.productId, item.color, item.storage)} className="text-red-400 text-xs hover:text-red-300 whitespace-nowrap shrink-0">Quitar</button>
                     </div>
                   ))}
                   <div className="border-t border-border pt-2 flex justify-between font-medium">
@@ -1013,6 +1400,52 @@ export default function PedidosPage() {
             <Button type="button" variant="ghost" onClick={() => { setDeleteDialogOpen(false); setDeleteTarget(null) }} className="text-muted-foreground">Cancelar</Button>
             <Button type="button" disabled={saving} onClick={handleDeleteOrder} className="bg-red-500 hover:bg-red-600 text-white">
               {saving ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* WhatsApp Dialog */}
+      <Dialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen}>
+        <DialogContent className="bg-card text-foreground max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Enviar WhatsApp al cliente</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Mensaje</Label>
+              <Textarea
+                value={whatsappMessage}
+                onChange={(e) => setWhatsappMessage(e.target.value)}
+                className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                rows={10}
+                placeholder="Escribe tu mensaje..."
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Se abrirá WhatsApp Web con el mensaje pre-cargado. El número del cliente: {productDetail ? formatWhatsAppDisplay(productDetail.order.clientPhone || productDetail.order.clientContact) : "—"}
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 p-4 border-t border-border shrink-0">
+            <Button type="button" variant="ghost" onClick={() => setWhatsappDialogOpen(false)} className="text-muted-foreground">Cancelar</Button>
+            <Button
+              type="button"
+              disabled={whatsappSending || !whatsappMessage.trim()}
+              onClick={() => {
+                if (!productDetail) return
+                const phone = productDetail.order.clientPhone || productDetail.order.clientContact
+                if (!phone) {
+                  toast.error("El cliente no tiene teléfono registrado")
+                  return
+                }
+                const digits = phone.replace(/\D/g, "")
+                const url = `https://wa.me/${digits}?text=${encodeURIComponent(whatsappMessage)}`
+                window.open(url, "_blank")
+                setWhatsappDialogOpen(false)
+              }}
+              className="bg-[#25D366] hover:bg-[#25D366]/90 text-white"
+            >
+              <MessageSquare className="w-4 h-4 mr-1" /> Abrir WhatsApp
             </Button>
           </div>
         </DialogContent>

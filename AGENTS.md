@@ -1,23 +1,23 @@
 # AGENTS.md (Workflow Context) — importexpress
-> Generado: 2026-08-13 23:50:52 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
+> Generado: 2026-08-15 14:22:49 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
 
 ## 🎯 Objetivo actual
-DÍA FALLIDO (revertido a f1bc018): se intentó limpiar calidad de ImportExpress — auditoría via JOACO: corregir warnings ESLint (43), warnings Turbopack de fs dinámico (10, fix /*turbopackIgnore*/), E2E con standalone server, Dockerfile con etapa test, y resolver audit de dependencias (uploadthing/@vercel/og/nodemailer). Resultado: deps forzadas rompían npm ci en Railway (ERESOLVE: @uploadthing/react@5 exigía React 18; nodemailer@9 rompía peer de next-auth ^7||^8). Se eliminaron uploadthing/@uploadthing/react/@vercel/og y se bajó nodemailer a 8.0.11 → deploy OK. Usuario pidió revertir TODO el día: main restaurado a f1bc018 (deploy exitoso 12-ago), push --force, re-deploy verificado en vivo (Next 16.2.12). Backup del WIP de hoy en branch/tag today-wip-backup-20260813 (commit 2ce40bc).
+Modificado flujo WhatsApp en página de producto individual: botón 'Consultar por WhatsApp' ahora abre formulario para datos de usuario (nombre, teléfono, dirección) y genera mensaje idéntico al formato del carrito (producto + link + total + datos usuario) antes de abrir WhatsAppAgentSelector. Verificado: typecheck, build, lint (0 errores), tests 117 pass. Push: f2d9b44
 
 ## 📍 Estado actual
   Branch: main · Working tree: SUCIO (1 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 123 +-------------------------------------------------------------
-   1 file changed, 2 insertions(+), 121 deletions(-)
+   AGENTS.md | 116 ++------------------------------------------------------------
+   1 file changed, 2 insertions(+), 114 deletions(-)
    M AGENTS.md
 
   Últimos commits:
+  f2d9b44 feat(product): add WhatsApp consultation form with user data (mirrors cart flow)
   f1bc018 docs: actualizar AGENTS.md — cierre de día 11-ago-2026 (testing completo)
   619bf2a test(e2e): arreglar E2E de Playwright con selectores data-testid y vista responsive
   a5faf59 fix(test): fix lint error in CartDrawer test
   f0357f3 feat(test): add vitest + playwright testing infrastructure
-  f2f75c8 docs: actualizar AGENTS.md — carrito FAB móvil completado, sin tareas activas
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -119,4 +119,4 @@ tsconfig.tsbuildinfo
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-        _(decisiones de diseño/acuerdo a registrar aquí)_
+          _(decisiones de diseño/acuerdo a registrar aquí)_
