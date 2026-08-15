@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Ship, Plus, Search, Package, Eye, Trash2 } from "lucide-react"
+import { Ship, Plus, Search, Package, Eye, Trash2, Pencil } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD, formatDate, formatARS } from "@/lib/utils"
@@ -108,6 +108,8 @@ export default function BultosPage() {
   const [saving, setSaving] = useState(false)
   const [viewBulk, setViewBulk] = useState<Bulk | null>(null)
   const [viewLoading, setViewLoading] = useState(false)
+  const [trackingDraft, setTrackingDraft] = useState("")
+  const [editingTracking, setEditingTracking] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Bulk | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -253,14 +255,54 @@ export default function BultosPage() {
   async function openView(bulk: Bulk) {
     setViewBulk(bulk)
     setViewLoading(true)
+    setEditingTracking(false)
+    setTrackingDraft(bulk.trackingCode || "")
     try {
       const res = await fetch(`/api/bultos/${bulk.id}`)
       const data = await res.json()
       setViewBulk(data)
+      setTrackingDraft(data.trackingCode || "")
     } catch {
       toast.error("Error al cargar bulto")
     } finally {
       setViewLoading(false)
+    }
+  }
+
+  async function handleSaveTracking(e: React.FormEvent) {
+    e.preventDefault()
+    if (!viewBulk) return
+    const code = trackingDraft.trim()
+    if (!code) {
+      toast.error("Ingresá el código de seguimiento")
+      return
+    }
+    setSaving(true)
+    try {
+      const newStatus = viewBulk.status === "pending" ? "en_camino" : viewBulk.status
+      const res = await fetch(`/api/bultos/${viewBulk.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trackingCode: code,
+          status: newStatus,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        const msg = err.details ? `${err.error}: ${err.details.map((d: {path: string[], message: string}) => `${d.path.join(".")} ${d.message}`).join(", ")}` : err.error
+        throw new Error(msg || "Error al guardar el seguimiento")
+      }
+      const updated = await res.json()
+      setViewBulk(updated)
+      setTrackingDraft(updated.trackingCode || "")
+      setEditingTracking(false)
+      toast.success("Seguimiento guardado")
+      setRefreshKey(k => k + 1)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar el seguimiento")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -323,7 +365,11 @@ export default function BultosPage() {
               bulks.map((b) => {
                 const cfg = statusConfig[b.status] || statusConfig.pending
                 return (
-                  <TableRow key={b.id} className="border-border hover:bg-muted">
+                  <TableRow
+                    key={b.id}
+                    className="border-border hover:bg-muted cursor-pointer"
+                    onClick={() => openView(b)}
+                  >
                     <TableCell className="text-center text-xs text-muted-foreground font-mono">#{b.internalNumber}</TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(b.date)}</TableCell>
                     <TableCell className="text-muted-foreground capitalize">{b.type === "grande" ? "Grande" : "Chico"}</TableCell>
@@ -335,7 +381,7 @@ export default function BultosPage() {
                     </TableCell>
                     <TableCell className="text-center"><StatusBadge status={b.status} /></TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" onClick={() => openView(b)} className="text-muted-foreground hover:text-blue-400">
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -486,11 +532,8 @@ export default function BultosPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!viewBulk} onOpenChange={(o) => { if (!o) setViewBulk(null) }}>
-        <DialogContent className="bg-card text-foreground max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Bulto — {viewBulk?.type === "grande" ? "Grande" : "Chico"} — {courierLabel[viewBulk?.courier || ""] || viewBulk?.courier}</DialogTitle>
-          </DialogHeader>
+      <Dialog open={!!viewBulk} onOpenChange={(o) => { if (!o) { setViewBulk(null); setEditingTracking(false) } }}>
+        <DialogContent className="bg-card text-foreground max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           {viewLoading ? (
             <div className="text-center text-muted-foreground py-12">Cargando bulto...</div>
           ) : !viewBulk ? (
@@ -499,73 +542,106 @@ export default function BultosPage() {
               <p>Bulto no encontrado</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Bulto</p>
-                  <p className="text-foreground font-mono">#{viewBulk.internalNumber}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Estado</p>
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <DialogTitle className="flex items-center gap-2 text-base">
+                    <span className="font-mono">#{viewBulk.internalNumber}</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground capitalize">
+                      {viewBulk.type === "grande" ? "Grande" : "Chico"}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground capitalize">
+                      {courierLabel[viewBulk.courier] || viewBulk.courier}
+                    </span>
+                  </DialogTitle>
                   <StatusBadge status={viewBulk.status} />
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Fecha</p>
-                  <p className="text-foreground">{formatDate(viewBulk.date)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Código de seguimiento</p>
-                  <p className="text-foreground">{viewBulk.trackingCode || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Costo total ARS</p>
-                  <p className="text-foreground">{viewBulk.totalCostARS ? `$${viewBulk.totalCostARS.toLocaleString("es-AR")}` : "—"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Costo total USD</p>
-                  <p className="text-foreground">${viewBulk.totalCostUSD.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Productos</p>
-                  <p className="text-foreground">{viewBulk.orderItems?.length || 0}</p>
-                </div>
-              </div>
-
-              {(viewBulk.orderItems?.length || 0) > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Productos en este bulto</p>
-                  <div className="max-h-60 overflow-y-auto border border-border rounded-lg">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-border hover:bg-transparent">
-                          <TableHead className="text-muted-foreground">Producto</TableHead>
-                          <TableHead className="text-muted-foreground">Cliente</TableHead>
-                          <TableHead className="text-muted-foreground">Seguimiento</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {viewBulk.orderItems.map((item) => (
-                          <TableRow key={item.id} className="border-border hover:bg-muted">
-                            <TableCell className="font-medium text-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</TableCell>
-                            <TableCell className="text-muted-foreground">
-                              Pedido #{item.order.internalNumber} — {item.order.clientName} {item.order.clientSurname}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-xs">{item.trackingCode || "—"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+              </DialogHeader>
+              <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-5">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Fecha</p>
+                    <p className="text-foreground">{formatDate(viewBulk.date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Productos</p>
+                    <p className="text-foreground">{viewBulk.orderItems?.length || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Costo total ARS</p>
+                    <p className="text-foreground">{viewBulk.totalCostARS ? `$${viewBulk.totalCostARS.toLocaleString("es-AR")}` : "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Costo total USD</p>
+                    <p className="text-foreground">${viewBulk.totalCostUSD.toFixed(2)}</p>
                   </div>
                 </div>
-              )}
 
-              {viewBulk.notes && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Notas</p>
-                  <p className="text-sm text-foreground bg-muted/30 rounded-lg p-3">{viewBulk.notes}</p>
+                <div className="border border-border rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-muted-foreground">Seguimiento del courier</p>
+                    {!editingTracking && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => { setTrackingDraft(viewBulk.trackingCode || ""); setEditingTracking(true) }} className="text-muted-foreground hover:text-blue-400">
+                        <Pencil className="w-3.5 h-3.5 mr-1" /> {viewBulk.trackingCode ? "Editar" : "Agregar"}
+                      </Button>
+                    )}
+                  </div>
+                  {editingTracking ? (
+                    <form onSubmit={handleSaveTracking} className="flex gap-2">
+                      <Input
+                        value={trackingDraft}
+                        onChange={(e) => setTrackingDraft(e.target.value)}
+                        className="bg-muted border-border text-foreground"
+                        placeholder="Ingresar código de seguimiento"
+                        autoFocus
+                      />
+                      <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0">
+                        {saving ? "Guardando..." : "Guardar"}
+                      </Button>
+                    </form>
+                  ) : viewBulk.trackingCode ? (
+                    <p className="text-foreground font-medium font-mono text-blue-400">📍 {viewBulk.trackingCode}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin tracking — agregá el código cuando lo tengas</p>
+                  )}
                 </div>
-              )}
-            </div>
+
+                {(viewBulk.orderItems?.length || 0) > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Productos en este bulto</p>
+                    <div className="max-h-60 overflow-y-auto border border-border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-border hover:bg-transparent">
+                            <TableHead className="text-muted-foreground">Producto</TableHead>
+                            <TableHead className="text-muted-foreground">Cliente</TableHead>
+                            <TableHead className="text-muted-foreground">Seguimiento</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {viewBulk.orderItems.map((item) => (
+                            <TableRow key={item.id} className="border-border hover:bg-muted">
+                              <TableCell className="font-medium text-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</TableCell>
+                              <TableCell className="text-muted-foreground">
+                                Pedido #{item.order.internalNumber} — {item.order.clientName} {item.order.clientSurname}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-xs">{item.trackingCode || "—"}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+
+                {viewBulk.notes && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Notas</p>
+                    <p className="text-sm text-foreground bg-muted/30 rounded-lg p-3">{viewBulk.notes}</p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

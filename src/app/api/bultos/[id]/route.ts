@@ -162,7 +162,7 @@ export async function PUT(
     })
     if (!updated) return Response.json({ error: "Bulto no encontrado" }, { status: 404 })
 
-    if (body.status === "en_camino" && body.trackingCode) {
+    if (body.status === "en_camino" && body.trackingCode && existing.status !== "en_camino") {
       const orderItems = await prisma.orderItem.findMany({
         where: { bulkId: id },
         include: { order: true },
