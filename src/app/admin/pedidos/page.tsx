@@ -854,17 +854,22 @@ export default function PedidosPage() {
 
   function addToCart(product: Product, color?: string, storage?: string) {
     const existing = cart.find(c => c.productId === product.id && c.color === color && c.storage === storage)
+    setCart(prev => {
+      const has = prev.find(c => c.productId === product.id && c.color === color && c.storage === storage)
+      if (has) {
+        return prev.map(c => c.productId === product.id && c.color === color && c.storage === storage ? { ...c, quantity: c.quantity + 1 } : c)
+      }
+      return [...prev, { productId: product.id, name: product.name, quantity: 1, priceUSD: product.priceUSD, color, storage }]
+    })
     if (existing) {
-      setCart(cart.map(c => c.productId === product.id && c.color === color && c.storage === storage ? { ...c, quantity: c.quantity + 1 } : c))
       toast.success(`${product.name} — cantidad: ${existing.quantity + 1}`)
     } else {
-      setCart([...cart, { productId: product.id, name: product.name, quantity: 1, priceUSD: product.priceUSD, color, storage }])
       toast.success(`${product.name} agregado`)
     }
   }
 
   function removeFromCart(productId: string, color?: string, storage?: string) {
-    setCart(cart.filter(c => !(c.productId === productId && c.color === color && c.storage === storage)))
+    setCart(prev => prev.filter(c => !(c.productId === productId && c.color === color && c.storage === storage)))
   }
 
   const totalUSD = cart.reduce((sum, item) => sum + item.priceUSD * item.quantity, 0)
@@ -993,13 +998,19 @@ export default function PedidosPage() {
       clientContact: readerParsed.clientPhone,
       notes: readerParsed.address ? `Dirección: ${readerParsed.address}` : "",
     })
-    for (const { parsed, product } of readerMatched) {
-      if (product) {
-        for (let i = 0; i < parsed.quantity; i++) {
-          addToCart(product)
+    setCart(prev => {
+      let next = [...prev]
+      for (const { parsed, product } of readerMatched) {
+        if (!product) continue
+        const idx = next.findIndex(c => c.productId === product.id && !c.color && !c.storage)
+        if (idx >= 0) {
+          next[idx] = { ...next[idx], quantity: next[idx].quantity + parsed.quantity }
+        } else {
+          next = [...next, { productId: product.id, name: product.name, quantity: parsed.quantity, priceUSD: product.priceUSD }]
         }
       }
-    }
+      return next
+    })
     setReaderOpen(false)
     setReaderText("")
     setReaderParsed(null)
