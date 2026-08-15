@@ -185,6 +185,7 @@ describe("CartDrawer", () => {
     fireEvent.change(screen.getByPlaceholderText("Nombre completo"), { target: { value: "Juan Perez" } })
     fireEvent.change(screen.getByPlaceholderText("Teléfono"), { target: { value: "+5491112345678" } })
     fireEvent.change(screen.getByPlaceholderText("Dirección"), { target: { value: "Calle Falsa 123" } })
+    fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: "juan@mail.com" } })
 
     fireEvent.click(screen.getByText("Enviar pedido por WhatsApp"))
 

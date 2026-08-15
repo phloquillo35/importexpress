@@ -14,7 +14,7 @@ interface CartDrawerProps {
 export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, clearCart, total } = useCart()
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: "", phone: "", address: "" })
+  const [form, setForm] = useState({ name: "", phone: "", address: "", email: "" })
   const [pendingWhatsAppMessage, setPendingWhatsAppMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -43,6 +43,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     lines.push(`Nombre: ${form.name}`)
     lines.push(`Teléfono: ${form.phone}`)
     lines.push(`Dirección: ${form.address}`)
+    lines.push(`Email: ${form.email}`)
     lines.push("\n¡Gracias!")
     return lines.join("\n")
   }
@@ -51,7 +52,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     e.preventDefault()
     const msg = buildMessage()
     setPendingWhatsAppMessage(msg)
-    setForm({ name: "", phone: "", address: "" })
+    setForm({ name: "", phone: "", address: "", email: "" })
     setShowForm(false)
     onClose()
   }
@@ -178,6 +179,14 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   placeholder="Dirección"
                   value={form.address}
                   onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                  required
+                  className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                   required
                   className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />

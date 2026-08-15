@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Loader2, MessageSquare, Calendar, Filter, X, DollarSign, Store, MoreHorizontal } from "lucide-react"
+import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Loader2, MessageSquare, Calendar, Filter, X, DollarSign, Store, MoreHorizontal, ClipboardPaste } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD, formatARS } from "@/lib/utils"
 import { formatWhatsAppDisplay } from "@/hooks/useWhatsAppConfig"
 import { calculateFinalPrice } from "@/lib/pricing"
+import { parseWhatsAppOrder, type ParsedOrder } from "@/lib/whatsapp-order-parser"
 import {
   Table,
   TableBody,
@@ -535,8 +536,14 @@ export default function PedidosPage() {
   // Cart with color and storage
   const [cart, setCart] = useState<{ productId: string; name: string; quantity: number; priceUSD: number; color?: string; storage?: string }[]>([])
   const [stores, setStores] = useState<StoreType[]>([])
-  const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
+  const [form, setForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "", notes: "" })
   const [saving, setSaving] = useState(false)
+  // WhatsApp order reader (paste message from client)
+  const [readerOpen, setReaderOpen] = useState(false)
+  const [readerText, setReaderText] = useState("")
+  const [readerParsed, setReaderParsed] = useState<ParsedOrder | null>(null)
+  const [readerMatched, setReaderMatched] = useState<{ parsed: ParsedOrder["items"][number]; product: Product | null }[]>([])
+  const [readerChecking, setReaderChecking] = useState(false)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -875,6 +882,7 @@ export default function PedidosPage() {
         clientEmail: form.clientEmail,
         storeId: form.storeId || null,
         clientContact: form.clientContact,
+        notes: form.notes || null,
         items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, priceUSD: c.priceUSD, color: c.color, storage: c.storage })),
         totalUSD,
       }
@@ -892,7 +900,7 @@ export default function PedidosPage() {
       toast.success("Pedido creado")
       setDialogOpen(false)
       setCart([])
-      setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "" })
+      setForm({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", storeId: "", clientContact: "", notes: "" })
       fetchOrders()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear pedido")
@@ -921,6 +929,64 @@ export default function PedidosPage() {
     finally { setSaving(false) }
   }
 
+  async function handleReaderParse() {
+    if (!readerText.trim()) {
+      toast.error("Pegá el mensaje de WhatsApp primero")
+      return
+    }
+    const parsed = parseWhatsAppOrder(readerText)
+    if (parsed.items.length === 0) {
+      toast.error("No se pudieron detectar productos en el mensaje")
+      return
+    }
+    setReaderParsed(parsed)
+    setReaderChecking(true)
+    try {
+      const matched = await Promise.all(
+        parsed.items.map(async (item) => {
+          if (!item.slug) return { parsed: item, product: null }
+          const res = await fetch(`/api/productos?admin=1&search=${encodeURIComponent(item.slug)}&limit=5`)
+          if (!res.ok) return { parsed: item, product: null }
+          const data = await res.json()
+          const product = (data.products || []).find((p: Product) => p.name === item.name || (p.name || "").toLowerCase() === item.name.toLowerCase())
+          return { parsed: item, product: product || null }
+        })
+      )
+      setReaderMatched(matched)
+    } catch {
+      toast.error("Error al buscar productos")
+      setReaderMatched(parsed.items.map((item) => ({ parsed: item, product: null })))
+    } finally {
+      setReaderChecking(false)
+    }
+  }
+
+  function handleReaderConfirm() {
+    if (!readerParsed) return
+    setForm({
+      clientName: readerParsed.clientName,
+      clientSurname: readerParsed.clientSurname,
+      clientPhone: readerParsed.clientPhone,
+      clientEmail: readerParsed.clientEmail,
+      storeId: "",
+      clientContact: readerParsed.clientPhone,
+      notes: readerParsed.address ? `Dirección: ${readerParsed.address}` : "",
+    })
+    for (const { parsed, product } of readerMatched) {
+      if (product) {
+        for (let i = 0; i < parsed.quantity; i++) {
+          addToCart(product)
+        }
+      }
+    }
+    setReaderOpen(false)
+    setReaderText("")
+    setReaderParsed(null)
+    setReaderMatched([])
+    setDialogOpen(true)
+    toast.success("Pedido precargado — revisá y crealo")
+  }
+
   const totalPages = Math.ceil(total / limit)
 
   return (
@@ -932,6 +998,9 @@ export default function PedidosPage() {
         </div>
         <div className="flex items-center gap-2">
           <PapeleraModal model="pedidos" sectionLabel="Pedidos" onRestore={fetchOrders} />
+          <Button variant="outline" onClick={() => setReaderOpen(true)} className="text-muted-foreground hover:text-foreground">
+            <ClipboardPaste className="w-4 h-4 mr-2" /> Pegar pedido de WhatsApp
+          </Button>
           <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
           </Button>
@@ -1142,6 +1211,70 @@ export default function PedidosPage() {
         </Dialog>
       )}
 
+      {/* WhatsApp order reader Dialog */}
+      <Dialog open={readerOpen} onOpenChange={setReaderOpen}>
+        <DialogContent className="bg-card text-foreground max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Pegar pedido de WhatsApp</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Pegá el mensaje que te envió el cliente por WhatsApp (el que genera el carrito o la página de producto). Se detectarán sus datos y los productos automáticamente.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Mensaje de WhatsApp</Label>
+              <Textarea
+                value={readerText}
+                onChange={(e) => { setReaderText(e.target.value); setReaderParsed(null); setReaderMatched([]) }}
+                rows={8}
+                placeholder="Pegá acá el mensaje del cliente..."
+                className="bg-muted border-border text-foreground placeholder-muted-foreground"
+              />
+            </div>
+            <Button type="button" onClick={handleReaderParse} disabled={readerChecking} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+              {readerChecking ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Detectar pedido
+            </Button>
+
+            {readerParsed && (
+              <div className="space-y-3 border border-border rounded-lg p-3">
+                <p className="text-sm font-semibold text-foreground">Pedido detectado</p>
+                <div className="text-sm text-muted-foreground space-y-0.5">
+                  <p><span className="text-foreground">Nombre:</span> {readerParsed.clientName} {readerParsed.clientSurname}</p>
+                  {readerParsed.clientPhone && <p><span className="text-foreground">Teléfono:</span> {readerParsed.clientPhone}</p>}
+                  {readerParsed.clientEmail && <p><span className="text-foreground">Email:</span> {readerParsed.clientEmail}</p>}
+                  {readerParsed.address && <p><span className="text-foreground">Dirección:</span> {readerParsed.address}</p>}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Productos</p>
+                  {readerMatched.map(({ parsed, product }, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate text-muted-foreground">{parsed.name} × {parsed.quantity}</span>
+                      {product ? (
+                        <span className="text-[#22C55E] text-xs shrink-0 whitespace-nowrap">✓ En catálogo</span>
+                      ) : (
+                        <span className="text-red-400 text-xs shrink-0 whitespace-nowrap">✗ Sin match</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {readerMatched.some(({ product }) => !product) && (
+                  <p className="text-xs text-red-400">
+                    Algunos productos no se encontraron en el catálogo. Se precargará el pedido solo con los que sí están.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-3 pt-3 border-t border-border shrink-0">
+            <Button type="button" variant="ghost" onClick={() => setReaderOpen(false)} className="text-muted-foreground">Cancelar</Button>
+            <Button type="button" disabled={!readerParsed || readerChecking} onClick={handleReaderConfirm} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              Precargar pedido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Nuevo pedido Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="bg-card text-foreground max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
@@ -1183,6 +1316,16 @@ export default function PedidosPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Dirección / Notas</Label>
+                <Textarea
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  rows={2}
+                  placeholder="Dirección de entrega o notas..."
+                  className="bg-muted border-border text-foreground placeholder-muted-foreground"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Productos</Label>

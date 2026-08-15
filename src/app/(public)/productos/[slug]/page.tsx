@@ -42,7 +42,7 @@ function ProductDetailContent() {
   const [selectedColor, setSelectedColor] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: "", phone: "", address: "" })
+  const [form, setForm] = useState({ name: "", phone: "", address: "", email: "" })
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const imagePanelRef = useRef<HTMLDivElement>(null)
 
@@ -183,6 +183,7 @@ function buildProductMessage() {
   lines.push(`Nombre: ${form.name}`);
   lines.push(`Teléfono: ${form.phone}`);
   lines.push(`Dirección: ${form.address}`);
+  lines.push(`Email: ${form.email}`);
   lines.push("\n¡Gracias!");
   return lines.join("\n");
 }
@@ -191,7 +192,7 @@ function handleSubmit(e: React.FormEvent) {
   e.preventDefault();
   const msg = buildProductMessage();
   setPendingMessage(msg);
-  setForm({ name: "", phone: "", address: "" });
+  setForm({ name: "", phone: "", address: "", email: "" });
   setShowForm(false);
 }
 
@@ -402,6 +403,14 @@ function handleSubmit(e: React.FormEvent) {
           placeholder="Dirección"
           value={form.address}
           onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+          required
+          className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
           required
           className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
         />
