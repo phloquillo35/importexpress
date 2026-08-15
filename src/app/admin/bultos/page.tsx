@@ -467,10 +467,10 @@ export default function BultosPage() {
       </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className=" bg-card text-foreground max-w-lg">
+        <DialogContent className="bg-card text-foreground max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader><DialogTitle>Editar bulto</DialogTitle></DialogHeader>
           {selectedBulk && (
-            <form onSubmit={handleEditSave} className="space-y-4">
+            <form onSubmit={handleEditSave} className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><p className="text-muted-foreground">Tipo</p><p className="text-foreground capitalize">{selectedBulk.type === "grande" ? "Grande" : "Chico"}</p></div>
                 <div><p className="text-muted-foreground">Courier</p><p className="text-foreground capitalize">{courierLabel[selectedBulk.courier] || selectedBulk.courier}</p></div>
