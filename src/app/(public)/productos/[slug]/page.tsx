@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react"
 import { useParams, useSearchParams } from "next/navigation"
-import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus, ChevronLeft, ChevronRight, X } from "lucide-react"
 import Link from "next/link"
 import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { ProductCard } from "@/components/public/ProductCard"
@@ -41,7 +41,9 @@ function ProductDetailContent() {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
   const [selectedColor, setSelectedColor] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [whatsAppOpen, setWhatsAppOpen] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ name: "", phone: "", address: "" })
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const imagePanelRef = useRef<HTMLDivElement>(null)
 
   function parseProductImages(images: unknown): { colors: string[]; byColor: Record<string, string[]> } {
@@ -96,7 +98,7 @@ function ProductDetailContent() {
           setProduct(data.product)
           setRelated(data.related || [])
         }
-      } catch (e) {
+      } catch (_) {
         if (!cancelled) setError(true)
       } finally {
         if (!cancelled) setLoading(false)
@@ -161,8 +163,37 @@ function ProductDetailContent() {
     )
   }
 
-  const specs = product.specs
-  const arsPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
+const specs = product.specs
+const arsPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
+
+function buildProductMessage() {
+  if (!product) return "";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const productUrl = origin ? `${origin}/productos/${product.slug}` : "";
+  const lines: string[] = ["¡Hola! Quiero hacer un pedido:\n"];
+  lines.push("🛒 *Producto:*");
+  lines.push(
+    `1. ${product.name} - $${Math.round(arsPrice).toLocaleString("es-AR")} ARS`
+  );
+  if (productUrl) {
+    lines.push(`   🔗 ${productUrl}`);
+  }
+  lines.push(`\n💰 *Total:* $${Math.round(arsPrice).toLocaleString("es-AR")} ARS`);
+  lines.push(`\n👤 *Datos:*`);
+  lines.push(`Nombre: ${form.name}`);
+  lines.push(`Teléfono: ${form.phone}`);
+  lines.push(`Dirección: ${form.address}`);
+  lines.push("\n¡Gracias!");
+  return lines.join("\n");
+}
+
+function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  const msg = buildProductMessage();
+  setPendingMessage(msg);
+  setForm({ name: "", phone: "", address: "" });
+  setShowForm(false);
+}
 
   return (
     <>
@@ -292,13 +323,13 @@ function ProductDetailContent() {
               <Plus className="w-5 h-5" />
               Agregar al carrito
             </button>
-            <button
-              onClick={() => setWhatsAppOpen(true)}
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              Consultar por WhatsApp
-            </button>
+<button
+               onClick={() => setShowForm(true)}
+               className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
+             >
+               <ShoppingBag className="w-5 h-5" />
+               Consultar por WhatsApp
+             </button>
           </div>
 
           {product.costUSD && (
@@ -339,11 +370,57 @@ function ProductDetailContent() {
       )}
       </div>
 
-      <WhatsAppAgentSelector
-        open={whatsAppOpen}
-        onClose={() => setWhatsAppOpen(false)}
-        message={`Hola! Me interesa el producto: ${product.name} (${arsPrice ? "$" + Math.round(arsPrice).toLocaleString("es-AR") + " ARS" : "consultar precio"})`}
-      />
+{showForm && (
+  <>
+    <div className="fixed inset-0 z-[50] bg-black/40" onClick={() => setShowForm(false)} />
+    <div className="fixed top-0 right-0 z-[60] h-screen w-full sm:w-[420px] bg-background shadow-2xl transition-transform duration-300 flex flex-col touch-manipulation translate-x-0">
+      <div className="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-4 border-b border-border/50">
+        <h2 className="font-heading font-semibold text-foreground text-lg">Consultar por WhatsApp</h2>
+        <button onClick={() => setShowForm(false)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Cerrar">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+        <input
+          type="text"
+          placeholder="Nombre completo"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+          required
+          className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+        />
+        <input
+          type="tel"
+          placeholder="Teléfono"
+          value={form.phone}
+          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+          required
+          className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+        />
+        <input
+          type="text"
+          placeholder="Dirección"
+          value={form.address}
+          onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+          required
+          className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+        />
+        <button type="submit" className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors">
+          Enviar consulta por WhatsApp
+        </button>
+        <button type="button" onClick={() => setShowForm(false)} className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          Volver
+        </button>
+      </form>
+    </div>
+  </>
+)}
+
+<WhatsAppAgentSelector
+         open={pendingMessage !== null}
+         onClose={() => setPendingMessage(null)}
+         message={pendingMessage ?? ""}
+       />
     </>
   )
 }

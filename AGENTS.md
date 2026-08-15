@@ -1,30 +1,23 @@
 # AGENTS.md (Workflow Context) — importexpress
-> Generado: 2026-08-11 23:01:35 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
+> Generado: 2026-08-13 23:50:52 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
 
 ## 🎯 Objetivo actual
-Testing completo para ImportExpress (Next.js 16 + TS estricto + Prisma/PostgreSQL).
-1) INFRA TESTING (nueva): Vitest + @testing-library/react/jsdom (vitest.config.ts con alias @→./src y coverage v8; vitest.setup.ts con mocks matchMedia/getComputedStyle/getBoundingClientRect/animate). Playwright con 3 proyectos: chromium desktop, mobile-chrome (Pixel 5), mobile-safari (iPhone 12); webServer corre build de produccion con NEXTAUTH_URL (evita UntrustedHost). Scripts nuevos: typecheck, test, test:watch, test:ui, test:coverage, test:e2e, test:e2e:ui.
-2) UNIT 117 pasando: CartContext 20, validators 44, flyToCart 13, CartDrawer 19, ProductCard 21.
-3) E2E 36 pasando (12x3): homepage, catalogo, agregar al carrito, cantidad, eliminar, checkout (form + WhatsApp), vaciar, persistencia localStorage, FAB movil, admin (redirect login + form).
-4) data-testid: CartDrawer (cart-overlay, close-drawer, decrease/increase-quantity, remove-item, quantity, product-placeholder), ProductCard (product-link, add-to-cart, color-swatch, product-placeholder; categoria UPPERCASE), Navbar (cart-trigger desktop + FAB movil).
-5) Correcciones E2E: UntrustedHost (NEXTAUTH_URL), selectores a data-testid (titulo real Lo Pedis, Lo Tenes), tests adaptados a que el drawer NO se abre solo al agregar (flyToCart), :visible para desktop/movil (FAB solo con items).
-6) Calidad: build OK, typecheck 0 errores, lint 0 errores (43 warnings previos).
-7) Integracion: rebase sin conflictos con commit de Nicolas 8b0cec1 (categorias expanden colores + overlay sidebar); push a origin/main (8b0cec1..619bf2a).
+DÍA FALLIDO (revertido a f1bc018): se intentó limpiar calidad de ImportExpress — auditoría via JOACO: corregir warnings ESLint (43), warnings Turbopack de fs dinámico (10, fix /*turbopackIgnore*/), E2E con standalone server, Dockerfile con etapa test, y resolver audit de dependencias (uploadthing/@vercel/og/nodemailer). Resultado: deps forzadas rompían npm ci en Railway (ERESOLVE: @uploadthing/react@5 exigía React 18; nodemailer@9 rompía peer de next-auth ^7||^8). Se eliminaron uploadthing/@uploadthing/react/@vercel/og y se bajó nodemailer a 8.0.11 → deploy OK. Usuario pidió revertir TODO el día: main restaurado a f1bc018 (deploy exitoso 12-ago), push --force, re-deploy verificado en vivo (Next 16.2.12). Backup del WIP de hoy en branch/tag today-wip-backup-20260813 (commit 2ce40bc).
 
 ## 📍 Estado actual
   Branch: main · Working tree: SUCIO (1 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 109 ++++++--------------------------------------------------------
-   1 file changed, 9 insertions(+), 100 deletions(-)
+   AGENTS.md | 123 +-------------------------------------------------------------
+   1 file changed, 2 insertions(+), 121 deletions(-)
    M AGENTS.md
 
   Últimos commits:
+  f1bc018 docs: actualizar AGENTS.md — cierre de día 11-ago-2026 (testing completo)
   619bf2a test(e2e): arreglar E2E de Playwright con selectores data-testid y vista responsive
   a5faf59 fix(test): fix lint error in CartDrawer test
   f0357f3 feat(test): add vitest + playwright testing infrastructure
   f2f75c8 docs: actualizar AGENTS.md — carrito FAB móvil completado, sin tareas activas
-  8b0cec1 fix(public): categorias expanden colores (paridad con /productos) + overlay dropdown sidebar en home y productos
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -126,4 +119,4 @@ tsconfig.tsbuildinfo
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-      _(decisiones de diseño/acuerdo a registrar aquí)_
+        _(decisiones de diseño/acuerdo a registrar aquí)_
