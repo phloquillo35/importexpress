@@ -470,6 +470,7 @@ export default function AdminProductosPage() {
           >
             Siguiente
           </Button>
+          <span className="text-sm text-muted-foreground">de {totalPages}</span>
           <div className="w-px h-6 bg-border" />
           <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
             <span className="text-sm text-muted-foreground">Ir a</span>
