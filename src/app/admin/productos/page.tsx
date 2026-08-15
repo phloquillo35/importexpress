@@ -443,6 +443,34 @@ export default function AdminProductosPage() {
           >
             Anterior
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled
+            className="bg-primary text-primary-foreground"
+          >
+            {page}
+          </Button>
+          {page < totalPages && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setPage(page + 1); setPageInput(String(page + 1)) }}
+              className="border-border text-muted-foreground"
+            >
+              {page + 1}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => { setPage(page + 1); setPageInput(String(page + 1)) }}
+            className="border-border text-muted-foreground"
+          >
+            Siguiente
+          </Button>
+          <div className="w-px h-6 bg-border" />
           <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
             <span className="text-sm text-muted-foreground">Ir a</span>
             <Input
@@ -453,20 +481,10 @@ export default function AdminProductosPage() {
               onChange={(e) => setPageInput(e.target.value)}
               className="w-16 h-8 text-center bg-muted border-border text-foreground"
             />
-            <span className="text-sm text-muted-foreground">de {totalPages}</span>
             <Button type="submit" size="sm" variant="outline" className="border-border text-muted-foreground">
-              Ir
+              Buscar
             </Button>
           </form>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => { setPage(page + 1); setPageInput(String(page + 1)) }}
-            className="border-border text-muted-foreground"
-          >
-            Siguiente
-          </Button>
         </div>
       )}
 
