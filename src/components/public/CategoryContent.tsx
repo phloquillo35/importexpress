@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useSearchParams, useRouter } from "next/navigation"
-import { Package, ArrowLeft, AlertCircle } from "lucide-react"
+import { Package, ArrowLeft, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { ProductCard } from "@/components/public/ProductCard"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -37,11 +37,18 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
   const searchParams = useSearchParams()
   const router = useRouter()
   const sub = searchParams.get("sub") || ""
+  const currentPage = parseInt(searchParams.get("page") || "1")
   const [category, setCategory] = useState<Category | null>(null)
   const [products, setProducts] = useState<Product[]>([])
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState(false)
+  const [pageInput, setPageInput] = useState(() => {
+    const raw = parseInt(searchParams.get("page") || "1", 10)
+    return String(Number.isNaN(raw) ? 1 : Math.max(1, raw))
+  })
 
   const colorVariants = useMemo(() => getProductColorVariants(products), [products])
 
@@ -52,7 +59,7 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
       setNotFound(false)
       try {
         const apiSlug = sub || slug
-        const res = await fetch(`/api/productos?categoria=${apiSlug}&limit=100`)
+        const res = await fetch(`/api/productos?categoria=${apiSlug}&page=${currentPage}&limit=20`)
         if (!res.ok) throw new Error("Error al cargar productos")
         const data = await res.json()
 
@@ -65,6 +72,9 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
 
         setCategory(found || null)
         setProducts(data.products || [])
+        setTotal(data.total || 0)
+        setTotalPages(data.totalPages || 0)
+        setPageInput(String(data.page || currentPage))
       } catch (e) {
         console.error(e)
         setError(true)
@@ -73,7 +83,31 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
       }
     }
     load()
-  }, [slug, sub])
+  }, [slug, sub, currentPage])
+
+  function updateParams(updates: Record<string, string | undefined>) {
+    const params = new URLSearchParams(searchParams.toString())
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) params.set(key, value)
+      else params.delete(key)
+    })
+    if (Object.keys(updates).length > 0 && !updates.page) {
+      params.set("page", "1")
+    }
+    router.replace(`/categorias/${slug}?${params.toString()}`)
+  }
+
+  function handleGoToPage(e: React.FormEvent) {
+    e.preventDefault()
+    const target = parseInt(pageInput, 10)
+    if (Number.isNaN(target) || totalPages < 1) {
+      setPageInput(String(currentPage))
+      return
+    }
+    const clamped = Math.min(Math.max(target, 1), totalPages)
+    setPageInput(String(clamped))
+    updateParams({ page: String(clamped) })
+  }
 
   const fallback = "/productos"
   function goBack() {
@@ -169,7 +203,7 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
           {category?.description && !sub && (
             <p className="text-muted-foreground mt-2 max-w-xl">{category.description}</p>
           )}
-          <p className="text-sm text-muted-foreground mt-2">{products.length} productos</p>
+          <p className="text-sm text-muted-foreground mt-2">{total || products.length} productos</p>
           {!sub && category?.children && category.children.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {category.children.map((child) => (
@@ -188,11 +222,73 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {colorVariants.map(({ product, colorName }) => (
-              <ProductCard key={colorName ? `${product.id}-${colorName}` : product.id} product={product} colorName={colorName} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {colorVariants.map(({ product, colorName }) => (
+                <ProductCard key={colorName ? `${product.id}-${colorName}` : product.id} product={product} colorName={colorName} />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-10">
+                <button
+                  onClick={() => { updateParams({ page: String(currentPage - 1) }); setPageInput(String(currentPage - 1)) }}
+                  disabled={currentPage <= 1}
+                  className="p-2 bg-card border border-border/60 rounded-full text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                  .map((p, idx, arr) => (
+                    <span key={p} className="contents">
+                      {idx > 0 && arr[idx - 1] !== p - 1 && (
+                        <span className="text-muted-foreground px-1">...</span>
+                      )}
+                      <button
+                        onClick={() => { updateParams({ page: String(p) }); setPageInput(String(p)) }}
+                        className={`w-9 h-9 rounded-full text-sm font-medium transition-colors ${
+                          p === currentPage
+                            ? "bg-[#0071e3] text-white"
+                            : "bg-card border border-border/60 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </span>
+                  ))}
+
+                <button
+                  onClick={() => { updateParams({ page: String(currentPage + 1) }); setPageInput(String(currentPage + 1)) }}
+                  disabled={currentPage >= totalPages}
+                  className="p-2 bg-card border border-border/60 rounded-full text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+
+                <div className="w-px h-6 bg-border" />
+                <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground">Ir a</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={pageInput}
+                    onChange={(e) => setPageInput(e.target.value)}
+                    className="w-16 h-9 text-center bg-muted border border-border/60 rounded-full text-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] text-sm transition-all"
+                  />
+                  <span className="text-sm text-muted-foreground">de {totalPages}</span>
+                  <button
+                    type="submit"
+                    className="px-4 h-9 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
+                  >
+                    Buscar
+                  </button>
+                </form>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Package className="w-16 h-16 mb-4 opacity-50" />

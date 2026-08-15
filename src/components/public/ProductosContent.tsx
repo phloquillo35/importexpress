@@ -43,6 +43,10 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
   const [error, setError] = useState(false)
   const [search, setSearch] = useState(searchParams.get("search") || "")
   const [showFilters, setShowFilters] = useState(false)
+  const [pageInput, setPageInput] = useState(() => {
+    const raw = parseInt(searchParams.get("page") || "1", 10)
+    return String(Number.isNaN(raw) ? 1 : Math.max(1, raw))
+  })
 
   const paramsKey = searchParams.toString()
   const currentPage = parseInt(searchParams.get("page") || "1")
@@ -92,12 +96,26 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     updateParams({ search, categoria: undefined })
+    setPageInput("1")
   }
 
   function handleSelectCategory(slug: string) {
     updateParams({ categoria: slug, search: undefined })
     setSearch("")
     setShowFilters(false)
+    setPageInput("1")
+  }
+
+  function handleGoToPage(e: React.FormEvent) {
+    e.preventDefault()
+    const target = parseInt(pageInput, 10)
+    if (Number.isNaN(target) || totalPages < 1) {
+      setPageInput(String(currentPage))
+      return
+    }
+    const clamped = Math.min(Math.max(target, 1), totalPages)
+    setPageInput(String(clamped))
+    updateParams({ page: String(clamped) })
   }
 
   const colorVariants = useMemo(() => getProductColorVariants(products), [products])
@@ -147,7 +165,7 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
               initialCategories={categories}
               activeCategory={searchParams.get("categoria") || undefined}
               onSelectCategory={handleSelectCategory}
-              onReset={() => { updateParams({ categoria: undefined, search: undefined }); setSearch(""); setShowFilters(false) }}
+              onReset={() => { updateParams({ categoria: undefined, search: undefined }); setSearch(""); setShowFilters(false); setPageInput("1") }}
               overlayDropdown
             />
           </div>
@@ -181,9 +199,9 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-10">
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-10">
                     <button
-                      onClick={() => updateParams({ page: String(currentPage - 1) })}
+                      onClick={() => { updateParams({ page: String(currentPage - 1) }); setPageInput(String(currentPage - 1)) }}
                       disabled={currentPage <= 1}
                       className="p-2 bg-card border border-border/60 rounded-full text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
@@ -198,7 +216,7 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
                             <span className="text-muted-foreground px-1">...</span>
                           )}
                           <button
-                            onClick={() => updateParams({ page: String(p) })}
+                            onClick={() => { updateParams({ page: String(p) }); setPageInput(String(p)) }}
                             className={`w-9 h-9 rounded-full text-sm font-medium transition-colors ${
                               p === currentPage
                                 ? "bg-[#0071e3] text-white"
@@ -211,12 +229,32 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
                       ))}
 
                     <button
-                      onClick={() => updateParams({ page: String(currentPage + 1) })}
+                      onClick={() => { updateParams({ page: String(currentPage + 1) }); setPageInput(String(currentPage + 1)) }}
                       disabled={currentPage >= totalPages}
                       className="p-2 bg-card border border-border/60 rounded-full text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
+
+                    <div className="w-px h-6 bg-border" />
+                    <form onSubmit={handleGoToPage} className="flex items-center gap-1.5">
+                      <span className="text-sm text-muted-foreground">Ir a</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={pageInput}
+                        onChange={(e) => setPageInput(e.target.value)}
+                        className="w-16 h-9 text-center bg-muted border border-border/60 rounded-full text-foreground focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] text-sm transition-all"
+                      />
+                      <span className="text-sm text-muted-foreground">de {totalPages}</span>
+                      <button
+                        type="submit"
+                        className="px-4 h-9 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
+                      >
+                        Buscar
+                      </button>
+                    </form>
                   </div>
                 )}
               </>
