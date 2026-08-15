@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseWhatsAppOrder, splitClientName } from "@/lib/whatsapp-order-parser"
+import { parseWhatsAppOrder, splitClientName, normalizeName } from "@/lib/whatsapp-order-parser"
 
 describe("splitClientName", () => {
   it("should split first name and last name", () => {
@@ -102,5 +102,85 @@ Dirección: X`
     expect(parsed.clientEmail).toBe("")
     expect(parsed.address).toBe("X")
     expect(parsed.items).toHaveLength(1)
+  })
+
+  it("should extract slug from URL wrapped in angle brackets", () => {
+    const text = `🛒 *Producto:*
+1. Altavoz - $150.000 ARS
+   🔗 <https://dominio/productos/altavoz-bt>
+
+👤 *Datos:*
+Nombre: Ana
+Teléfono: 123`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.items[0].slug).toBe("altavoz-bt")
+  })
+
+  it("should extract slug from URL without emoji", () => {
+    const text = `🛒 *Producto:*
+1. Altavoz - $150.000 ARS
+   https://dominio/productos/altavoz-bt
+
+👤 *Datos:*
+Nombre: Ana
+Teléfono: 123`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.items[0].slug).toBe("altavoz-bt")
+  })
+
+  it("should extract slug from relative path", () => {
+    const text = `🛒 *Producto:*
+1. Altavoz - $150.000 ARS
+   🔗 /productos/altavoz-bt
+
+👤 *Datos:*
+Nombre: Ana
+Teléfono: 123`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.items[0].slug).toBe("altavoz-bt")
+  })
+
+  it("should strip query params and trailing punctuation from slug", () => {
+    const text = `🛒 *Producto:*
+1. Altavoz - $150.000 ARS
+   🔗 https://dominio/productos/altavoz-bt?color=negro).
+
+👤 *Datos:*
+Nombre: Ana
+Teléfono: 123`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.items[0].slug).toBe("altavoz-bt")
+  })
+
+  it("should pair each product with its own link when mixed", () => {
+    const text = `🛒 *Productos:*
+1. Altavoz - $150.000 ARS x 1 = $150.000 ARS
+   🔗 https://dominio/productos/altavoz
+2. Notebook - $500.000 ARS x 2 = $1.000.000 ARS
+   https://dominio/productos/notebook-np750
+
+👤 *Datos:*
+Nombre: Ana
+Teléfono: 123`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.items).toEqual([
+      { name: "Altavoz", slug: "altavoz", quantity: 1 },
+      { name: "Notebook", slug: "notebook-np750", quantity: 2 },
+    ])
+  })
+})
+
+describe("normalizeName", () => {
+  it("should lowercase, strip accents and collapse spaces", () => {
+    expect(normalizeName("Altavoz portátil Sony SRS-ULT1000 - Negro")).toBe("altavoz portatil sony srs ult1000 negro")
+  })
+
+  it("should handle uppercase", () => {
+    expect(normalizeName("JEAN PAUL GAULTIER PERFUME SCANDAL ABSOLU M PARFUM 100ML")).toBe("jean paul gaultier perfume scandal absolu m parfum 100ml")
   })
 })

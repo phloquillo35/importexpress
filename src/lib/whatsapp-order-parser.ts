@@ -26,6 +26,27 @@ function cleanLabel(value: string | undefined): string {
   return (value || "").trim()
 }
 
+export function normalizeName(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+}
+
+export function normalizeSlug(value: string): string {
+  return value.trim().replace(/^\/+|\/+$/g, "").toLowerCase()
+}
+
+function extractSlug(line: string): string | undefined {
+  const urlMatch = line.match(/https?:\/\/[^\s>)]+|[^\s]*\/productos\/[^\s>)]+/i)
+  if (!urlMatch) return undefined
+  const url = urlMatch[0]
+  const slugMatch = url.match(/\/productos\/([a-z0-9\-_%]+)/i)
+  return slugMatch ? decodeURIComponent(slugMatch[1]) : undefined
+}
+
 export function parseWhatsAppOrder(text: string): ParsedOrder {
   const lines = text.split(/\r?\n/)
   const normalized = text.replace(/\*\*/g, "").replace(/\*/g, "")
@@ -43,15 +64,20 @@ export function parseWhatsAppOrder(text: string): ParsedOrder {
   const { clientName: name, clientSurname: surname } = splitClientName(clientName)
 
   const items: ParsedOrderItem[] = []
+  let pendingSlug: string | undefined
 
   for (const rawLine of lines) {
     const line = rawLine.trim()
     if (!line) continue
 
-    const slugMatch = line.match(/🔗\s*(?:https?:\/\/[^\s/]+\/)?productos\/([^\s?#]+)/i)
-    if (slugMatch) {
+    const slugFromLine = extractSlug(line)
+    if (slugFromLine) {
       const lastItem = items[items.length - 1]
-      if (lastItem) lastItem.slug = slugMatch[1]
+      if (lastItem && !lastItem.slug) {
+        lastItem.slug = slugFromLine
+      } else {
+        pendingSlug = slugFromLine
+      }
       continue
     }
 
@@ -59,8 +85,10 @@ export function parseWhatsAppOrder(text: string): ParsedOrder {
     if (itemMatch) {
       items.push({
         name: itemMatch[2].trim(),
+        slug: pendingSlug,
         quantity: itemMatch[3] ? parseInt(itemMatch[3], 10) : 1,
       })
+      pendingSlug = undefined
     }
   }
 

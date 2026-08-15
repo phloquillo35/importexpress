@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { formatUSD, formatARS } from "@/lib/utils"
 import { formatWhatsAppDisplay } from "@/hooks/useWhatsAppConfig"
 import { calculateFinalPrice } from "@/lib/pricing"
-import { parseWhatsAppOrder, type ParsedOrder } from "@/lib/whatsapp-order-parser"
+import { parseWhatsAppOrder, normalizeName, type ParsedOrder } from "@/lib/whatsapp-order-parser"
 import {
   Table,
   TableBody,
@@ -141,6 +141,7 @@ interface Order {
 interface Product {
   id: string
   name: string
+  slug?: string
   priceUSD: number
   stock: number
   category?: { name: string; parent?: { name: string } | null } | null
@@ -944,12 +945,8 @@ export default function PedidosPage() {
     try {
       const matched = await Promise.all(
         parsed.items.map(async (item) => {
-          if (!item.slug) return { parsed: item, product: null }
-          const res = await fetch(`/api/productos?admin=1&search=${encodeURIComponent(item.slug)}&limit=5`)
-          if (!res.ok) return { parsed: item, product: null }
-          const data = await res.json()
-          const product = (data.products || []).find((p: Product) => p.name === item.name || (p.name || "").toLowerCase() === item.name.toLowerCase())
-          return { parsed: item, product: product || null }
+          const product = await matchReaderItem(item)
+          return { parsed: item, product }
         })
       )
       setReaderMatched(matched)
@@ -959,6 +956,30 @@ export default function PedidosPage() {
     } finally {
       setReaderChecking(false)
     }
+  }
+
+  async function matchReaderItem(item: ParsedOrder["items"][number]): Promise<Product | null> {
+    // 1. Por slug (identificador único del link del mensaje)
+    if (item.slug) {
+      const slugRes = await fetch(`/api/productos?admin=1&search=${encodeURIComponent(item.slug)}&limit=10`)
+      if (slugRes.ok) {
+        const slugData = await slugRes.json()
+        const bySlug = (slugData.products || []).find((p: Product) => (p.slug || "").toLowerCase() === item.slug!.toLowerCase())
+        if (bySlug) return bySlug
+      }
+    }
+    // 2. Por nombre normalizado (quita acentos, mayúsculas y sufijos tipo "- Negro")
+    const searchName = item.name.split(" - ")[0].trim()
+    if (searchName) {
+      const nameRes = await fetch(`/api/productos?admin=1&search=${encodeURIComponent(searchName)}&limit=10`)
+      if (nameRes.ok) {
+        const nameData = await nameRes.json()
+        const normalizedItem = normalizeName(item.name)
+        const byName = (nameData.products || []).find((p: Product) => normalizeName(p.name || "") === normalizedItem)
+        if (byName) return byName
+      }
+    }
+    return null
   }
 
   function handleReaderConfirm() {
