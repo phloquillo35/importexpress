@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         store: { select: { id: true, name: true } },
         orderItems: {
           include: {
-            order: { select: { id: true, clientName: true, clientSurname: true } },
+            order: { select: { id: true, internalNumber: true, clientName: true, clientSurname: true } },
             product: { select: { id: true, name: true, slug: true } },
           },
         },

@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
                   costUSDT: true, priceUSD: true, finalPriceUSD: true, finalPriceARS: true,
                   yoniEnabled: true, yoniType: true, yoniValue: true,
                   shippingCost: true, profitType: true, profitValue: true,
+                  category: { select: { name: true } },
                 },
               },
               bulk: { select: { courier: true, trackingCode: true, type: true } },

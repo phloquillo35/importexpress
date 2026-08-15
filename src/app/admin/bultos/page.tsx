@@ -5,6 +5,7 @@ import { Ship, Plus, Search, Package, Eye, Trash2 } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD, formatDate, formatARS } from "@/lib/utils"
+import { detectBulkSize } from "@/lib/bulk-size"
 import {
   Table,
   TableBody,
@@ -63,7 +64,7 @@ interface OrderItemBrief {
   bulkType: string | null
   productName?: string | null
   productSlug?: string | null
-  order: { id: string; clientName: string; clientSurname: string }
+  order: { id: string; internalNumber: number; clientName: string; clientSurname: string }
   product?: { id: string; name: string; slug: string }
 }
 
@@ -89,8 +90,8 @@ interface PendingOrderItem {
   priceUSD: number
   productName?: string | null
   productSlug?: string | null
-  product?: { id: string; name: string }
-  order: { id: string; clientName: string; clientSurname: string }
+  product?: { id: string; name: string; category: { name: string } | null }
+  order: { id: string; internalNumber: number; clientName: string; clientSurname: string }
 }
 
 export default function BultosPage() {
@@ -131,11 +132,12 @@ export default function BultosPage() {
   }, [statusFilter, refreshKey])
 
   useEffect(() => {
-    fetch("/api/pedidos?status=pending")
+    fetch("/api/pedidos?status=pending&limit=100")
       .then(r => r.json())
       .then((data) => {
+        const orders = Array.isArray(data) ? data : (data.orders || [])
         const items: PendingOrderItem[] = []
-        for (const order of Array.isArray(data) ? data : []) {
+        for (const order of orders) {
           for (const item of order.items || []) {
             if (!item.bulkId) {
               items.push({
@@ -145,7 +147,7 @@ export default function BultosPage() {
                 productName: item.productName,
                 productSlug: item.productSlug,
                 product: item.product,
-                order: { id: order.id, clientName: order.clientName, clientSurname: order.clientSurname },
+                order: { id: order.id, internalNumber: order.internalNumber, clientName: order.clientName, clientSurname: order.clientSurname },
               })
             }
           }
@@ -262,9 +264,11 @@ export default function BultosPage() {
     }
   }
 
-  const filteredPending = form.type === "grande"
-    ? pendingItems
-    : pendingItems
+  const filteredPending = pendingItems.filter((item) => {
+    const name = item.productName ?? item.product?.name ?? ""
+    const categoryName = item.product?.category?.name || undefined
+    return detectBulkSize(name, categoryName) === form.type
+  })
 
   return (
     <div className="space-y-6">
@@ -371,7 +375,7 @@ export default function BultosPage() {
               </div>
               <div className="space-y-2">
                 <Label>Tipo</Label>
-                <Select value={form.type} onValueChange={(v) => { if (v) setForm({ ...form, type: v }) }}>
+                <Select value={form.type} onValueChange={(v) => { if (v) { setForm({ ...form, type: v }); setSelectedItemIds([]) } }}>
                   <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue placeholder="Seleccionar">{form.type === "grande" ? "Grande" : "Chico"}</SelectValue>
                   </SelectTrigger>
@@ -383,7 +387,7 @@ export default function BultosPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Productos pendientes</Label>
+              <Label>Productos pendientes {form.type === "grande" ? "grandes" : "chicos"} ({filteredPending.length})</Label>
               <div className="max-h-48 overflow-y-auto space-y-1 bg-muted/30 rounded-lg p-2">
                 {filteredPending.map((item) => (
                   <label key={item.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer">
@@ -395,12 +399,14 @@ export default function BultosPage() {
                     />
                     <span className="text-sm text-muted-foreground flex-1">{item.productName ?? item.product?.name ?? "Producto eliminado"}</span>
                     <span className="text-xs text-muted-foreground">
-                      {item.order.clientName} {item.order.clientSurname}
+                      Pedido #{item.order.internalNumber} — {item.order.clientName} {item.order.clientSurname}
                     </span>
                   </label>
                 ))}
                 {filteredPending.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay productos pendientes</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No hay productos {form.type === "grande" ? "grandes" : "chicos"} pendientes
+                  </p>
                 )}
               </div>
             </div>
@@ -462,7 +468,7 @@ export default function BultosPage() {
                     <div key={item.id} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
                       <span className="text-muted-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</span>
                       <span className="text-muted-foreground text-xs">
-                        {item.order.clientName} {item.order.clientSurname}
+                        Pedido #{item.order.internalNumber} — {item.order.clientName} {item.order.clientSurname}
                         {item.trackingCode && ` | ${item.trackingCode}`}
                       </span>
                     </div>
@@ -542,7 +548,7 @@ export default function BultosPage() {
                           <TableRow key={item.id} className="border-border hover:bg-muted">
                             <TableCell className="font-medium text-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</TableCell>
                             <TableCell className="text-muted-foreground">
-                              {item.order.clientName} {item.order.clientSurname}
+                              Pedido #{item.order.internalNumber} — {item.order.clientName} {item.order.clientSurname}
                             </TableCell>
                             <TableCell className="text-muted-foreground text-xs">{item.trackingCode || "—"}</TableCell>
                           </TableRow>
