@@ -511,9 +511,9 @@ export default function BultosPage() {
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Productos en este bulto</p>
                   {selectedBulk.orderItems.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
-                      <span className="text-muted-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</span>
-                      <span className="text-muted-foreground text-xs">
+                    <div key={item.id} className="flex justify-between text-sm py-1 border-b border-border last:border-0 gap-2">
+                      <span className="text-muted-foreground min-w-0 truncate" title={item.productName ?? item.product?.name ?? "Producto eliminado"}>{item.productName ?? item.product?.name ?? "Producto eliminado"}</span>
+                      <span className="text-muted-foreground text-xs shrink-0">
                         Pedido #{item.order.internalNumber} — {item.order.clientName} {item.order.clientSurname}
                         {item.trackingCode && ` | ${item.trackingCode}`}
                       </span>
@@ -621,7 +621,11 @@ export default function BultosPage() {
                         <TableBody>
                           {viewBulk.orderItems.map((item) => (
                             <TableRow key={item.id} className="border-border hover:bg-muted">
-                              <TableCell className="font-medium text-foreground">{item.productName ?? item.product?.name ?? "Producto eliminado"}</TableCell>
+                              <TableCell className="font-medium text-foreground max-w-[200px]">
+                                <span className="block truncate" title={item.productName ?? item.product?.name ?? "Producto eliminado"}>
+                                  {item.productName ?? item.product?.name ?? "Producto eliminado"}
+                                </span>
+                              </TableCell>
                               <TableCell className="text-muted-foreground">
                                 Pedido #{item.order.internalNumber} — {item.order.clientName} {item.order.clientSurname}
                               </TableCell>
