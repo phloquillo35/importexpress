@@ -562,13 +562,8 @@ export default function PedidosPage() {
   // Tabs state for detail dialog
   const [activeTab, setActiveTab] = useState<"items" | "payments" | "notes">("items")
 
-  // Advanced filters state
-  const [dateFrom, setDateFrom] = useState(searchParams.get("dateFrom") || "")
-  const [dateTo, setDateTo] = useState(searchParams.get("dateTo") || "")
-  const [storeFilter, setStoreFilter] = useState(searchParams.get("store") || "")
-  const [totalMin, setTotalMin] = useState(searchParams.get("totalMin") || "")
-  const [totalMax, setTotalMax] = useState(searchParams.get("totalMax") || "")
-  const [totalCurrency, setTotalCurrency] = useState<"USD" | "ARS">((searchParams.get("totalCurrency") as "USD" | "ARS") || "USD")
+  // Search + status filter state
+  const [searchFilter, setSearchFilter] = useState(searchParams.get("search") || "")
 
   // Color/Storage selection for product being added
   const [selectedProductColor, setSelectedProductColor] = useState<string>("")
@@ -581,12 +576,7 @@ export default function PedidosPage() {
       params.set("page", String(page))
       params.set("limit", String(limit))
       if (statusFilter) params.set("status", statusFilter)
-      if (dateFrom) params.set("dateFrom", dateFrom)
-      if (dateTo) params.set("dateTo", dateTo)
-      if (storeFilter) params.set("store", storeFilter)
-      if (totalMin) params.set("totalMin", totalMin)
-      if (totalMax) params.set("totalMax", totalMax)
-      if (totalCurrency) params.set("totalCurrency", totalCurrency)
+      if (searchFilter) params.set("search", searchFilter)
       const res = await fetch(`/api/pedidos?${params}`)
       const data = await res.json()
       if (data.orders) {
@@ -599,7 +589,7 @@ export default function PedidosPage() {
     } catch {
       toast.error("Error al cargar pedidos")
     } finally { setLoading(false) }
-  }, [page, statusFilter, dateFrom, dateTo, storeFilter, totalMin, totalMax, totalCurrency])
+  }, [page, statusFilter, searchFilter])
 
   useEffect(() => {
     let cancelled = false
@@ -609,12 +599,7 @@ export default function PedidosPage() {
         params.set("page", String(page))
         params.set("limit", String(limit))
         if (statusFilter) params.set("status", statusFilter)
-        if (dateFrom) params.set("dateFrom", dateFrom)
-        if (dateTo) params.set("dateTo", dateTo)
-        if (storeFilter) params.set("store", storeFilter)
-        if (totalMin) params.set("totalMin", totalMin)
-        if (totalMax) params.set("totalMax", totalMax)
-        if (totalCurrency) params.set("totalCurrency", totalCurrency)
+        if (searchFilter) params.set("search", searchFilter)
         const res = await fetch(`/api/pedidos?${params}`)
         const data = await res.json()
         if (!cancelled) {
@@ -632,32 +617,38 @@ export default function PedidosPage() {
     }
     fetchOrdersEffect()
     return () => { cancelled = true }
-  }, [page, statusFilter, dateFrom, dateTo, storeFilter, totalMin, totalMax, totalCurrency])
+  }, [page, statusFilter, searchFilter])
 
   // Update URL with filters
   const updateFiltersUrl = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
     if (statusFilter) params.set("status", statusFilter)
     else params.delete("status")
-    if (dateFrom) params.set("dateFrom", dateFrom)
-    else params.delete("dateFrom")
-    if (dateTo) params.set("dateTo", dateTo)
-    else params.delete("dateTo")
-    if (storeFilter) params.set("store", storeFilter)
-    else params.delete("store")
-    if (totalMin) params.set("totalMin", totalMin)
-    else params.delete("totalMin")
-    if (totalMax) params.set("totalMax", totalMax)
-    else params.delete("totalMax")
-    if (totalCurrency) params.set("totalCurrency", totalCurrency)
-    else params.delete("totalCurrency")
+    if (searchFilter) params.set("search", searchFilter)
+    else params.delete("search")
     router.push(`/admin/pedidos?${params.toString()}`, { scroll: false })
-  }, [router, searchParams, statusFilter, dateFrom, dateTo, storeFilter, totalMin, totalMax, totalCurrency])
+  }, [router, searchParams, statusFilter, searchFilter])
 
-  // Sync filters to URL when they change
+  // Sync filters to URL when they change (status immediate, search debounced)
   useEffect(() => {
     updateFiltersUrl()
   }, [updateFiltersUrl])
+
+  const filterDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  const handleSearchFilterChange = (value: string) => {
+    if (filterDebounceRef.current) clearTimeout(filterDebounceRef.current)
+    filterDebounceRef.current = setTimeout(() => {
+      setSearchFilter(value)
+      setPage(1)
+    }, 300)
+  }
+
+  // Cleanup filter debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (filterDebounceRef.current) clearTimeout(filterDebounceRef.current)
+    }
+  }, [])
 
   function handleProductDetail(item: OrderItem, order: Order) {
     setPaymentAmount("")
@@ -947,9 +938,29 @@ export default function PedidosPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 items-end">
+      <div className="flex flex-wrap gap-3 items-center">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchFilter}
+              onChange={(e) => handleSearchFilterChange(e.target.value)}
+              placeholder="Buscar por cliente, teléfono, #pedido, producto, tienda, estado..."
+              className="pl-9 w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            />
+            {searchFilter && (
+              <button
+                type="button"
+                onClick={() => { setSearchFilter(""); setPage(1) }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
           {/* Status Filter */}
-          <Select value={statusFilter} onValueChange={(v: string | null) => setStatusFilter(v === "all" ? "" : v || "")}>
+          <Select value={statusFilter} onValueChange={(v: string | null) => { setStatusFilter(v === "all" ? "" : v || ""); setPage(1) }}>
             <SelectTrigger className="w-40 bg-muted border-border text-foreground">
               <SelectValue placeholder="Filtrar estado">{!statusFilter ? "Filtrar estado" : statusConfig[statusFilter]?.label || statusFilter}</SelectValue>
             </SelectTrigger>
@@ -961,89 +972,9 @@ export default function PedidosPage() {
             </SelectContent>
           </Select>
 
-          {/* Date From */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Fecha desde</Label>
-            <Input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-            />
-          </div>
-
-          {/* Date To */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Fecha hasta</Label>
-            <Input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-            />
-          </div>
-
-          {/* Store Filter */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Tienda</Label>
-            <Select value={storeFilter} onValueChange={(v: string | null) => setStoreFilter(v === "all" ? "" : v || "")}>
-              <SelectTrigger className="w-48 bg-muted border-border text-foreground">
-                <SelectValue placeholder="Todas">{!storeFilter ? "Todas" : stores.find(s => s.id === storeFilter)?.name || storeFilter}</SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-card text-foreground">
-                <SelectItem value="all">Todas</SelectItem>
-                {stores.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Total Range */}
-          <div className="flex items-center gap-2 space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Total ({totalCurrency})</Label>
-            <div className="flex items-center gap-1">
-              <Input
-                type="number"
-                placeholder="Mín"
-                value={totalMin}
-                onChange={(e) => setTotalMin(e.target.value)}
-                className="w-24 px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                step="0.01"
-                min="0"
-              />
-              <span className="text-muted-foreground">–</span>
-              <Input
-                type="number"
-                placeholder="Máx"
-                value={totalMax}
-                onChange={(e) => setTotalMax(e.target.value)}
-                className="w-24 px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                step="0.01"
-                min="0"
-              />
-            </div>
-            <Select value={totalCurrency} onValueChange={(v) => v && setTotalCurrency(v as "USD" | "ARS")}>
-              <SelectTrigger className="w-24 bg-muted border-border text-foreground">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card text-foreground">
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="ARS">ARS</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Clear Filters */}
-          {(statusFilter || dateFrom || dateTo || storeFilter || totalMin || totalMax) && (
-            <Button variant="ghost" size="sm" onClick={() => {
-              setStatusFilter("")
-              setDateFrom("")
-              setDateTo("")
-              setStoreFilter("")
-              setTotalMin("")
-              setTotalMax("")
-            }} className="text-muted-foreground hover:text-foreground">
+          {(statusFilter || searchFilter) && (
+            <Button variant="ghost" size="sm" onClick={() => { setStatusFilter(""); setSearchFilter(""); setPage(1) }} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4 mr-1" /> Limpiar
             </Button>
           )}
