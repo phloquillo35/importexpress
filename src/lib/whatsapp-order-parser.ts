@@ -39,20 +39,22 @@ export function normalizeSlug(value: string): string {
   return value.trim().replace(/^\/+|\/+$/g, "").toLowerCase()
 }
 
-function extractSlug(line: string): string | undefined {
-  const urlMatch = line.match(/https?:\/\/[^\s>)]+|[^\s]*\/productos\/[^\s>)]+/i)
-  if (!urlMatch) return undefined
-  const url = urlMatch[0]
+const FIELD_STOP =
+  "Nombre|Teléfono|Dirección|Email|Total|Productos?|Gracias|¡Gracias"
+
+function extractSlug(url: string): string | undefined {
   const slugMatch = url.match(/\/productos\/([a-z0-9\-_%]+)/i)
   return slugMatch ? decodeURIComponent(slugMatch[1]) : undefined
 }
 
 export function parseWhatsAppOrder(text: string): ParsedOrder {
-  const lines = text.split(/\r?\n/)
   const normalized = text.replace(/\*\*/g, "").replace(/\*/g, "")
 
   const field = (label: string): string => {
-    const re = new RegExp(`^\\s*${label}\\s*:\\s*(.+)$`, "im")
+    const re = new RegExp(
+      `(?:^|\\s)${label}\\s*:\\s*(.*?)(?=\\s*(?:${FIELD_STOP})|$)`,
+      "i"
+    )
     const match = normalized.match(re)
     return cleanLabel(match?.[1])
   }
@@ -64,33 +66,26 @@ export function parseWhatsAppOrder(text: string): ParsedOrder {
   const { clientName: name, clientSurname: surname } = splitClientName(clientName)
 
   const items: ParsedOrderItem[] = []
-  let pendingSlug: string | undefined
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim()
-    if (!line) continue
-
-    const slugFromLine = extractSlug(line)
-    if (slugFromLine) {
-      const lastItem = items[items.length - 1]
-      if (lastItem && !lastItem.slug) {
-        lastItem.slug = slugFromLine
-      } else {
-        pendingSlug = slugFromLine
-      }
-      continue
-    }
-
-    const itemMatch = line.match(/^(\d+)[.)]\s+(.+?)\s+-\s+\$[\d.,]+\s*ARS(?:\s*x\s*(\d+))?/i)
-    if (itemMatch) {
-      items.push({
-        name: itemMatch[2].trim(),
-        slug: pendingSlug,
-        quantity: itemMatch[3] ? parseInt(itemMatch[3], 10) : 1,
-      })
-      pendingSlug = undefined
-    }
+  const itemRe =
+    /(\d+)[.)]\s+(.+?)\s+-\s+\$[\d.,]+\s*ARS(?:\s*x\s*(\d+))?/gi
+  let itemMatch: RegExpExecArray | null
+  while ((itemMatch = itemRe.exec(normalized))) {
+    items.push({
+      name: itemMatch[2].trim(),
+      quantity: itemMatch[3] ? parseInt(itemMatch[3], 10) : 1,
+    })
   }
+
+  const slugs: string[] = []
+  const urlRe = /https?:\/\/[^\s>)]+|\/productos\/[a-z0-9\-_%]+/gi
+  let urlMatch: RegExpExecArray | null
+  while ((urlMatch = urlRe.exec(normalized))) {
+    const slug = extractSlug(urlMatch[0])
+    if (slug) slugs.push(slug)
+  }
+  items.forEach((item, i) => {
+    if (slugs[i]) item.slug = slugs[i]
+  })
 
   return {
     clientName: name,

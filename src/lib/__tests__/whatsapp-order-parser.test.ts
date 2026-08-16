@@ -173,6 +173,33 @@ Teléfono: 123`
       { name: "Notebook", slug: "notebook-np750", quantity: 2 },
     ])
   })
+
+  it("should parse single product message without line breaks", () => {
+    const text = `¡Hola! Quiero hacer un pedido: 🛒 *Producto:* 1. Auricular JBL Sense Pro Wireless - $206.200 ARS 🔗 https://lopedis-lotenes.up.railway.app/productos/auricular-jbl-sense-pro-wireless 💰 *Total:* $206.200 ARS 👤 *Datos:* Nombre: pablo canelo Teléfono: 3816155379 Dirección: calle 12 Email: phloquillo35@gmail.com ¡Gracias!`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.clientName).toBe("pablo")
+    expect(parsed.clientSurname).toBe("canelo")
+    expect(parsed.clientPhone).toBe("3816155379")
+    expect(parsed.clientEmail).toBe("phloquillo35@gmail.com")
+    expect(parsed.address).toBe("calle 12")
+    expect(parsed.items).toEqual([
+      { name: "Auricular JBL Sense Pro Wireless", slug: "auricular-jbl-sense-pro-wireless", quantity: 1 },
+    ])
+  })
+
+  it("should parse cart message with multiple products without line breaks", () => {
+    const text = `¡Hola! Quiero hacer un pedido: 🛒 *Productos:* 1. Apple iPhone 15 - $1.234.567 ARS x 2 = $2.469.134 ARS 🔗 https://dominio/productos/iphone-15 2. Notebook Samsung NP750 - $999.999 ARS x 1 = $999.999 ARS 🔗 https://dominio/productos/notebook-samsung-np750 💰 *Total:* $3.469.133 ARS 👤 *Datos:* Nombre: Juan Carlos Perez Teléfono: +5491112345678 Dirección: Calle Falsa 123 Email: juan@mail.com ¡Gracias!`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.clientName).toBe("Juan Carlos")
+    expect(parsed.clientSurname).toBe("Perez")
+    expect(parsed.clientPhone).toBe("+5491112345678")
+    expect(parsed.items).toEqual([
+      { name: "Apple iPhone 15", slug: "iphone-15", quantity: 2 },
+      { name: "Notebook Samsung NP750", slug: "notebook-samsung-np750", quantity: 1 },
+    ])
+  })
 })
 
 describe("normalizeName", () => {
