@@ -1,23 +1,32 @@
 # AGENTS.md (Workflow Context) — importexpress
-> Generado: 2026-08-15 14:22:49 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
+> Generado: 2026-08-15 21:32:05 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
 
 ## 🎯 Objetivo actual
-Modificado flujo WhatsApp en página de producto individual: botón 'Consultar por WhatsApp' ahora abre formulario para datos de usuario (nombre, teléfono, dirección) y genera mensaje idéntico al formato del carrito (producto + link + total + datos usuario) antes de abrir WhatsAppAgentSelector. Verificado: typecheck, build, lint (0 errores), tests 117 pass. Push: f2d9b44
+Jornada ImportExpress: flujo de pedidos por WhatsApp de punta a punta + mejoras en pedidos, productos y bultos.
+
+- Pagina de producto individual: formulario Consultar por WhatsApp (nombre, telefono, direccion) que genera mensaje con el mismo formato que el carrito (producto + link + total + datos) y abre WhatsAppAgentSelector (f2d9b44).
+- Admin pedidos: boton WhatsApp al cliente, filtros avanzados y soporte color/storage (60978db); fix de migracion color/storage para crear pedidos y buscador unico con select de estado (92d1cfb); truncar nombre de producto en tabla (36e4b6a).
+- Paginacion de productos: salto directo a numero de pagina (bc93fe6), reorden con numeros y selector Ir a (ab50f5e), total de paginas en admin (4f270a9) y selector de pagina en el sitio publico (57f0e82).
+- Bultos: fix de regresion que impedia cargar productos pendientes + clasificacion automatica chico/grande + numero de pedido (381e01f); card de detalle clickeable y ordenada + tracking del courier editable con auto en camino y notificacion (7c5f4ce); truncar nombres largos (4fee969); scroll interno en card de edicion (d023115).
+- NUEVO lector de pedidos de WhatsApp en admin (e1fcd9a): boton Pegar pedido + dialogo con textarea y Detectar pedido, preview con cliente y productos En catalogo / Sin match, y Precargar pedido que rellena formulario + carrito y abre el modal Nuevo pedido. Email agregado en CartDrawer y pagina de producto.
+- Fixes del lector: matchear por slug y nombre normalizado (9d32afa); precargar TODOS los productos con updates funcionales del carrito, causa raiz: cierre desactualizado de cart en addToCart (0e4fe8e); parser que detecta mensajes SIN saltos de linea porque WhatsApp colapsa los saltos al pegar (a602190).
+
+Verificado: typecheck OK, lint 0 errores, tests 136 pass (7 archivos), build OK. 16 commits a main. Working tree limpio.
 
 ## 📍 Estado actual
   Branch: main · Working tree: SUCIO (1 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 116 ++------------------------------------------------------------
-   1 file changed, 2 insertions(+), 114 deletions(-)
+   AGENTS.md | 125 ++++++--------------------------------------------------------
+   1 file changed, 11 insertions(+), 114 deletions(-)
    M AGENTS.md
 
   Últimos commits:
-  f2d9b44 feat(product): add WhatsApp consultation form with user data (mirrors cart flow)
-  f1bc018 docs: actualizar AGENTS.md — cierre de día 11-ago-2026 (testing completo)
-  619bf2a test(e2e): arreglar E2E de Playwright con selectores data-testid y vista responsive
-  a5faf59 fix(test): fix lint error in CartDrawer test
-  f0357f3 feat(test): add vitest + playwright testing infrastructure
+  a602190 fix(whatsapp-reader): parsear pedidos pegados sin saltos de línea (una sola línea)
+  0e4fe8e fix(pedidos): precargar todos los productos del lector con updates funcionales del carrito
+  9d32afa fix(whatsapp-reader): matchear productos por slug y nombre normalizado con parser tolerante a formatos reales
+  e1fcd9a feat(pedidos): lector de pedidos de WhatsApp con pegado + preview y precarga del formulario
+  d023115 fix(bultos): contener card de edición con scroll interno (evita desborde con muchos productos)
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -119,4 +128,4 @@ tsconfig.tsbuildinfo
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-          _(decisiones de diseño/acuerdo a registrar aquí)_
+              _(decisiones de diseño/acuerdo a registrar aquí)_
