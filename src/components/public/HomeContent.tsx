@@ -51,7 +51,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [hasMore, setHasMore] = useState(false)
-  const [offset, setOffset] = useState(12)
+  const [offset, setOffset] = useState(0)
 
   async function loadFeatured(newOffset = 0, append = false) {
     setError(false)
@@ -62,8 +62,10 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
       const products = prods.products || []
       if (append) {
         setFeatured(prev => [...prev, ...products])
+        setOffset(offset + products.length)
       } else {
         setFeatured(products)
+        setOffset(products.length)
       }
       setHasMore(products.length === 12)
     } catch (e) {

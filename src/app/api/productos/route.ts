@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
     const rawPage = parseInt(searchParams.get("page") || "1", 10)
     const page = Number.isNaN(rawPage) ? 1 : Math.max(1, rawPage)
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)))
+    const rawOffset = parseInt(searchParams.get("offset") || "0", 10)
+    const offset = Number.isNaN(rawOffset) ? 0 : Math.max(0, rawOffset)
 
     const admin = searchParams.get("admin") || ""
     const showDeleted = searchParams.get("showDeleted") === "true"
@@ -26,10 +28,6 @@ export async function GET(request: NextRequest) {
     }
     const where: Record<string, unknown> = {}
     if (!showDeleted) where.deletedAt = null
-
-    if (!admin) {
-      where.isAvailable = true
-    }
 
     if (search) {
       // Soporte para formato argentino y decimal estándar
@@ -124,11 +122,14 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit)
     const safePage = Math.min(page, Math.max(1, totalPages))
 
+    // Use offset if provided, otherwise calculate from page
+    const skip = offset > 0 ? offset : (safePage - 1) * limit
+
     const [products, totalAll] = await Promise.all([
       prisma.product.findMany({
         where,
         include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } } },
-        skip: (safePage - 1) * limit,
+        skip,
         take: limit,
         orderBy: { createdAt: "desc" },
       }),
