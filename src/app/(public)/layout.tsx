@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Lo Pedís, Lo Tenes - Importación directa desde Ciudad del Este, Paraguay",
     description: "Todo lo que necesitás, importado para vos. Electrónica, bicicletas, celulares y más.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Lo Pedís, Lo Tenes" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lo Pedís, Lo Tenes",
+    description: "Importación directa desde Ciudad del Este, Paraguay",
+    images: ["/opengraph-image"],
   },
 }
 
