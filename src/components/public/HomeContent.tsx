@@ -50,23 +50,40 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
   const [featured, setFeatured] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [offset, setOffset] = useState(12)
+
+  async function loadFeatured(newOffset = 0, append = false) {
+    setError(false)
+    try {
+      const prodRes = await fetch(`/api/productos?destacados=true&limit=12&offset=${newOffset}`)
+      if (!prodRes.ok) throw new Error("Error al cargar datos")
+      const prods = await prodRes.json()
+      const products = prods.products || []
+      if (append) {
+        setFeatured(prev => [...prev, ...products])
+      } else {
+        setFeatured(products)
+      }
+      setHasMore(products.length === 12)
+    } catch (e) {
+      console.error(e)
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      setError(false)
-      try {
-        const prodRes = await fetch("/api/productos?destacados=true&limit=8")
-        if (!prodRes.ok) throw new Error("Error al cargar datos")
-        const prods = await prodRes.json()
-        setFeatured(prods.products || [])
-      } catch (e) {
-        console.error(e)
-        setError(true)
-      } finally {
-        setLoading(false)
+    let cancelled = false
+    async function loadInitial() {
+      await loadFeatured(0, false)
+      if (!cancelled) {
+        // Initial load complete
       }
     }
-    load()
+    loadInitial()
+    return () => { cancelled = true }
   }, [])
 
   const categories = initialCategories
@@ -82,15 +99,18 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-heading">Productos Destacados</h2>
               <p className="text-foreground/70 dark:text-muted-foreground mt-1.5">Lo más elegido por nuestros clientes</p>
             </div>
-            <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
-              Ver todos
+            <button
+              onClick={() => window.location.href = "/productos"}
+              className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
+            >
+              Ver todos los productos
               <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </button>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 4 }).map((_, i) => (
+            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="bg-card rounded-2xl border border-border/60 overflow-hidden">
                   <Skeleton className="aspect-square sm:aspect-[4/3] !rounded-none bg-muted" />
                   <div className="p-5 space-y-3">
@@ -107,7 +127,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
               <p className="text-sm">Error al cargar productos</p>
             </div>
           ) : featured.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-6">
               {featured.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -116,12 +136,30 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
             <p className="text-center text-foreground/70 dark:text-muted-foreground py-12">No hay productos destacados aún</p>
           )}
 
-          <div className="sm:hidden mt-6 text-center">
-            <Link href="/productos" className="inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
-              Ver todos
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+          {(hasMore || offset < 12) && featured.length > 0 && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => loadFeatured(offset, true)}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Cargando...
+                  </>
+                ) : (
+                  <>
+                    Ver más
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -132,10 +170,13 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-heading">Categorías</h2>
               <p className="text-foreground/70 dark:text-muted-foreground mt-1.5">Explorá por categoría</p>
             </div>
-            <Link href="/productos" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
-              Ver todo
+            <button
+              onClick={() => window.location.href = "/productos"}
+              className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
+            >
+              Ver todos los productos
               <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </button>
           </div>
 
           {loading ? (
