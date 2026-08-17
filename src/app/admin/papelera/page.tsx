@@ -42,7 +42,6 @@ const SECTION_CONFIG: Record<string, { label: string; icon: React.ElementType; c
 
 export default function PapeleraPage() {
   const [data, setData] = useState<TrashData | null>(null)
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [restoring, setRestoring] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -53,15 +52,12 @@ export default function PapeleraPage() {
 
   async function fetchTrash() {
     try {
-      setLoading(true)
       const res = await fetch("/api/papelera")
       if (!res.ok) throw new Error()
       const json = await res.json()
       setData(json)
     } catch {
       toast.error("Error al cargar papelera")
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -113,14 +109,6 @@ export default function PapeleraPage() {
   const totalItems = data
     ? Object.values(data).reduce((sum, arr) => sum + arr.length, 0)
     : 0
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">

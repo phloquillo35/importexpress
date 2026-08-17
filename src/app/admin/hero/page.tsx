@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { ImagePlus, Plus, Trash2, RefreshCw, Link as LinkIcon } from "lucide-react"
+import { ImagePlus, Plus, Trash2, Link as LinkIcon } from "lucide-react"
 import { toast } from "sonner"
 
 interface HeroBanner {
@@ -25,7 +25,6 @@ const FLYER_POSITIONS = [
 export default function HeroAdminPage() {
   const [carousel, setCarousel] = useState<HeroBanner[]>([])
   const [flyers, setFlyers] = useState<HeroBanner[]>([])
-  const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
 
   const loadBanners = useCallback(async () => {
@@ -38,7 +37,7 @@ export default function HeroAdminPage() {
     } catch {
       toast.error("Error al cargar banners")
     } finally {
-      setLoading(false)
+      // loading state removed - no spinner
     }
   }, [])
 
@@ -56,7 +55,7 @@ export default function HeroAdminPage() {
       } catch {
         if (!cancelled) toast.error("Error al cargar banners")
       } finally {
-        if (!cancelled) setLoading(false)
+        // loading state removed - no spinner
       }
     }
     initLoad()
@@ -203,14 +202,6 @@ export default function HeroAdminPage() {
       )
     )
     loadBanners()
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    )
   }
 
   return (

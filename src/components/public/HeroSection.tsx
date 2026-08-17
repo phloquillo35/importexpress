@@ -33,7 +33,6 @@ export function HeroSection({ initialCategories, initialHero }: { initialCategor
   const router = useRouter()
   const [carousel, setCarousel] = useState<HeroBanner[]>(initialHero?.carousel ?? [])
   const [flyers, setFlyers] = useState<HeroBanner[]>(initialHero?.flyers ?? [])
-  const [loading, setLoading] = useState(initialHero ? false : true)
   const [search, setSearch] = useState("")
 
   useEffect(() => {
@@ -47,35 +46,10 @@ export function HeroSection({ initialCategories, initialHero }: { initialCategor
       } catch {
         setCarousel([])
         setFlyers([])
-      } finally {
-        setLoading(false)
       }
     }
     load()
   }, [initialHero])
-
-  if (loading) {
-    return (
-      <section className="py-8 lg:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="hidden lg:grid grid-cols-[220px_3fr_2fr] gap-4">
-            <div className="row-span-2 rounded-2xl bg-muted animate-pulse" />
-            <div className="row-span-2 aspect-square rounded-2xl bg-muted animate-pulse" />
-            <div className="grid grid-cols-2 gap-2">
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-              <div className="col-span-2 aspect-[2/1] rounded-2xl bg-muted animate-pulse" />
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-              <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-            </div>
-          </div>
-          <div className="lg:hidden space-y-4">
-            <div className="aspect-square rounded-2xl bg-muted animate-pulse" />
-          </div>
-        </div>
-      </section>
-    )
-  }
 
   const getFlyer = (pos: string) => flyers.find((f) => f.position === pos)
 
