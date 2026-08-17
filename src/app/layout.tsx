@@ -37,13 +37,13 @@ export const metadata: Metadata = {
     siteName: "Lo Pedís, Lo Tenes",
     locale: "es_AR",
     type: "website",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Lo Pedís, Lo Tenes" }],
+    images: [{ url: "/images/og-whatsapp.jpg", width: 1200, height: 630, alt: "Lo Pedís, Lo Tenes" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Lo Pedís, Lo Tenes",
     description: "Importación directa desde Ciudad del Este, Paraguay",
-    images: ["/opengraph-image"],
+    images: ["/images/og-whatsapp.jpg"],
   },
 };
 
