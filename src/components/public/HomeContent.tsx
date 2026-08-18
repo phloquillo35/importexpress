@@ -103,7 +103,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
             </div>
             <button
               onClick={() => window.location.href = "/productos"}
-              className="block sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
+              className="block sm:inline-flex ml-auto sm:ml-0 items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
             >
               Ver todos los productos
               <ArrowRight className="w-3.5 h-3.5" />
