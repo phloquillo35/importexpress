@@ -98,7 +98,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-heading">Productos Destacados</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-heading whitespace-nowrap">Productos Destacados</h2>
               <p className="text-foreground/70 dark:text-muted-foreground mt-1.5">Lo más elegido por nuestros clientes</p>
             </div>
             <button
