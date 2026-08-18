@@ -4,7 +4,7 @@ import { requireAuth, requireRole } from "@/lib/auth"
 import { updateOrderSchema, registerPaymentSchema } from "@/lib/validators"
 import { genId } from "@/lib/utils"
 import { computeOrderTotalARS } from "@/lib/pricing"
-import { recalculatePaymentStatus } from "@/lib/orders"
+import { computeOrderStatus, recalculatePaymentStatus } from "@/lib/orders"
 
 async function getSettings() {
   const [er, ur] = await Promise.all([
@@ -138,6 +138,19 @@ export async function PUT(
     if (body.clientEmail !== undefined) data.clientEmail = body.clientEmail
     if (body.storeId !== undefined) data.storeId = body.storeId
     if (body.clientContact !== undefined) data.clientContact = body.clientContact
+
+    if (body.status !== undefined) {
+      await prisma.orderItem.updateMany({
+        where: { orderId: id, bulkId: null },
+        data: { shippingStatus: body.status },
+      })
+
+      const items = await prisma.orderItem.findMany({
+        where: { orderId: id },
+        select: { shippingStatus: true },
+      })
+      data.status = computeOrderStatus(items)
+    }
 
     const updated = await prisma.order.update({
       where: { id },

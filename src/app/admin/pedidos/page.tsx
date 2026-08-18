@@ -324,7 +324,7 @@ function DetailDialogContent({
                   <Label className="text-xs text-muted-foreground">Tienda</Label>
                   <Select value={editForm.storeId || "__none"} onValueChange={(v: string | null) => setEditForm({ ...editForm, storeId: v === "__none" ? "" : v || "" })}>
                     <SelectTrigger className="bg-muted border-border text-foreground">
-                      <SelectValue placeholder="Seleccionar tienda" />
+                      <SelectValue placeholder="Seleccionar tienda">{(value) => !value ? "Seleccionar tienda" : value === "__none" ? "Sin tienda" : stores.find(s => s.id === value)?.name ?? value}</SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card text-foreground">
                       <SelectItem value="__none">Sin tienda</SelectItem>
@@ -338,7 +338,7 @@ function DetailDialogContent({
                   <Label className="text-xs text-muted-foreground">Estado</Label>
                   <Select value={editForm.status} onValueChange={(v: string | null) => setEditForm({ ...editForm, status: v || "" })}>
                     <SelectTrigger className="bg-muted border-border text-foreground">
-                      <SelectValue placeholder="Seleccionar estado" />
+                      <SelectValue placeholder="Seleccionar estado">{(value) => value ? statusConfig[value]?.label : "Seleccionar estado"}</SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card text-foreground">
                       {Object.entries(statusConfig).map(([k, v]) => (
@@ -549,6 +549,8 @@ export default function PedidosPage() {
   const [usdtRate, setUsdtRate] = useState(1)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
+  const [deleteItemTarget, setDeleteItemTarget] = useState<{ item: OrderItem; order: Order } | null>(null)
+  const [groupDeleteOpen, setGroupDeleteOpen] = useState(false)
   const [productDetail, setProductDetail] = useState<{ item: OrderItem; order: Order } | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [paymentCurrency, setPaymentCurrency] = useState("USD")
@@ -627,20 +629,14 @@ export default function PedidosPage() {
     return () => { cancelled = true }
   }, [page, statusFilter, searchFilter])
 
-  // Update URL with filters
-  const updateFiltersUrl = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (statusFilter) params.set("status", statusFilter)
-    else params.delete("status")
-    if (searchFilter) params.set("search", searchFilter)
-    else params.delete("search")
-    router.push(`/admin/pedidos?${params.toString()}`, { scroll: false })
-  }, [router, searchParams, statusFilter, searchFilter])
-
   // Sync filters to URL when they change (status immediate, search debounced)
   useEffect(() => {
-    updateFiltersUrl()
-  }, [updateFiltersUrl])
+    const params = new URLSearchParams()
+    if (statusFilter) params.set("status", statusFilter)
+    if (searchFilter) params.set("search", searchFilter)
+    const qs = params.toString()
+    router.push(`/admin/pedidos${qs ? `?${qs}` : ""}`, { scroll: false })
+  }, [router, statusFilter, searchFilter])
 
   const filterDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const handleSearchFilterChange = (value: string) => {
@@ -935,6 +931,23 @@ export default function PedidosPage() {
     finally { setSaving(false) }
   }
 
+  async function handleDeleteItem() {
+    if (!deleteItemTarget) return
+    setSaving(true)
+    try {
+      const { order, item } = deleteItemTarget
+      const res = await fetch(`/api/pedidos/${order.id}/items/${item.id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Error al eliminar producto del pedido")
+      }
+      toast.success("Producto eliminado del pedido")
+      setDeleteItemTarget(null)
+      fetchOrders()
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al eliminar producto del pedido") }
+    finally { setSaving(false) }
+  }
+
   async function handleReaderParse() {
     if (!readerText.trim()) {
       toast.error("Pegá el mensaje de WhatsApp primero")
@@ -1041,8 +1054,8 @@ export default function PedidosPage() {
 
       <div className="flex flex-wrap gap-3 items-center">
           {/* Search */}
-          <div className="relative flex-1 min-w-[220px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative flex-1 min-w-[220px] max-w-md cursor-text">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={searchFilter}
               onChange={(e) => handleSearchFilterChange(e.target.value)}
@@ -1079,6 +1092,11 @@ export default function PedidosPage() {
               <X className="w-4 h-4 mr-1" /> Limpiar
             </Button>
           )}
+
+          {/* Delete order */}
+          <Button variant="outline" onClick={() => setGroupDeleteOpen(true)} className="text-red-400 hover:text-red-500 hover:border-red-400/50">
+            <Trash2 className="w-4 h-4 mr-2" /> Eliminar pedido
+          </Button>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
@@ -1167,7 +1185,7 @@ export default function PedidosPage() {
                       {getItemStatusBadge(item.shippingStatus)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setDeleteTarget(order); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setDeleteItemTarget({ item, order }) }} className="text-muted-foreground hover:text-red-400">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
@@ -1339,7 +1357,7 @@ export default function PedidosPage() {
                 <Label className="text-xs text-muted-foreground">Tienda</Label>
                 <Select value={form.storeId} onValueChange={(v: string | null) => setForm({ ...form, storeId: v === "__none" ? "" : v || "" })}>
                   <SelectTrigger className="bg-muted border-border text-foreground">
-                    <SelectValue placeholder="Seleccionar tienda" />
+                    <SelectValue placeholder="Seleccionar tienda">{(value) => !value ? "Seleccionar tienda" : value === "__none" ? "Sin tienda" : stores.find(s => s.id === value)?.name ?? value}</SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-card text-foreground">
                     <SelectItem value="__none">Sin tienda</SelectItem>
@@ -1415,7 +1433,7 @@ export default function PedidosPage() {
                               <Label className="text-xs text-muted-foreground">Color</Label>
                               <Select value={selectedProductColor} onValueChange={(v) => v && setSelectedProductColor(v)}>
                                 <SelectTrigger className="bg-muted border-border text-foreground">
-                                  <SelectValue placeholder="Seleccionar color" />
+                                  <SelectValue placeholder="Seleccionar color">{(value) => value ? value : "Seleccionar color"}</SelectValue>
                                 </SelectTrigger>
                                 <SelectContent className="bg-card text-foreground">
                                   {colors.map((color) => (
@@ -1507,6 +1525,75 @@ export default function PedidosPage() {
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={() => { setDeleteDialogOpen(false); setDeleteTarget(null) }} className="text-muted-foreground">Cancelar</Button>
             <Button type="button" disabled={saving} onClick={handleDeleteOrder} className="bg-red-500 hover:bg-red-600 text-white">
+              {saving ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={groupDeleteOpen} onOpenChange={setGroupDeleteOpen}>
+        <DialogContent className="bg-card text-foreground max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Eliminar pedido</DialogTitle></DialogHeader>
+          {orders.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No hay pedidos para eliminar</p>
+          ) : (
+            (() => {
+              const grouped = new Map<string, Order[]>()
+              for (const order of orders) {
+                const key = `${order.clientName}|${order.clientSurname}|${order.clientPhone || order.clientContact}`
+                if (!grouped.has(key)) grouped.set(key, [])
+                grouped.get(key)!.push(order)
+              }
+              return Array.from(grouped.entries()).map(([key, userOrders]) => {
+                const first = userOrders[0]
+                return (
+                  <div key={key} className="space-y-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {first.clientName} {first.clientSurname} — {first.clientPhone || first.clientContact}
+                    </p>
+                    <div className="space-y-2">
+                      {userOrders.map((order) => (
+                        <div key={order.id} className="border border-border rounded-lg p-3 space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-medium text-foreground">
+                              #{order.internalNumber} — {new Date(order.createdAt).toLocaleDateString("es-AR")}
+                            </span>
+                            <span className="text-sm text-foreground">${order.totalUSD.toFixed(2)} USD</span>
+                          </div>
+                          <div className="space-y-0.5">
+                            {order.items.map((item) => (
+                              <p key={item.id} className="text-xs text-muted-foreground">
+                                {item.productName ?? item.product?.name ?? "Producto eliminado"} ×{item.quantity}
+                              </p>
+                            ))}
+                          </div>
+                          <div className="flex justify-end">
+                            <Button variant="ghost" size="sm" onClick={() => { setDeleteTarget(order); setDeleteDialogOpen(true) }} className="text-red-400 hover:text-red-500">
+                              <Trash2 className="w-4 h-4 mr-1" /> Eliminar
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })
+            })()
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteItemTarget !== null} onOpenChange={(o) => { if (!o) setDeleteItemTarget(null) }}>
+        <DialogContent className="bg-card text-foreground max-w-sm">
+          <DialogHeader><DialogTitle>¿Eliminar producto del pedido?</DialogTitle></DialogHeader>
+          {deleteItemTarget && (
+            <p className="text-sm text-muted-foreground">
+              Se eliminará {deleteItemTarget.item.productName ?? deleteItemTarget.item.product?.name ?? "Producto"} ×{deleteItemTarget.item.quantity} del pedido #{deleteItemTarget.order.internalNumber}. El stock se restaura automáticamente.
+            </p>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setDeleteItemTarget(null)} className="text-muted-foreground">Cancelar</Button>
+            <Button type="button" disabled={saving} onClick={handleDeleteItem} className="bg-red-500 hover:bg-red-600 text-white">
               {saving ? "Eliminando..." : "Eliminar"}
             </Button>
           </div>

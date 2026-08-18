@@ -28,7 +28,7 @@ async function getDashboardData(periodDays: number = 30) {
           parent: { select: { name: true } },
         },
       }),
-      prisma.order.findMany({ where: { deletedAt: null, paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
+      prisma.order.findMany({ where: { deletedAt: null, status: { not: "cancelado" }, paymentStatus: { not: "pagado" } }, select: { totalUSD: true, amountPaidUSD: true } }),
     ])
 
     const incomeAgg = await prisma.transaction.aggregate({
