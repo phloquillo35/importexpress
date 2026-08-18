@@ -48,6 +48,7 @@ interface Product {
   stock: number
   minStock: number
   isAvailable: boolean
+  createdAt: string
   category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
 }
 
@@ -335,6 +336,7 @@ export default function AdminProductosPage() {
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground">Producto</TableHead>
               <TableHead className="text-muted-foreground">Categoría</TableHead>
+              <TableHead className="text-muted-foreground">Fecha creación</TableHead>
               <TableHead className="text-muted-foreground text-right">Costo USDT</TableHead>
               <TableHead className="text-muted-foreground text-right">Logística</TableHead>
               <TableHead className="text-muted-foreground text-right">Envío ARS</TableHead>
@@ -350,13 +352,13 @@ export default function AdminProductosPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={13} className="text-center text-muted-foreground py-12">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={13} className="text-center text-muted-foreground py-12">
                   <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No hay productos</p>
                 </TableCell>
@@ -379,6 +381,9 @@ export default function AdminProductosPage() {
                   <TableCell className="font-medium text-foreground cursor-pointer max-w-[280px]" onClick={() => setViewProduct(product)}><span className="truncate block" title={product.name}>{product.name}</span></TableCell>
                   <TableCell className="text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)} title={product.category?.parent ? `${product.category.parent.name} / ${product.category.name}` : (product.category?.name || "")}>
                     {product.category?.parent?.name || product.category?.name || "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
+                    {product.createdAt ? new Date(product.createdAt).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}
                   </TableCell>
                   <TableCell className="text-right text-foreground cursor-pointer" onClick={() => setViewProduct(product)}>${(product.costUSDT || 0).toFixed(2)}</TableCell>
                   <TableCell className="text-right text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>
