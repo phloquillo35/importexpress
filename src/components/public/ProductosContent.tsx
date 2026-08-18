@@ -145,7 +145,7 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
             </div>
             <button
               type="submit"
-              className="ml-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
+              className="ml-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors cursor-pointer"
             >
               Buscar
             </button>
@@ -153,7 +153,7 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="lg:hidden p-2.5 bg-muted border border-border/60 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+            className="lg:hidden p-2.5 bg-muted border border-border/60 rounded-full text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <SlidersHorizontal className="w-5 h-5" />
           </button>

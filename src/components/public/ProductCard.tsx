@@ -153,7 +153,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
         <button
           onClick={handleAdd}
           data-testid="add-to-cart"
-          className="w-full flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-medium rounded-full transition-colors sm:gap-1.5 sm:py-2.5 sm:text-xs"
+          className="w-full flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-medium rounded-full transition-colors sm:gap-1.5 sm:py-2.5 sm:text-xs cursor-pointer"
         >
           <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           Agregar

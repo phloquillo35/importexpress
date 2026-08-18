@@ -56,7 +56,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
           <div className="flex md:hidden items-center justify-between h-12">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               aria-label="Menú"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -69,7 +69,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
 
             <button
               onClick={() => setWhatsAppOpen(true)}
-              className="flex items-center justify-center w-11 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-colors"
+              className="flex items-center justify-center w-11 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-colors cursor-pointer"
               aria-label="Contactar por WhatsApp"
             >
               <MessageCircle className="w-4 h-4" />
@@ -84,13 +84,13 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              <Link href="/productos" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+              <Link href="/productos" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium cursor-pointer">
                 Productos
               </Link>
-              <Link href="/como-funciona" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+              <Link href="/como-funciona" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium cursor-pointer">
                 Cómo funciona
               </Link>
-              <Link href="/contacto" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+              <Link href="/contacto" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium cursor-pointer">
                 Contacto
               </Link>
             </div>
@@ -116,14 +116,14 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
               >
                 {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <button
                 onClick={() => setCartOpen(true)}
-                className="relative flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors"
+                className="relative flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 aria-label="Carrito"
                 data-testid="cart-trigger"
               >
@@ -136,7 +136,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
               </button>
               <button
                 onClick={() => setWhatsAppOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors cursor-pointer"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">WhatsApp</span>
@@ -166,7 +166,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
             <div className="px-4 py-4 space-y-1">
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-foreground rounded-xl hover:bg-muted transition-colors"
+                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-foreground rounded-xl hover:bg-muted transition-colors cursor-pointer"
               >
                 {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 {theme === "dark" ? "Modo claro" : "Modo oscuro"}
@@ -177,21 +177,21 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
               <Link
                 href="/productos"
                 onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2.5 text-sm text-foreground hover:text-primary font-medium rounded-xl hover:bg-muted transition-colors"
+                className="block px-3 py-2.5 text-sm text-foreground hover:text-primary font-medium rounded-xl hover:bg-muted transition-colors cursor-pointer"
               >
                 Productos
               </Link>
               <Link
                 href="/como-funciona"
                 onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2.5 text-sm text-foreground hover:text-primary font-medium rounded-xl hover:bg-muted transition-colors"
+                className="block px-3 py-2.5 text-sm text-foreground hover:text-primary font-medium rounded-xl hover:bg-muted transition-colors cursor-pointer"
               >
                 Cómo funciona
               </Link>
               <Link
                 href="/contacto"
                 onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2.5 text-sm text-foreground hover:text-primary font-medium rounded-xl hover:bg-muted transition-colors"
+                className="block px-3 py-2.5 text-sm text-foreground hover:text-primary font-medium rounded-xl hover:bg-muted transition-colors cursor-pointer"
               >
                 Contacto
               </Link>
@@ -206,7 +206,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
       {isMobile && count > 0 && (
         <button
           onClick={() => setCartOpen(true)}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 z-[55] flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 touch-manipulation"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 z-[55] flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 touch-manipulation cursor-pointer"
           aria-label={`Carrito (${count} items)`}
           data-testid="cart-trigger"
         >

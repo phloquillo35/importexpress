@@ -174,7 +174,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
             </div>
             <button
               onClick={() => window.location.href = "/productos"}
-              className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
+              className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium cursor-pointer"
             >
               Ver todos los productos
               <ArrowRight className="w-3.5 h-3.5" />
@@ -198,7 +198,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
                 <Link
                   key={cat.id}
                   href={`/categorias/${cat.slug}`}
-                  className="group flex flex-col items-center justify-center gap-3 p-6 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:scale-[1.02] transition-all duration-300"
+                  className="group flex flex-col items-center justify-center gap-3 p-6 bg-card rounded-2xl border border-border/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:scale-[1.02] transition-all duration-300 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-[#e8e8ed] transition-colors overflow-hidden">
                     {cat.image ? (
