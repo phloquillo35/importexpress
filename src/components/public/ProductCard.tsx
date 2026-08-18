@@ -76,7 +76,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
   }
 
   return (
-    <div className="group block bg-card rounded-2xl border border-border/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300">
+    <div className="group block bg-card rounded-2xl border border-border/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer">
       <Link href={href} className="block" data-testid="product-link">
         <div className="aspect-[5/4] sm:aspect-[4/3] bg-muted flex items-center justify-center p-1 sm:p-8">
           {cardImage ? (

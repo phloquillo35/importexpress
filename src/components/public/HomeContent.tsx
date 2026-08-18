@@ -103,7 +103,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
             </div>
             <button
               onClick={() => window.location.href = "/productos"}
-              className="block sm:inline-flex ml-auto sm:ml-0 items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
+              className="block sm:inline-flex ml-auto sm:ml-0 items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium cursor-pointer"
             >
               Ver todos los productos
               <ArrowRight className="w-3.5 h-3.5" />
@@ -143,7 +143,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
               <button
                 onClick={() => loadFeatured(offset, true)}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -219,14 +219,14 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
           )}
           {categories.some(c => c.parent) && (
             <div className="mt-4 text-center">
-              <Link href="/productos" className="text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
+              <Link href="/productos" className="text-sm text-primary hover:text-[#0077ed] transition-colors font-medium cursor-pointer">
                 Ver subcategorías disponibles
               </Link>
             </div>
           )}
 
           <div className="sm:hidden mt-6 text-center">
-            <Link href="/productos" className="inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium">
+            <Link href="/productos" className="inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium cursor-pointer">
               Ver todo
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>

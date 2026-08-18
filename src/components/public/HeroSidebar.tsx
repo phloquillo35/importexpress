@@ -73,7 +73,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
         <button
           onClick={onReset}
           aria-current={!activeCategory ? "true" : undefined}
-          className={`w-full text-left px-2 py-1.5 rounded-lg text-sm font-medium transition-colors mb-2 ${
+          className={`w-full text-left px-2 py-1.5 rounded-lg text-sm font-medium transition-colors mb-2 cursor-pointer ${
             !activeCategory ? "bg-primary/10 text-primary" : "text-primary hover:text-[#0077ed] hover:bg-muted/50"
           }`}
         >
@@ -109,7 +109,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
                   <button
                     onClick={(e) => handleParentClick(e, cat)}
                     aria-current={isParentActive ? "true" : undefined}
-                    className={`${parentClasses} w-full text-left`}
+                    className={`${parentClasses} w-full text-left cursor-pointer`}
                   >
                     <Package className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                     <span className="truncate flex-1">{cat.name}</span>
@@ -126,7 +126,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
                     href={`/categorias/${cat.slug}`}
                     onClick={(e) => handleParentClick(e, cat)}
                     aria-current={isParentActive ? "true" : undefined}
-                    className={parentClasses}
+                    className={`${parentClasses} cursor-pointer`}
                   >
                     <Package className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                     <span className="truncate flex-1">{cat.name}</span>
@@ -150,7 +150,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
                       {onSelectCategory ? (
                         <button
                           onClick={() => onSelectCategory(cat.slug)}
-                          className="flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-primary hover:text-[#0077ed] hover:bg-muted/50 transition-colors w-full text-left"
+                          className="flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-primary hover:text-[#0077ed] hover:bg-muted/50 transition-colors w-full text-left cursor-pointer"
                         >
                           Ver todos los {cat.name}
                         </button>
@@ -158,7 +158,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
                         <Link
                           href={`/categorias/${cat.slug}`}
                           onClick={() => onNavigate?.()}
-                          className="flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-primary hover:text-[#0077ed] hover:bg-muted/50 transition-colors"
+                          className="flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-primary hover:text-[#0077ed] hover:bg-muted/50 transition-colors cursor-pointer"
                         >
                           Ver todos los {cat.name}
                         </Link>
@@ -173,7 +173,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
                             key={child.id}
                             onClick={() => onSelectCategory(child.slug)}
                             aria-current={isChildActive ? "true" : undefined}
-                            className={`${childClasses} w-full text-left`}
+                            className={`${childClasses} w-full text-left cursor-pointer`}
                           >
                             <span className="w-1 h-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
                             <span className="truncate flex-1">{child.name}</span>
@@ -184,7 +184,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
                             href={`/categorias/${cat.slug}?sub=${child.slug}`}
                             onClick={() => onNavigate?.()}
                             aria-current={isChildActive ? "true" : undefined}
-                            className={childClasses}
+                            className={`${childClasses} cursor-pointer`}
                           >
                             <span className="w-1 h-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
                             <span className="truncate flex-1">{child.name}</span>
@@ -205,7 +205,7 @@ export function HeroSidebar({ onNavigate, onSelectCategory, onReset, initialCate
             document.getElementById("categorias")?.scrollIntoView({ behavior: "smooth" })
             onNavigate?.()
           }}
-          className="w-full mt-3 px-2 py-1.5 rounded-lg text-sm font-medium text-primary hover:text-[#0077ed] hover:bg-muted/50 transition-colors"
+          className="w-full mt-3 px-2 py-1.5 rounded-lg text-sm font-medium text-primary hover:text-[#0077ed] hover:bg-muted/50 transition-colors cursor-pointer"
         >
           Ver todas
         </button>
