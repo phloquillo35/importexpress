@@ -103,7 +103,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
             </div>
             <button
               onClick={() => window.location.href = "/productos"}
-              className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
+              className="block sm:inline-flex items-center gap-1 text-sm text-primary hover:text-[#0077ed] transition-colors font-medium"
             >
               Ver todos los productos
               <ArrowRight className="w-3.5 h-3.5" />
@@ -111,7 +111,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="bg-card rounded-2xl border border-border/60 overflow-hidden">
                   <Skeleton className="aspect-square sm:aspect-[4/3] !rounded-none bg-muted" />
@@ -129,7 +129,7 @@ export function HomeContent({ initialCategories = [], initialHero }: { initialCa
               <p className="text-sm">Error al cargar productos</p>
             </div>
           ) : featured.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featured.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
