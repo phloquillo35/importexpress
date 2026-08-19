@@ -42,22 +42,28 @@ const links = [
 
 interface SidebarProps {
   onClose?: () => void
+  isOpen?: boolean
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({ onClose, isOpen = false }: SidebarProps) {
   const pathname = usePathname()
   const { collapsed, toggleCollapsed, isMobile } = useSidebar()
+
+  // On mobile: expanded when sidebar is opened via hamburger, collapsed otherwise
+  // On desktop: uses collapsed state from context
+  const isExpanded = isMobile ? isOpen : !collapsed
+  const sidebarWidth = isMobile ? (isOpen ? "w-64" : "w-16") : (collapsed ? "w-16" : "w-64")
 
   return (
     <aside
       className={cn(
         "bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 h-full overflow-y-auto",
-        isMobile ? "w-16" : collapsed ? "w-16" : "w-64"
+        sidebarWidth
       )}
     >
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
         <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-        {!collapsed && !isMobile && (
+        {isExpanded && (
           <span className="font-heading font-semibold text-sidebar-foreground text-sm">Lo Pedís, Lo Tenes</span>
         )}
       </div>
@@ -81,10 +87,10 @@ export function Sidebar({ onClose }: SidebarProps) {
                   ? "bg-primary/10 text-primary"
                   : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10"
               )}
-              title={collapsed || isMobile ? link.label : undefined}
+              title={!isExpanded ? link.label : undefined}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && !isMobile && <span>{link.label}</span>}
+              {isExpanded && <span>{link.label}</span>}
             </Link>
           )
         })}
@@ -104,10 +110,10 @@ export function Sidebar({ onClose }: SidebarProps) {
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-red-400 hover:bg-red-500/5 transition-colors"
-          title={collapsed || isMobile ? "Cerrar sesión" : undefined}
+          title={!isExpanded ? "Cerrar sesión" : undefined}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && !isMobile && <span>Cerrar sesión</span>}
+          {isExpanded && <span>Cerrar sesión</span>}
         </button>
       </div>
     </aside>

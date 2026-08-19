@@ -25,7 +25,7 @@ export function AdminHeaderWrapper() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <Sidebar onClose={() => setSidebarOpen(false)} />
+        <Sidebar onClose={() => setSidebarOpen(false)} isOpen={sidebarOpen} />
       </div>
     </>
   )
