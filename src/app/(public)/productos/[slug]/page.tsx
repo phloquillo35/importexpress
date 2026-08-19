@@ -12,12 +12,18 @@ import { useCart } from "@/context/CartContext"
 import { swatchStyle } from "@/lib/colors"
 import { flyToCart } from "@/lib/flyToCart"
 
+interface SpecItem {
+  key: string
+  value: string
+  order?: number
+}
+
 interface Product {
   id: string
   slug: string
   name: string
   description: string | null
-  specs: Record<string, string> | null
+  specs: SpecItem[] | Record<string, string> | null
   images: string[]
   priceUSD: number
   priceARS: number | null
@@ -347,10 +353,13 @@ function handleSubmit(e: React.FormEvent) {
           <div className="bg-muted rounded-2xl overflow-hidden max-w-2xl border border-border/60">
             <table className="w-full text-sm">
               <tbody>
-                {Object.entries(specs).map(([key, value], i) => (
-                  <tr key={key} className={i % 2 === 0 ? "bg-card/50" : ""}>
-                    <td className="px-5 py-3.5 text-muted-foreground font-medium capitalize w-1/3">{key.replace(/_/g, " ")}</td>
-                    <td className="px-5 py-3.5 text-foreground">{value}</td>
+                {(Array.isArray(specs) 
+                  ? specs.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                  : Object.entries(specs as Record<string, string>).map(([key, value], i) => ({ key, value, order: i }))
+                ).map((spec, i) => (
+                  <tr key={spec.key} className={i % 2 === 0 ? "bg-card/50" : ""}>
+                    <td className="px-5 py-3.5 text-muted-foreground font-medium capitalize w-1/3">{spec.key.replace(/_/g, " ")}</td>
+                    <td className="px-5 py-3.5 text-foreground">{spec.value}</td>
                   </tr>
                 ))}
               </tbody>

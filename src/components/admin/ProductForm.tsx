@@ -69,8 +69,12 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   const [stores, setStores] = useState<StoreType[]>([])
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
-  const [specs, setSpecs] = useState<{ key: string; value: string }[]>(
-    defaultValues?.specs ? Object.entries(defaultValues.specs).map(([k, v]) => ({ key: k, value: v })) : []
+  const [specs, setSpecs] = useState<{ key: string; value: string; order: number }[]>(
+    defaultValues?.specs 
+      ? (Array.isArray(defaultValues.specs) 
+          ? defaultValues.specs 
+          : Object.entries(defaultValues.specs as Record<string, string>).map(([k, v], i) => ({ key: k, value: v, order: i })))
+      : []
   )
   function parseImagesToColorGroups(images: unknown): ColorGroup[] {
     if (!images || !Array.isArray(images) || images.length === 0) return []
@@ -159,7 +163,13 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   }, [defaultValues?.categoryId])
 
   useEffect(() => {
-    setSpecs(defaultValues?.specs ? Object.entries(defaultValues.specs).map(([k, v]) => ({ key: k, value: v })) : [])
+    setSpecs(
+      defaultValues?.specs
+        ? (Array.isArray(defaultValues.specs)
+            ? defaultValues.specs
+            : Object.entries(defaultValues.specs as Record<string, string>).map(([k, v], i) => ({ key: k, value: v, order: i })))
+        : []
+    )
     setColorGroups(parseImagesToColorGroups(defaultValues?.images))
   }, [defaultValues?.specs, defaultValues?.images])
 
@@ -192,11 +202,12 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
   }, [costUSDT, yoniEnabled, yoniType, yoniValue, shippingCost, profitType, profitValue, exchangeRate, usdtRate])
 
   function addSpec() {
-    setSpecs([...specs, { key: "", value: "" }])
+    setSpecs([...specs, { key: "", value: "", order: specs.length }])
   }
 
   function removeSpec(i: number) {
-    setSpecs(specs.filter((_, idx) => idx !== i))
+    const updated = specs.filter((_, idx) => idx !== i).map((s, idx) => ({ ...s, order: idx }))
+    setSpecs(updated)
   }
 
   function updateSpec(i: number, field: "key" | "value", val: string) {
@@ -277,10 +288,9 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
 
     setSaving(true)
 
-    const specsObj = specs.filter((s) => s.key.trim()).reduce<Record<string, string>>((acc, s) => {
-      acc[s.key.trim()] = s.value
-      return acc
-    }, {})
+    const specsArray = specs
+      .filter((s) => s.key.trim())
+      .map((s, idx) => ({ key: s.key.trim(), value: s.value, order: idx }))
 
     const body = {
       ...data,
@@ -300,7 +310,7 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       finalPriceARS: pricing.finalPriceARS,
       exchangeRate,
       images: colorGroups.flatMap(g => g.images.map(url => ({ url, color: g.name }))),
-      specs: Object.keys(specsObj).length > 0 ? specsObj : null,
+      specs: specsArray.length > 0 ? specsArray : null,
     }
 
     try {
