@@ -22,7 +22,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useSidebar } from "@/context/SidebarContext"
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -46,13 +46,13 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const { collapsed, toggleCollapsed } = useSidebar()
 
   return (
     <aside
       className={cn(
         "bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 h-full overflow-y-auto",
-        collapsed ? "w-16" : "w-60"
+        collapsed ? "w-16" : "w-70"
       )}
     >
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
@@ -92,9 +92,9 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       <div className="border-t border-sidebar-border p-2 space-y-1">
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleCollapsed}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 transition-colors"
-          title={collapsed ? "Expandir barra" : undefined}
+          title={collapsed ? "Expandir barra" : "Contraer barra"}
         >
           {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
           {!collapsed && <span>Contraer barra</span>}

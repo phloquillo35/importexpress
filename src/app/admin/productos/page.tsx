@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { calculateFinalPrice } from "@/lib/pricing"
+import { useSidebar } from "@/context/SidebarContext"
 
 interface Product {
   id: string
@@ -62,6 +63,7 @@ interface Category {
 export default function AdminProductosPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { collapsed: isSidebarCollapsed } = useSidebar()
   const [products, setProducts] = useState<Product[]>([])
   const [total, setTotal] = useState(0)
   const [totalAll, setTotalAll] = useState(0)
@@ -423,8 +425,8 @@ return (
                       <Badge className="bg-red-500/10 text-red-400 border-0">No</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right w-[80px] sm:w-[100px] md:w-[120px] lg:w-[130px]">
-                    <div className="flex items-center justify-end gap-1.5 flex-wrap w-full sm:flex-nowrap">
+                  <TableCell className={`text-right ${isSidebarCollapsed ? "w-[70px] sm:w-[80px] md:w-[90px] lg:w-[100px]" : "w-[80px] sm:w-[100px] md:w-[120px] lg:w-[130px]"} transition-all duration-200`}>
+                    <div className={`flex items-center justify-end gap-${isSidebarCollapsed ? "0.5" : "1.5"} ${isSidebarCollapsed ? "flex-col" : "flex-row"} w-full`}>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -432,7 +434,7 @@ return (
                         className="hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E]"
                         title="Editar producto"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className={`w-3.5 h-3.5 transition-all duration-200 ${isSidebarCollapsed ? "w-3 h-5 scale-x-125" : ""}`} />
                       </Button>
                       <Button
                         variant="ghost"
@@ -441,7 +443,11 @@ return (
                         className={product.isAvailable ? "hover:bg-accent/10 text-muted-foreground hover:text-red-400" : "hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E]"}
                         title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
                       >
-                        {product.isAvailable ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        {product.isAvailable ? (
+                          <EyeOff className={`w-3.5 h-3.5 transition-all duration-200 ${isSidebarCollapsed ? "w-3 h-5 scale-x-125" : ""}`} />
+                        ) : (
+                          <Eye className={`w-3.5 h-3.5 transition-all duration-200 ${isSidebarCollapsed ? "w-3 h-5 scale-x-125" : ""}`} />
+                        )}
                       </Button>
                       <Button
                         variant="ghost"
@@ -450,7 +456,7 @@ return (
                         className="hover:bg-accent/10 text-muted-foreground hover:text-red-400"
                         title="Eliminar producto"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className={`w-3.5 h-3.5 transition-all duration-200 ${isSidebarCollapsed ? "w-3 h-5 scale-x-125" : ""}`} />
                       </Button>
                     </div>
                   </TableCell>
