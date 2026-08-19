@@ -46,18 +46,18 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
-  const { collapsed, toggleCollapsed } = useSidebar()
+  const { collapsed, toggleCollapsed, isMobile } = useSidebar()
 
   return (
     <aside
       className={cn(
         "bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 h-full overflow-y-auto",
-        collapsed ? "w-16" : "w-64"
+        isMobile ? "w-16" : collapsed ? "w-16" : "w-64"
       )}
     >
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
         <img src="/logo.jpg" alt="Lo Pedís, Lo Tenes" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-        {!collapsed && (
+        {!collapsed && !isMobile && (
           <span className="font-heading font-semibold text-sidebar-foreground text-sm">Lo Pedís, Lo Tenes</span>
         )}
       </div>
@@ -81,31 +81,33 @@ export function Sidebar({ onClose }: SidebarProps) {
                   ? "bg-primary/10 text-primary"
                   : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10"
               )}
-              title={collapsed ? link.label : undefined}
+              title={collapsed || isMobile ? link.label : undefined}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span>{link.label}</span>}
+              {!collapsed && !isMobile && <span>{link.label}</span>}
             </Link>
           )
         })}
       </nav>
 
       <div className="border-t border-sidebar-border p-2 space-y-1">
-        <button
-          onClick={toggleCollapsed}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 transition-colors"
-          title={collapsed ? "Expandir barra" : "Contraer barra"}
-        >
-          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-          {!collapsed && <span>Contraer barra</span>}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={toggleCollapsed}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 transition-colors"
+            title={collapsed ? "Expandir barra" : "Contraer barra"}
+          >
+            {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            {!collapsed && <span>Contraer barra</span>}
+          </button>
+        )}
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/60 hover:text-red-400 hover:bg-red-500/5 transition-colors"
-          title={collapsed ? "Cerrar sesión" : undefined}
+          title={collapsed || isMobile ? "Cerrar sesión" : undefined}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span>Cerrar sesión</span>}
+          {!collapsed && !isMobile && <span>Cerrar sesión</span>}
         </button>
       </div>
     </aside>
