@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff, X, Loader2, Star } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
@@ -85,7 +85,6 @@ export default function AdminProductosPage() {
   const [exchangeRate, setExchangeRate] = useState(1)
   const [usdtRate, setUsdtRate] = useState(1)
   const highlightId = searchParams.get("highlight")
-  const tableRef = useRef<HTMLDivElement>(null)
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
   const limit = 20
   const [refreshKey, setRefreshKey] = useState(0)
@@ -330,23 +329,23 @@ export default function AdminProductosPage() {
         </p>
       </form>
 
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+      <div className="bg-card border border-border rounded-xl overflow-x-auto shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
-              <TableHead className="text-muted-foreground max-w-[280px] min-w-[160px]">Producto</TableHead>
-              <TableHead className="text-muted-foreground max-w-[160px] min-w-[100px]">Categoría</TableHead>
+              <TableHead className="text-muted-foreground max-w-[320px] min-w-[180px] sm:max-w-[240px] sm:min-w-[140px] truncate">Producto</TableHead>
+              <TableHead className="text-muted-foreground max-w-[200px] min-w-[120px] sm:max-w-[160px] sm:min-w-[100px] truncate">Categoría</TableHead>
               <TableHead className="text-muted-foreground whitespace-nowrap">Fecha creación</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[70px]">Costo USDT</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[70px]">Logística</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[70px]">Envío ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[70px]">Subtotal ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[60px]">Ganancia ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[70px]">Final ARS</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[70px]">Final USD</TableHead>
-              <TableHead className="text-muted-foreground text-center w-[45px]">Stock</TableHead>
-              <TableHead className="text-muted-foreground text-center w-[45px]">Disp.</TableHead>
-              <TableHead className="text-muted-foreground text-right w-[140px]">Acciones</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[50px] sm:w-[70px] md:w-[80px]">Costo USDT</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[50px] sm:w-[70px] md:w-[80px]">Logística</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[50px] sm:w-[70px] md:w-[80px]">Envío ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[50px] sm:w-[70px] md:w-[80px]">Subtotal ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[40px] sm:w-[60px] md:w-[60px]">Ganancia ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[50px] sm:w-[70px] md:w-[70px]">Final ARS</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[50px] sm:w-[70px] md:w-[70px]">Final USD</TableHead>
+              <TableHead className="text-muted-foreground text-center w-[30px] sm:w-[45px]">Stock</TableHead>
+              <TableHead className="text-muted-foreground text-center w-[30px] sm:w-[45px]">Disp.</TableHead>
+              <TableHead className="text-muted-foreground text-right w-[80px] sm:w-[100px] md:w-[120px] lg:w-[130px]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -376,58 +375,82 @@ export default function AdminProductosPage() {
                   exchangeRate,
                   usdtRate,
                 })
-                return (
-<TableRow id={`product-${product.id}`} key={product.id} className="border-border hover:bg-muted transition-all duration-1000">
-                  <TableCell className="font-medium text-foreground cursor-pointer max-w-[280px] min-w-[160px] truncate" onClick={() => setViewProduct(product)} title={product.name}>
+return (
+                <TableRow
+                  id={`product-${product.id}`}
+                  key={product.id}
+                  className="border-border hover:bg-muted/50 transition-colors even:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary/20"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setViewProduct(product); } }}
+                >
+                  <TableCell className="font-medium text-foreground cursor-pointer max-w-[320px] min-w-[180px] sm:max-w-[240px] sm:min-w-[140px] truncate" onClick={() => setViewProduct(product)} title={product.name}>
                     {product.name}
                   </TableCell>
-                  <TableCell className="text-muted-foreground cursor-pointer max-w-[160px] min-w-[100px] truncate" onClick={() => setViewProduct(product)} title={product.category?.parent ? `${product.category.parent.name} / ${product.category.name}` : (product.category?.name || "")}>
+                  <TableCell className="text-muted-foreground cursor-pointer max-w-[200px] min-w-[120px] sm:max-w-[160px] sm:min-w-[100px] truncate" onClick={() => setViewProduct(product)} title={product.category?.parent ? `${product.category.parent.name} / ${product.category.name}` : (product.category?.name || "")}>
                     {product.category?.parent?.name || product.category?.name || "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground cursor-pointer whitespace-nowrap" onClick={() => setViewProduct(product)}>
                     {product.createdAt ? new Date(product.createdAt).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}
                   </TableCell>
-                  <TableCell className="text-right text-foreground cursor-pointer w-[70px]" onClick={() => setViewProduct(product)}>${(product.costUSDT || 0).toFixed(2)}</TableCell>
-                  <TableCell className="text-right text-muted-foreground cursor-pointer w-[70px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-right text-foreground cursor-pointer w-[50px] sm:w-[70px] md:w-[80px]" onClick={() => setViewProduct(product)}>${(product.costUSDT || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-muted-foreground cursor-pointer w-[50px] sm:w-[70px] md:w-[80px]" onClick={() => setViewProduct(product)}>
                     {product.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground cursor-pointer w-[70px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-right text-muted-foreground cursor-pointer w-[50px] sm:w-[70px] md:w-[80px]" onClick={() => setViewProduct(product)}>
                     ${(product.shippingCost || 0).toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-foreground cursor-pointer w-[70px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-right text-foreground cursor-pointer w-[50px] sm:w-[70px] md:w-[80px]" onClick={() => setViewProduct(product)}>
                     ${pricing.subtotalARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-[#0071e3] cursor-pointer w-[60px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-right text-[#0071e3] cursor-pointer w-[40px] sm:w-[60px] md:w-[60px]" onClick={() => setViewProduct(product)}>
                     ${pricing.profitARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-[#22C55E] font-medium cursor-pointer w-[70px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-right text-[#22C55E] font-medium cursor-pointer w-[50px] sm:w-[70px] md:w-[70px]" onClick={() => setViewProduct(product)}>
                     ${pricing.finalPriceARS.toLocaleString("es-AR")}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground cursor-pointer w-[70px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-right text-muted-foreground cursor-pointer w-[50px] sm:w-[70px] md:w-[70px]" onClick={() => setViewProduct(product)}>
                     ${pricing.finalPriceUSD.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-center cursor-pointer w-[45px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-center cursor-pointer w-[30px] sm:w-[45px]" onClick={() => setViewProduct(product)}>
                     <span className={product.stock <= product.minStock ? "text-red-400 font-medium" : "text-muted-foreground"}>
                       {product.stock}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center cursor-pointer w-[45px]" onClick={() => setViewProduct(product)}>
+                  <TableCell className="text-center cursor-pointer w-[30px] sm:w-[45px]" onClick={() => setViewProduct(product)}>
                     {product.isAvailable ? (
                       <Badge className="bg-[#22C55E]/10 text-[#22C55E] border-0">Sí</Badge>
                     ) : (
                       <Badge className="bg-red-500/10 text-red-400 border-0">No</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right w-[140px]">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); router.push(`/admin/productos/${product.slug}/editar`) }} className="text-muted-foreground hover:text-[#22C55E]">
-                        <Pencil className="w-4 h-4" />
+                  <TableCell className="text-right w-[80px] sm:w-[100px] md:w-[120px] lg:w-[130px]">
+                    <div className="flex items-center justify-end gap-1.5 flex-wrap w-full sm:flex-nowrap">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); router.push(`/admin/productos/${product.slug}/editar`) }}
+                        className="hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E]"
+                        title="Editar producto"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleToggleAvailability(product) }} className={product.isAvailable ? "text-muted-foreground hover:text-red-400" : "text-muted-foreground hover:text-[#22C55E]"} title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}>
-                        {product.isAvailable ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); handleToggleAvailability(product) }}
+                        className={product.isAvailable ? "hover:bg-accent/10 text-muted-foreground hover:text-red-400" : "hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E]"}
+                        title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
+                      >
+                        {product.isAvailable ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(product) }} className="text-muted-foreground hover:text-red-400">
-                        <Trash2 className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(product) }}
+                        className="hover:bg-accent/10 text-muted-foreground hover:text-red-400"
+                        title="Eliminar producto"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </TableCell>
