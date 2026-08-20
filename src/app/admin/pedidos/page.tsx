@@ -426,9 +426,9 @@ function DetailDialogContent({
           </div>
         </div>
       </DialogHeader>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
         {editingOrder ? (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
             <div className="space-y-3 border border-border rounded-lg p-4">
               <h3 className="text-sm font-semibold text-foreground">Editar pedido</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -1475,7 +1475,7 @@ export default function PedidosPage() {
       {/* Detail Dialog */}
       {productDetail && (
         <Dialog open onOpenChange={(o) => { if (!o) { setProductDetail(null); setActiveTab("items") } }}>
-          <DialogContent className="bg-card text-foreground max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogContent className="bg-card text-foreground max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" showCloseButton={!editingOrder}>
             <DetailDialogContent
               productDetail={productDetail}
               editingOrder={editingOrder}
