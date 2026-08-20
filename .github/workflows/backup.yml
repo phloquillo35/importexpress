@@ -1,0 +1,17 @@
+name: Backup DB
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger backup endpoint
+        run: |
+          curl -sS -X POST "https://lopedis-lotenes.up.railway.app/api/mantenimiento/backup" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            -w "\nHTTP %{http_code}" \
+            --max-time 300

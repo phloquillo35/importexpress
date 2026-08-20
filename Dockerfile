@@ -36,6 +36,8 @@ RUN npm install prisma@7.8.0 pg@^8.13.0 better-sqlite3@^12.11.1
 
 RUN mkdir -p /data && chown nextjs:nodejs /data
 
+RUN apk add --no-cache postgresql-client
+
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
