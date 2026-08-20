@@ -135,6 +135,11 @@ model OrderItem {
   profitValue    Float   @default(0)
   color          String?
   storage        String?
+  subtotalARS    Float?
+  profitARS      Float?
+  finalPriceARS  Float?
+  finalPriceUSD  Float?
+  logisticaUSDT  Float?
   order          Order    @relation(fields: [orderId], references: [id])
   product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   bulk           Bulk?    @relation(fields: [bulkId], references: [id])

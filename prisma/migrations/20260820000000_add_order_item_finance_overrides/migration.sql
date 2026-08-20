@@ -1,0 +1,6 @@
+-- AlterTable: Add financial override fields to OrderItem
+ALTER TABLE "OrderItem" ADD COLUMN "subtotalARS" DOUBLE PRECISION;
+ALTER TABLE "OrderItem" ADD COLUMN "profitARS" DOUBLE PRECISION;
+ALTER TABLE "OrderItem" ADD COLUMN "finalPriceARS" DOUBLE PRECISION;
+ALTER TABLE "OrderItem" ADD COLUMN "finalPriceUSD" DOUBLE PRECISION;
+ALTER TABLE "OrderItem" ADD COLUMN "logisticaUSDT" DOUBLE PRECISION;

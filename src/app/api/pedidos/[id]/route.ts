@@ -3,7 +3,7 @@ import { NextRequest } from "next/server"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { updateOrderSchema, registerPaymentSchema } from "@/lib/validators"
 import { genId } from "@/lib/utils"
-import { computeOrderTotalARS } from "@/lib/pricing"
+import { computeOrderTotalARS, getItemEffectivePricing } from "@/lib/pricing"
 import { computeOrderStatus, recalculatePaymentStatus } from "@/lib/orders"
 
 async function getSettings() {
@@ -150,6 +150,54 @@ export async function PUT(
         select: { shippingStatus: true },
       })
       data.status = computeOrderStatus(items)
+    }
+
+    let financesChanged = false
+    if (body.finances !== undefined && Array.isArray(body.finances) && body.finances.length > 0) {
+      const financeMap = new Map((parsed.data.finances ?? []).map((f) => [f.itemId, f]))
+      const orderItems = await prisma.orderItem.findMany({ where: { orderId: id } })
+
+      for (const item of orderItems) {
+        const fin = financeMap.get(item.id)
+        if (!fin) continue
+        await prisma.orderItem.update({
+          where: { id: item.id },
+          data: {
+            costUSDT: fin.costUSDT !== undefined ? fin.costUSDT : item.costUSDT,
+            shippingCost: fin.shippingCost !== undefined ? fin.shippingCost : item.shippingCost,
+            logisticaUSDT: fin.logisticaUSDT !== undefined ? fin.logisticaUSDT : null,
+            subtotalARS: fin.subtotalARS !== undefined ? fin.subtotalARS : null,
+            profitARS: fin.profitARS !== undefined ? fin.profitARS : null,
+            finalPriceARS: fin.finalPriceARS !== undefined ? fin.finalPriceARS : null,
+            finalPriceUSD: fin.finalPriceUSD !== undefined ? fin.finalPriceUSD : null,
+          },
+        })
+      }
+
+      const settings = await getSettings()
+      const orderExchangeRate = existing.exchangeRate || settings.exchangeRate
+      const orderUsdtRate = existing.usdtRate || settings.usdtRate
+
+      const recalcItems = await prisma.orderItem.findMany({ where: { orderId: id } })
+      let totalUSD = 0
+      let totalARS = 0
+      for (const it of recalcItems) {
+        const eff = getItemEffectivePricing(it, orderExchangeRate, orderUsdtRate)
+        totalUSD += eff.finalPriceUSD
+        totalARS += eff.finalPriceARS
+      }
+      data.totalUSD = Math.round(totalUSD * 100) / 100
+      data.totalARS = Math.round(totalARS)
+      financesChanged = true
+    }
+
+    if (body.amountPaidUSD !== undefined) {
+      data.amountPaidUSD = body.amountPaidUSD
+    }
+    if (body.amountPaidUSD !== undefined || financesChanged) {
+      const finalTotalUSD = data.totalUSD !== undefined ? Number(data.totalUSD) : existing.totalUSD
+      const paidUSD = body.amountPaidUSD !== undefined ? Number(body.amountPaidUSD) : existing.amountPaidUSD
+      data.paymentStatus = paidUSD <= 0 ? "debe" : paidUSD < finalTotalUSD ? "seña" : "pagado"
     }
 
     const updated = await prisma.order.update({

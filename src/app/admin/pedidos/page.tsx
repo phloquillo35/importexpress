@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Loader2, MessageSquare, Calendar, Filter, X, DollarSign, Store, MoreHorizontal, ClipboardPaste } from "lucide-react"
+import { Package, Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Loader2, MessageSquare, Calendar, Filter, X, DollarSign, Store, MoreHorizontal, ClipboardPaste, RotateCcw } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import { formatUSD, formatARS } from "@/lib/utils"
 import { formatWhatsAppDisplay } from "@/hooks/useWhatsAppConfig"
-import { calculateFinalPrice } from "@/lib/pricing"
+import { getItemEffectivePricing } from "@/lib/pricing"
 import { parseWhatsAppOrder, normalizeName, type ParsedOrder } from "@/lib/whatsapp-order-parser"
 import {
   Table,
@@ -82,6 +82,11 @@ interface OrderItem {
   productSlug: string | null
   color: string | null
   storage: string | null
+  subtotalARS: number | null
+  profitARS: number | null
+  finalPriceARS: number | null
+  finalPriceUSD: number | null
+  logisticaUSDT: number | null
   product?: {
     name: string
     slug: string
@@ -153,26 +158,43 @@ interface Product {
   images?: string[] | { url: string; color: string }[]
 }
 
+type FinanceDerivedField = "subtotalARS" | "profitARS" | "finalPriceARS" | "finalPriceUSD"
+
+interface ItemFinanceForm {
+  costUSDT: string
+  shippingCost: string
+  logisticaUSDT: string
+  subtotalARS: string
+  profitARS: string
+  finalPriceARS: string
+  finalPriceUSD: string
+  manual: Record<FinanceDerivedField, boolean>
+}
+
+type EditForm = {
+  clientName: string
+  clientSurname: string
+  clientPhone: string
+  clientEmail: string
+  clientContact: string
+  storeId: string
+  status: string
+  notes: string
+  amountPaidUSD: string
+  finances: Record<string, ItemFinanceForm>
+}
+
 function computeItemPricing(item: OrderItem, exchangeRate: number, usdtRate: number) {
-  const perUnit = calculateFinalPrice({
-    costUSDT: item.costUSDT ?? 0,
-    yoniEnabled: item.yoniEnabled ?? false,
-    yoniType: (item.yoniType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
-    yoniValue: item.yoniValue ?? 0,
-    shippingCost: item.shippingCost ?? 0,
-    profitType: (item.profitType ?? "percentage") as "percentage" | "fixed_usdt" | "fixed_ars",
-    profitValue: item.profitValue ?? 0,
-    exchangeRate,
-    usdtRate,
-  })
+  const eff = getItemEffectivePricing(item, exchangeRate, usdtRate)
   return {
-    costUSDT: (item.costUSDT ?? 0) * item.quantity,
-    yoniUSDT: Math.round(perUnit.yoniUSDT * item.quantity * 100) / 100,
-    shippingCost: (item.shippingCost ?? 0) * item.quantity,
-    subtotalARS: Math.round(perUnit.subtotalARS * item.quantity),
-    profitARS: Math.round(perUnit.profitARS * item.quantity),
-    finalPriceARS: Math.round(perUnit.finalPriceARS * item.quantity),
-    finalPriceUSD: Math.round(perUnit.finalPriceUSD * item.quantity * 100) / 100,
+    costUSDT: eff.costUSDT,
+    yoniUSDT: eff.yoniUSDT,
+    logisticaUSDT: eff.logisticaUSDT,
+    shippingCost: eff.shippingCost,
+    subtotalARS: eff.subtotalARS,
+    profitARS: eff.profitARS,
+    finalPriceARS: eff.finalPriceARS,
+    finalPriceUSD: eff.finalPriceUSD,
   }
 }
 
@@ -181,8 +203,8 @@ interface DetailDialogContentProps {
   editingOrder: boolean
   activeTab: "items" | "payments" | "notes"
   setActiveTab: (tab: "items" | "payments" | "notes") => void
-  editForm: { clientName: string; clientSurname: string; clientPhone: string; clientEmail: string; clientContact: string; storeId: string; status: string; notes: string }
-  setEditForm: React.Dispatch<React.SetStateAction<{ clientName: string; clientSurname: string; clientPhone: string; clientEmail: string; clientContact: string; storeId: string; status: string; notes: string }>>
+  editForm: EditForm
+  setEditForm: React.Dispatch<React.SetStateAction<EditForm>>
   savingEdit: boolean
   handleSaveEdit: () => Promise<void>
   paymentAmount: string
@@ -201,7 +223,7 @@ interface DetailDialogContentProps {
   formatWhatsAppDisplay: (raw: string) => string
   statusConfig: Record<string, { label: string; className: string }>
   paymentConfig: Record<string, { label: string; className: string }>
-  computeItemPricing: (item: OrderItem, exchangeRate: number, usdtRate: number) => { costUSDT: number; yoniUSDT: number; shippingCost: number; subtotalARS: number; profitARS: number; finalPriceARS: number; finalPriceUSD: number }
+  computeItemPricing: (item: OrderItem, exchangeRate: number, usdtRate: number) => { costUSDT: number; yoniUSDT: number; logisticaUSDT: number; shippingCost: number; subtotalARS: number; profitARS: number; finalPriceARS: number; finalPriceUSD: number }
   exchangeRate: number
   usdtRate: number
   getItemStatusBadge: (status: string) => React.ReactElement
@@ -251,6 +273,116 @@ function DetailDialogContent({
     totalUSD: Math.round((acc.totalUSD + p.finalPriceUSD) * 100) / 100,
     totalARS: acc.totalARS + p.finalPriceARS,
   }), { totalUSD: 0, totalARS: 0 })
+
+  const derivedFieldDefs: { key: FinanceDerivedField; label: string }[] = [
+    { key: "subtotalARS", label: "Subtotal ARS" },
+    { key: "profitARS", label: "Ganancia ARS" },
+    { key: "finalPriceARS", label: "Final ARS" },
+    { key: "finalPriceUSD", label: "Final USD" },
+  ]
+
+  function parseRoot(value: string, fallback: number) {
+    return value.trim() === "" ? fallback : (parseFloat(value) || 0)
+  }
+
+  function buildFinancePricingInput(item: OrderItem, fin: ItemFinanceForm) {
+    return {
+      quantity: item.quantity,
+      costUSDT: parseRoot(fin.costUSDT, item.costUSDT ?? 0),
+      yoniEnabled: item.yoniEnabled,
+      yoniType: item.yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
+      yoniValue: item.yoniValue,
+      shippingCost: parseRoot(fin.shippingCost, item.shippingCost ?? 0),
+      profitType: item.profitType as "percentage" | "fixed_usdt" | "fixed_ars",
+      profitValue: item.profitValue,
+      logisticaUSDT: fin.logisticaUSDT.trim() === "" ? null : (parseFloat(fin.logisticaUSDT) || 0),
+      subtotalARS: fin.manual.subtotalARS ? (parseFloat(fin.subtotalARS) || 0) : null,
+      profitARS: fin.manual.profitARS ? (parseFloat(fin.profitARS) || 0) : null,
+      finalPriceARS: fin.manual.finalPriceARS ? (parseFloat(fin.finalPriceARS) || 0) : null,
+      finalPriceUSD: fin.manual.finalPriceUSD ? (parseFloat(fin.finalPriceUSD) || 0) : null,
+    }
+  }
+
+  function computeLivePricing(item: OrderItem, fin: ItemFinanceForm) {
+    return getItemEffectivePricing(buildFinancePricingInput(item, fin), order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
+  }
+
+  function handleRootChange(item: OrderItem, field: "costUSDT" | "shippingCost", value: string) {
+    const current = editForm.finances[item.id]
+    if (!current) return
+    const next: ItemFinanceForm = { ...current, [field]: value }
+    const eff = computeLivePricing(item, next)
+    setEditForm(prev => {
+      const pfin = prev.finances[item.id]
+      if (!pfin) return prev
+      return {
+        ...prev,
+        finances: {
+          ...prev.finances,
+          [item.id]: {
+            ...pfin,
+            [field]: value,
+            subtotalARS: pfin.manual.subtotalARS ? pfin.subtotalARS : String(Math.round(eff.subtotalARS)),
+            profitARS: pfin.manual.profitARS ? pfin.profitARS : String(Math.round(eff.profitARS)),
+            finalPriceARS: pfin.manual.finalPriceARS ? pfin.finalPriceARS : String(Math.round(eff.finalPriceARS)),
+            finalPriceUSD: pfin.manual.finalPriceUSD ? pfin.finalPriceUSD : eff.finalPriceUSD.toFixed(2),
+          },
+        },
+      }
+    })
+  }
+
+  function handleLogisticaChange(itemId: string, value: string) {
+    setEditForm(prev => {
+      const pfin = prev.finances[itemId]
+      if (!pfin) return prev
+      return {
+        ...prev,
+        finances: { ...prev.finances, [itemId]: { ...pfin, logisticaUSDT: value } },
+      }
+    })
+  }
+
+  function handleDerivedChange(itemId: string, field: FinanceDerivedField, value: string) {
+    setEditForm(prev => {
+      const pfin = prev.finances[itemId]
+      if (!pfin) return prev
+      return {
+        ...prev,
+        finances: {
+          ...prev.finances,
+          [itemId]: { ...pfin, [field]: value, manual: { ...pfin.manual, [field]: true } },
+        },
+      }
+    })
+  }
+
+  function resetDerived(itemId: string, field: FinanceDerivedField) {
+    setEditForm(prev => {
+      const pfin = prev.finances[itemId]
+      if (!pfin) return prev
+      const item = order.items.find(i => i.id === itemId)
+      if (!item) return prev
+      const next: ItemFinanceForm = { ...pfin, manual: { ...pfin.manual, [field]: false } }
+      const eff = computeLivePricing(item, next)
+      const value = field === "finalPriceUSD" ? eff.finalPriceUSD.toFixed(2) : String(Math.round(eff[field]))
+      return {
+        ...prev,
+        finances: { ...prev.finances, [itemId]: { ...next, [field]: value } },
+      }
+    })
+  }
+
+  function resetLogistica(itemId: string) {
+    setEditForm(prev => {
+      const pfin = prev.finances[itemId]
+      if (!pfin) return prev
+      return {
+        ...prev,
+        finances: { ...prev.finances, [itemId]: { ...pfin, logisticaUSDT: "" } },
+      }
+    })
+  }
 
   return (
     <>
@@ -348,13 +480,90 @@ function DetailDialogContent({
                   </Select>
                 </div>
                 <div className="space-y-1.5 col-span-2">
-                  <Label className="text-xs text-muted-foreground">Notas</Label>
+                  <Label className="text-xs text-muted-foreground">Dirección / Notas</Label>
                   <Textarea
                     value={editForm.notes}
                     onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                     className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                     rows={3}
                   />
+                </div>
+              </div>
+              <div className="border border-border rounded-lg p-4 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Finanzas del pedido</h3>
+                {order.items.map(item => {
+                  const fin = editForm.finances[item.id]
+                  if (!fin) return null
+                  const pricing = computeLivePricing(item, fin)
+                  return (
+                    <div key={item.id} className="border border-border rounded-lg p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {item.productName ?? item.product?.name ?? "Producto eliminado"} ×{item.quantity}
+                        </p>
+                        {pricing.overridden && (
+                          <span className="text-[10px] text-amber-400 font-medium shrink-0">Overrides activos</span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Costo USDT</Label>
+                          <Input type="number" min={0} step={0.01} value={fin.costUSDT} onChange={(e) => handleRootChange(item, "costUSDT", e.target.value)} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs text-muted-foreground">Logística</Label>
+                            {fin.logisticaUSDT.trim() !== "" && (
+                              <button type="button" onClick={() => resetLogistica(item.id)} title="Volver a Auto" className="text-amber-400 hover:text-amber-300">
+                                <RotateCcw className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                          <Input type="number" min={0} step={0.01} value={fin.logisticaUSDT} placeholder={fin.logisticaUSDT.trim() === "" ? String(pricing.yoniUSDT) : ""} onChange={(e) => handleLogisticaChange(item.id, e.target.value)} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Envío ARS</Label>
+                          <Input type="number" min={0} step={0.01} value={fin.shippingCost} onChange={(e) => handleRootChange(item, "shippingCost", e.target.value)} className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                        </div>
+                        {derivedFieldDefs.map(df => {
+                          const manual = fin.manual[df.key]
+                          return (
+                            <div className="space-y-1.5" key={df.key}>
+                              <div className="flex items-center justify-between">
+                                <Label className={`text-xs ${manual ? "text-amber-400" : "text-muted-foreground"}`}>
+                                  {df.label}
+                                  {manual && (
+                                    <span className="ml-1.5 inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-medium uppercase text-amber-400">Manual</span>
+                                  )}
+                                </Label>
+                                {manual && (
+                                  <button type="button" onClick={() => resetDerived(item.id, df.key)} title="Volver a Auto" className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1">
+                                    <RotateCcw className="w-3 h-3" /> Auto
+                                  </button>
+                                )}
+                              </div>
+                              <Input type="number" min={0} step={0.01} value={fin[df.key]} onChange={(e) => handleDerivedChange(item.id, df.key, e.target.value)} className={`w-full px-4 py-2.5 bg-muted border rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all ${manual ? "border-amber-500" : "border-border/60"}`} />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+                <Separator />
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total USD</span><span className="text-foreground font-medium">${order.items.reduce((sum, item) => { const fin = editForm.finances[item.id]; if (!fin) return sum; return sum + computeLivePricing(item, fin).finalPriceUSD }, 0).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total ARS</span><span className="text-[#22C55E] font-medium">${order.items.reduce((sum, item) => { const fin = editForm.finances[item.id]; if (!fin) return sum; return sum + computeLivePricing(item, fin).finalPriceARS }, 0).toLocaleString("es-AR")}</span></div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Pagado</span>
+                    <Input type="number" min={0} step={0.01} value={editForm.amountPaidUSD} onChange={(e) => setEditForm({ ...editForm, amountPaidUSD: e.target.value })} className="w-28 px-3 py-1.5 bg-muted border border-border/60 rounded-lg text-sm text-foreground text-right focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Saldo pendiente</span>
+                    <span className={(order.items.reduce((sum, item) => { const fin = editForm.finances[item.id]; if (!fin) return sum; return sum + computeLivePricing(item, fin).finalPriceUSD }, 0) - (parseFloat(editForm.amountPaidUSD) || 0)) > 0 ? "text-orange-400 font-medium" : "text-[#22C55E]"}>
+                      ${Math.max(0, order.items.reduce((sum, item) => { const fin = editForm.finances[item.id]; if (!fin) return sum; return sum + computeLivePricing(item, fin).finalPriceUSD }, 0) - (parseFloat(editForm.amountPaidUSD) || 0)).toFixed(2)} USD
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
@@ -397,7 +606,7 @@ function DetailDialogContent({
                     {getItemStatusBadge(i.shippingStatus)}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1.5 text-xs text-muted-foreground border-t border-border/50">
                       <span>Costo USDT: <span className="text-foreground">${p.costUSDT.toFixed(2)}</span></span>
-                      <span>Logística: <span className="text-foreground">{i.yoniEnabled ? `$${p.yoniUSDT.toFixed(2)}` : "—"}</span></span>
+                      <span>Logística: <span className="text-foreground">{i.yoniEnabled || i.logisticaUSDT != null ? `$${p.logisticaUSDT.toFixed(2)}` : "—"}</span></span>
                       <span>Envío ARS: <span className="text-foreground">${p.shippingCost.toLocaleString("es-AR")}</span></span>
                       <span>Subtotal ARS: <span className="text-foreground">${p.subtotalARS.toLocaleString("es-AR")}</span></span>
                       <span>Ganancia ARS: <span className="text-[#0071e3]">${p.profitARS.toLocaleString("es-AR")}</span></span>
@@ -556,7 +765,7 @@ export default function PedidosPage() {
   const [paymentCurrency, setPaymentCurrency] = useState("USD")
   const [savingPay, setSavingPay] = useState(false)
   const [editingOrder, setEditingOrder] = useState(false)
-  const [editForm, setEditForm] = useState({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", clientContact: "", storeId: "", status: "", notes: "" })
+  const [editForm, setEditForm] = useState<EditForm>({ clientName: "", clientSurname: "", clientPhone: "", clientEmail: "", clientContact: "", storeId: "", status: "", notes: "", amountPaidUSD: "0", finances: {} })
   const [savingEdit, setSavingEdit] = useState(false)
   const highlightId = searchParams.get("highlight")
   const tableRef = useRef<HTMLDivElement>(null)
@@ -700,6 +909,27 @@ export default function PedidosPage() {
       if (editForm.status) body.status = editForm.status
       if (editForm.notes !== undefined) body.notes = editForm.notes
 
+      const finances = productDetail.order.items.map(item => {
+        const fin = editForm.finances[item.id]
+        if (!fin) return null
+        const costUSDT = fin.costUSDT.trim() === "" ? (item.costUSDT ?? 0) : (parseFloat(fin.costUSDT) || 0)
+        const shippingCost = fin.shippingCost.trim() === "" ? (item.shippingCost ?? 0) : (parseFloat(fin.shippingCost) || 0)
+        return {
+          itemId: item.id,
+          costUSDT,
+          shippingCost,
+          logisticaUSDT: fin.logisticaUSDT.trim() === "" ? null : (parseFloat(fin.logisticaUSDT) || 0),
+          subtotalARS: fin.manual.subtotalARS ? (parseFloat(fin.subtotalARS) || 0) : null,
+          profitARS: fin.manual.profitARS ? (parseFloat(fin.profitARS) || 0) : null,
+          finalPriceARS: fin.manual.finalPriceARS ? (parseFloat(fin.finalPriceARS) || 0) : null,
+          finalPriceUSD: fin.manual.finalPriceUSD ? (parseFloat(fin.finalPriceUSD) || 0) : null,
+        }
+      }).filter((f): f is NonNullable<typeof f> => f !== null)
+      if (finances.length > 0) body.finances = finances
+      if (editForm.amountPaidUSD.trim() !== "") {
+        body.amountPaidUSD = parseFloat(editForm.amountPaidUSD) || 0
+      }
+
       const res = await fetch(`/api/pedidos/${productDetail.order.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -720,6 +950,25 @@ export default function PedidosPage() {
   }
 
   function startEditing(order: Order) {
+    const finances: Record<string, ItemFinanceForm> = {}
+    for (const item of order.items) {
+      const eff = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
+      finances[item.id] = {
+        costUSDT: String(item.costUSDT ?? 0),
+        shippingCost: String(item.shippingCost ?? 0),
+        logisticaUSDT: item.logisticaUSDT != null ? String(item.logisticaUSDT) : "",
+        subtotalARS: String(eff.subtotalARS),
+        profitARS: String(eff.profitARS),
+        finalPriceARS: String(eff.finalPriceARS),
+        finalPriceUSD: String(eff.finalPriceUSD),
+        manual: {
+          subtotalARS: item.subtotalARS != null,
+          profitARS: item.profitARS != null,
+          finalPriceARS: item.finalPriceARS != null,
+          finalPriceUSD: item.finalPriceUSD != null,
+        },
+      }
+    }
     setEditForm({
       clientName: order.clientName,
       clientSurname: order.clientSurname,
@@ -729,6 +978,8 @@ export default function PedidosPage() {
       storeId: order.store?.id || "",
       status: order.status,
       notes: order.notes || "",
+      amountPaidUSD: String(order.amountPaidUSD ?? 0),
+      finances,
     })
     setEditingOrder(true)
   }
@@ -1157,7 +1408,7 @@ export default function PedidosPage() {
                       ${pricing.costUSDT.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground text-sm cursor-pointer" onClick={() => handleProductDetail(item, order)}>
-                      {item.yoniEnabled ? `$${pricing.yoniUSDT.toFixed(2)}` : "—"}
+                      {item.yoniEnabled || item.logisticaUSDT != null ? `$${pricing.logisticaUSDT.toFixed(2)}` : "—"}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground text-sm cursor-pointer" onClick={() => handleProductDetail(item, order)}>
                       ${pricing.shippingCost.toLocaleString("es-AR")}
