@@ -90,6 +90,7 @@ test.describe("ImportExpress - Critical User Flows", () => {
     await page.fill('input[placeholder="Nombre completo"]', "Juan Perez")
     await page.fill('input[placeholder="Teléfono"]', "+5491112345678")
     await page.fill('input[placeholder="Dirección"]', "Calle Falsa 123, CABA")
+    await page.fill('input[placeholder="Email"]', "juanperez@gmail.com")
 
     await page.click("button:has-text('Enviar pedido por WhatsApp')")
 
