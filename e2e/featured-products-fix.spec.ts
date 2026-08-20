@@ -18,7 +18,7 @@ test('home page - 12 unique featured products on desktop', async ({ page }) => {
   // Check for unique product IDs (no duplicates)
   const productIds = await page.evaluate(() => {
     const cards = document.querySelectorAll('.grid > [class*="rounded-2xl"][class*="border"] a[data-testid="product-link"]');
-    return Array.from(cards).map(a => a.href);
+    return Array.from(cards).map(a => (a as HTMLAnchorElement).href);
   });
   const uniqueIds = new Set(productIds);
   console.log(`Total cards: ${productIds.length}, Unique: ${uniqueIds.size}`);
@@ -44,7 +44,7 @@ test('home page - 12 unique featured products on mobile', async ({ page }) => {
   // Check for unique product IDs (no duplicates)
   const productIds = await page.evaluate(() => {
     const cards = document.querySelectorAll('.grid > [class*="rounded-2xl"][class*="border"] a[data-testid="product-link"]');
-    return Array.from(cards).map(a => a.href);
+    return Array.from(cards).map(a => (a as HTMLAnchorElement).href);
   });
   const uniqueIds = new Set(productIds);
   console.log(`Total cards: ${productIds.length}, Unique: ${uniqueIds.size}`);
@@ -61,7 +61,7 @@ test('home page - "Ver más" button loads more unique products', async ({ page }
   // Get initial count
   let productIds = await page.evaluate(() => {
     const cards = document.querySelectorAll('.grid > [class*="rounded-2xl"][class*="border"] a[data-testid="product-link"]');
-    return Array.from(cards).map(a => a.href);
+    return Array.from(cards).map(a => (a as HTMLAnchorElement).href);
   });
   const initialCount = productIds.length;
   console.log(`Initial count: ${initialCount}`);
@@ -76,7 +76,7 @@ test('home page - "Ver más" button loads more unique products', async ({ page }
   // Check if more products loaded (should have more than initial)
   productIds = await page.evaluate(() => {
     const cards = document.querySelectorAll('.grid > [class*="rounded-2xl"][class*="border"] a[data-testid="product-link"]');
-    return Array.from(cards).map(a => a.href);
+    return Array.from(cards).map(a => (a as HTMLAnchorElement).href);
   });
   const newCount = productIds.length;
   console.log(`After "Ver más": ${newCount}`);
