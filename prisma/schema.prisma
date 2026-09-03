@@ -8,6 +8,8 @@ datasource db {
 }
 
 model Admin {
+  @@map("admin")
+
   id        String   @id
   email     String   @unique
   name      String
@@ -18,6 +20,8 @@ model Admin {
 }
 
 model Category {
+  @@map("category")
+
   id          String     @id
   name        String
   slug        String     @unique
@@ -52,6 +56,8 @@ model Store {
 }
 
 model Product {
+  @@map("product")
+
   id            String      @id
   name          String
   slug          String      @unique
@@ -89,6 +95,8 @@ model Product {
 }
 
 model Order {
+  @@map("order")
+
   id            String      @id
   internalNumber  Int      @unique @default(autoincrement())
   clientName      String
@@ -115,6 +123,8 @@ model Order {
 }
 
 model OrderItem {
+  @@map("orderItem")
+
   id             String  @id
   orderId        String
   productId      String?
@@ -146,6 +156,8 @@ model OrderItem {
 }
 
 model Bulk {
+  @@map("bulk")
+
   id            String      @id
   internalNumber Int        @unique @default(autoincrement())
   type          String      @default("grande")
@@ -166,6 +178,8 @@ model Bulk {
 }
 
 model Transaction {
+  @@map("transaction")
+
   id        String   @id
   type      String
   concept   String
@@ -180,6 +194,8 @@ model Transaction {
 }
 
 model HeroBanner {
+  @@map("heroBanner")
+
   id        String   @id
   type      String   @default("carousel")
   position  String   @default("carousel")
@@ -192,6 +208,8 @@ model HeroBanner {
 }
 
 model Setting {
+  @@map("setting")
+
   id    String @id
   key   String @unique
   value String
