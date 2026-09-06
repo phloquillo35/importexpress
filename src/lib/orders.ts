@@ -34,9 +34,13 @@ export function computeOrderStatus(items: { shippingStatus: string }[]): string 
   let computed = "entregado"
   let minPrio = STATUS_PRIORITY[computed]
   for (const item of items) {
-    const prio = STATUS_PRIORITY[item.shippingStatus] ?? 99
-    if (prio < minPrio) {
-      minPrio = prio
+    const prio = STATUS_PRIORITY[item.shippingStatus]
+    if (prio === undefined) {
+      console.warn(`[computeOrderStatus] Unknown shippingStatus "${item.shippingStatus}", treating as pending`)
+    }
+    const effectivePrio = prio ?? STATUS_PRIORITY.pending
+    if (effectivePrio < minPrio) {
+      minPrio = effectivePrio
       computed = item.shippingStatus
     }
   }

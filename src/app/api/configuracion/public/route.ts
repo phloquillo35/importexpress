@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { publicRateLimiter } from "@/lib/rate-limit"
 
 // Keys públicas no sensibles: solo lo que el frontend público necesita.
 // NUNCA incluir smtp_* ni credenciales aquí.
@@ -16,8 +17,12 @@ const DEFAULTS: Record<string, string> = {
   instagram: "@lopedis_lotenes.01",
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    if (!publicRateLimiter.check(request)) {
+      return Response.json({ error: "Demasiadas solicitudes. Intentá de nuevo en un minuto." }, { status: 429 })
+    }
+
     for (const key of PUBLIC_KEYS) {
       const exists = await prisma.setting.findUnique({ where: { key } })
       if (!exists && DEFAULTS[key]) {

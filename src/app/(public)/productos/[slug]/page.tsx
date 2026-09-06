@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useMemo, useRef } from "react"
 import { useParams, useSearchParams } from "next/navigation"
-import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { Package, ArrowLeft, ShoppingBag, ShieldCheck, Truck, AlertCircle, Plus, X } from "lucide-react"
 import Link from "next/link"
-import { fetchExchangeRate } from "@/lib/exchange-rate"
+import { fetchExchangeRate } from "@/lib/client-exchange-rate"
 import { ProductCard } from "@/components/public/ProductCard"
 import { WhatsAppAgentSelector } from "@/components/public/WhatsAppAgentSelector"
+import { AngleCarousel } from "@/components/product/AngleCarousel"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCart } from "@/context/CartContext"
 import { swatchStyle } from "@/lib/colors"
@@ -34,6 +35,8 @@ interface Product {
   hasFinancing: boolean
   freeShipping: boolean
   category: { name: string; slug: string; parent: { name: string; slug: string } | null } | null
+  angles: { front: string; left: string; right: string } | null
+  angleMeta: { category: "C1" | "C2" | "C3"; source?: string; assignedAt?: string; exception?: string | null; colorsCount?: number; imagesPerColor?: Record<string, number> } | null
 }
 
 function ProductDetailContent() {
@@ -46,7 +49,6 @@ function ProductDetailContent() {
   const [error, setError] = useState(false)
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
   const [selectedColor, setSelectedColor] = useState("")
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: "", phone: "", address: "", email: "" })
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
@@ -78,7 +80,6 @@ function ProductDetailContent() {
       const match = fromUrl && parsed.colors.find(c => c.toLowerCase() === fromUrl.toLowerCase())
       const timer = setTimeout(() => {
         setSelectedColor(match || parsed.colors[0])
-        setCurrentIndex(0)
       }, 0)
       return () => clearTimeout(timer)
     }
@@ -215,57 +216,22 @@ function handleSubmit(e: React.FormEvent) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
         <div className="space-y-4">
-          <div ref={imagePanelRef} className="aspect-square bg-muted rounded-2xl flex items-center justify-center overflow-hidden relative">
-            {currentImages.length > 0 ? (
-              <>
-                <img
-                  src={currentImages[currentIndex]}
-                  alt={product.name}
-                  loading="lazy"
-                  className="w-full h-full object-contain p-8 transition-opacity duration-300"
-                />
-                {currentImages.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => setCurrentIndex(i => (i - 1 + currentImages.length) % currentImages.length)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all"
-                    >
-                      <ChevronLeft className="w-5 h-5 text-foreground" />
-                    </button>
-                    <button
-                      onClick={() => setCurrentIndex(i => (i + 1) % currentImages.length)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all"
-                    >
-                      <ChevronRight className="w-5 h-5 text-foreground" />
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <Package className="w-24 h-24 text-muted-foreground" />
-            )}
+          <div ref={imagePanelRef}>
+            <AngleCarousel
+              key={selectedColor}
+              images={currentImages}
+              angleMeta={product.angleMeta}
+              productName={product.name}
+              fallbackImages={product.images?.filter((img): img is string => typeof img === "string") ?? []}
+            />
           </div>
-
-          {currentImages.length > 1 && (
-            <div className="flex justify-center gap-2">
-              {currentImages.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentIndex(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    i === currentIndex ? "bg-[#1d1d1f] w-4" : "bg-[#d2d2d7]"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
 
           {parsed.colors.length > 1 && (
             <div className="flex flex-wrap gap-2 justify-center">
               {parsed.colors.map(color => (
                 <button
                   key={color}
-                  onClick={() => { setSelectedColor(color); setCurrentIndex(0) }}
+                  onClick={() => setSelectedColor(color)}
                   className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-full border transition-all ${
                     selectedColor === color
                       ? "bg-[#1d1d1f] text-white border-[#1d1d1f]"
@@ -323,7 +289,7 @@ function handleSubmit(e: React.FormEvent) {
               onClick={(e) => {
                 e.preventDefault()
                 flyToCart(e.currentTarget, imagePanelRef.current)
-                addItem({ slug: product.slug, color: parsed.colors.length <= 1 ? null : selectedColor, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[currentIndex] || product.images?.[0]) ?? null })
+                addItem({ slug: product.slug, color: parsed.colors.length <= 1 ? null : selectedColor, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[0] || product.images?.[0]) ?? null })
               }}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
             >

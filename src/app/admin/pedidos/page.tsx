@@ -811,32 +811,8 @@ export default function PedidosPage() {
   }, [page, statusFilter, searchFilter])
 
   useEffect(() => {
-    let cancelled = false
-    async function fetchOrdersEffect() {
-      try {
-        const params = new URLSearchParams()
-        params.set("page", String(page))
-        params.set("limit", String(limit))
-        if (statusFilter) params.set("status", statusFilter)
-        if (searchFilter) params.set("search", searchFilter)
-        const res = await fetch(`/api/pedidos?${params}`)
-        const data = await res.json()
-        if (!cancelled) {
-          if (data.orders) {
-            setOrders(data.orders)
-            setTotal(data.total)
-          } else {
-            setOrders(Array.isArray(data) ? data : [])
-            setTotal(0)
-          }
-        }
-      } catch {
-        if (!cancelled) toast.error("Error al cargar pedidos")
-      } finally { if (!cancelled) setLoading(false) }
-    }
-    fetchOrdersEffect()
-    return () => { cancelled = true }
-  }, [page, statusFilter, searchFilter])
+    fetchOrders()
+  }, [fetchOrders])
 
   // Sync filters to URL when they change (status immediate, search debounced)
   useEffect(() => {

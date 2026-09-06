@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff, X, Loader2, Star } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Package, Eye, EyeOff, X, Loader2, Star, Download, Upload } from "lucide-react"
 import { PapeleraModal } from "@/components/papelera-modal"
 import { toast } from "sonner"
 import {
@@ -90,6 +90,22 @@ export default function AdminProductosPage() {
   const [viewProduct, setViewProduct] = useState<Product | null>(null)
   const limit = 20
   const [refreshKey, setRefreshKey] = useState(0)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{
+    dryRun: boolean
+    totalRows: number
+    validRows: number
+    created: number
+    updated: number
+    skipped: number
+    errors: number
+    rows: Array<{ slug: string; action: string; message: string }>
+    validationErrors: Array<{ row: number; field: string; message: string }>
+  } | null>(null)
+  const [importDryRun, setImportDryRun] = useState(true)
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [importCsvContent, setImportCsvContent] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const categoryOptions = categories.flatMap((cat) => [
     { id: cat.id, name: cat.name },
@@ -207,6 +223,74 @@ export default function AdminProductosPage() {
     setPageInput("1")
   }
 
+  async function handleExportCsv() {
+    try {
+      const params = new URLSearchParams()
+      if (categoriaId) params.set("categoryId", categoriaId)
+      if (disponible) params.set("available", disponible)
+      if (debouncedSearch) params.set("search", debouncedSearch)
+
+      const res = await fetch(`/api/admin/products/export?${params}`)
+      if (!res.ok) throw new Error("Error al exportar")
+
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `products-export-${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success("CSV exportado correctamente")
+    } catch {
+      toast.error("Error al exportar productos")
+    }
+  }
+
+  async function handleImportCsv(file: File, dryRun: boolean) {
+    setImporting(true)
+    setImportResult(null)
+    try {
+      const csv = await file.text()
+      if (dryRun) setImportCsvContent(csv)
+      const res = await fetch("/api/admin/products/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv, dryRun }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || "Error al importar")
+        return
+      }
+      setImportResult(data)
+      setImportDryRun(dryRun)
+      setShowImportDialog(true)
+
+      if (!dryRun) {
+        if (data.created > 0 || data.updated > 0) {
+          toast.success(`Importación completada: ${data.created} creados, ${data.updated} actualizados`)
+          setRefreshKey((k) => k + 1)
+        }
+        if (data.errors > 0) {
+          toast.warning(`${data.errors} filas con errores`)
+        }
+      }
+    } catch {
+      toast.error("Error al procesar el archivo CSV")
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    handleImportCsv(file, true) // Always start with dry-run
+    e.target.value = ""
+  }
+
   async function handleDelete(product: Product) {
     if (!confirm(`¿Eliminar "${product.name}"?`)) return
     try {
@@ -241,13 +325,43 @@ export default function AdminProductosPage() {
           <h1 className="text-2xl font-bold text-foreground font-heading">Productos</h1>
           <p className="text-muted-foreground text-sm mt-1">{total} productos registrados</p>
         </div>
-        <Button
-          onClick={() => router.push("/admin/productos/nuevo")}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo producto
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportCsv}
+            className="border-border text-muted-foreground hover:text-foreground"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="border-border text-muted-foreground hover:text-foreground"
+          >
+            {importing ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 mr-2" />
+            )}
+            Import CSV
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <Button
+            onClick={() => router.push("/admin/productos/nuevo")}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo producto
+          </Button>
+        </div>
       </div>
 
       <form onSubmit={handleSearch} className="mb-6 space-y-3">
@@ -561,6 +675,133 @@ return (
               </div>
             )
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Import CSV Result Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={(o) => { if (!o) { setShowImportDialog(false); setImportResult(null) } }}>
+        <DialogContent className="bg-card text-foreground max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {importResult?.dryRun ? "Vista previa de importación" : "Resultado de importación"}
+            </DialogTitle>
+          </DialogHeader>
+          {importResult && (
+            <div className="space-y-4">
+              {/* Summary */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-muted rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-foreground">{importResult.totalRows}</p>
+                  <p className="text-xs text-muted-foreground">Total filas</p>
+                </div>
+                <div className="bg-muted rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-[#22C55E]">{importResult.created}</p>
+                  <p className="text-xs text-muted-foreground">A crear</p>
+                </div>
+                <div className="bg-muted rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-[#0071e3]">{importResult.updated}</p>
+                  <p className="text-xs text-muted-foreground">A actualizar</p>
+                </div>
+                <div className="bg-muted rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-red-400">{importResult.errors}</p>
+                  <p className="text-xs text-muted-foreground">Errores</p>
+                </div>
+              </div>
+
+              {/* Validation Errors */}
+              {importResult.validationErrors.length > 0 && (
+                <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
+                  <p className="text-sm font-medium text-red-400 mb-2">Errores de validación:</p>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {importResult.validationErrors.map((err, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">
+                        Fila {err.row}: {err.field} — {err.message}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Row details */}
+              {importResult.rows.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-foreground mb-2">Detalle por fila:</p>
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {importResult.rows.map((r, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <Badge
+                          className={
+                            r.action === "create"
+                              ? "bg-[#22C55E]/10 text-[#22C55E] border-0"
+                              : r.action === "update"
+                                ? "bg-[#0071e3]/10 text-[#0071e3] border-0"
+                                : "bg-red-500/10 text-red-400 border-0"
+                          }
+                        >
+                          {r.action === "create" ? "Crear" : r.action === "update" ? "Actualizar" : "Error"}
+                        </Badge>
+                        <span className="text-muted-foreground font-mono">{r.slug}</span>
+                        <span className="text-muted-foreground">{r.message}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                {importResult.dryRun && importResult.validRows > 0 && (
+                  <Button
+                    onClick={async () => {
+                      if (importCsvContent) {
+                        setImporting(true)
+                        setImportResult(null)
+                        try {
+                          const res = await fetch("/api/admin/products/import", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ csv: importCsvContent, dryRun: false }),
+                          })
+                          const data = await res.json()
+                          if (!res.ok) {
+                            toast.error(data.error || "Error al importar")
+                            return
+                          }
+                          setImportResult(data)
+                          setImportDryRun(false)
+                          setShowImportDialog(true)
+                          if (data.created > 0 || data.updated > 0) {
+                            toast.success(`Importación completada: ${data.created} creados, ${data.updated} actualizados`)
+                            setRefreshKey((k) => k + 1)
+                          }
+                          if (data.errors > 0) {
+                            toast.warning(`${data.errors} filas con errores`)
+                          }
+                        } catch {
+                          toast.error("Error al procesar el archivo CSV")
+                        } finally {
+                          setImporting(false)
+                        }
+                      } else {
+                        toast.error("No hay contenido CSV disponible. Seleccioná el archivo de nuevo.")
+                        setShowImportDialog(false)
+                      }
+                    }}
+                    className="bg-[#22C55E] hover:bg-[#22C55E]/90 text-white"
+                  >
+                    Aplicar cambios
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => { setShowImportDialog(false); setImportResult(null) }}
+                  className="border-border text-muted-foreground"
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

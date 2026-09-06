@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState, useMemo } from "react"
 import { Package, ShoppingBag } from "lucide-react"
-import { fetchExchangeRate } from "@/lib/exchange-rate"
+import { fetchExchangeRate } from "@/lib/client-exchange-rate"
 import { useCart } from "@/context/CartContext"
 import { colorSwatch, swatchStyle } from "@/lib/colors"
 import { flyToCart } from "@/lib/flyToCart"

@@ -64,6 +64,8 @@ model Product {
   description   String?
   specs         Json?
   images        Json?
+  angles        Json?
+  angleMeta     Json?
   priceUSD      Float
   priceARS      Float?
   costUSD       Float?

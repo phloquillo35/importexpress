@@ -25,16 +25,6 @@ export async function GET() {
   try {
     const session = await requireRole("admin")
     if (session instanceof Response) return session
-    for (const key of DEFAULT_KEYS) {
-      const exists = await prisma.setting.findUnique({ where: { key } })
-      if (!exists && DEFAULTS[key]) {
-        await prisma.setting.upsert({
-          where: { key },
-          update: { value: DEFAULTS[key] },
-          create: { id: key, key, value: DEFAULTS[key] },
-        })
-      }
-    }
 
     const settings = await prisma.setting.findMany({
       where: { key: { in: DEFAULT_KEYS as unknown as string[] } },
@@ -106,7 +96,7 @@ export async function PUT(request: Request) {
             })
             return prisma.product.update({
               where: { id: p.id },
-              data: { finalPriceUSD: result.finalPriceUSD, finalPriceARS: result.finalPriceARS },
+              data: { finalPriceUSD: result.finalPriceUSD, finalPriceARS: result.finalPriceARS, subtotalARS: result.subtotalARS, profitARS: result.profitARS },
             })
           }),
         )

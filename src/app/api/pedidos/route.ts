@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
     }
 
-    const { clientName, clientSurname, clientPhone, clientEmail, storeId, clientContact, items, totalUSD, totalARS, notes } = body
+    const { clientName, clientSurname, clientPhone, clientEmail, storeId, clientContact, items, notes } = body
 
     if (!clientName || !items || !items.length) {
       return Response.json({ error: "clientName y items son requeridos" }, { status: 400 })
@@ -135,17 +135,6 @@ export async function POST(request: Request) {
     const usdtRate = parseFloat(usdtRateSetting?.value || "1400")
 
     const stockProductIds = items.map((item: { productId: string }) => item.productId)
-    const stockProducts = await prisma.product.findMany({
-      where: { id: { in: stockProductIds } },
-      select: { id: true, stock: true },
-    })
-    const stockMap = new Map(stockProducts.map((p) => [p.id, p.stock]))
-    for (const item of items) {
-      const available = stockMap.get(item.productId) ?? 0
-      if (available < item.quantity) {
-        return Response.json({ error: `Stock insuficiente para producto ${item.productId}: disponible ${available}, requerido ${item.quantity}` }, { status: 400 })
-      }
-    }
 
     const productIds = items.map((item: { productId: string }) => item.productId)
     const products = await prisma.product.findMany({
@@ -185,6 +174,7 @@ export async function POST(request: Request) {
     })
 
     let computedTotalARS = 0
+    let computedTotalUSD = 0
     for (const item of orderItems) {
       const pricing = calculateFinalPrice({
         costUSDT: item.costUSDT ?? 0,
@@ -198,9 +188,24 @@ export async function POST(request: Request) {
         usdtRate,
       })
       computedTotalARS += pricing.finalPriceARS * item.quantity
+      computedTotalUSD += pricing.finalPriceUSD * item.quantity
     }
 
     const order = await prisma.$transaction(async (tx) => {
+      // Lock product rows and validate stock atomically (SELECT FOR UPDATE)
+      const lockedProducts = await tx.$queryRaw<{ id: string; stock: number }[]>`
+        SELECT id, stock FROM "Product"
+        WHERE id IN ${stockProductIds}
+        FOR UPDATE
+      `
+      const lockedMap = new Map(lockedProducts.map((p) => [p.id, p.stock]))
+      for (const item of items) {
+        const available = lockedMap.get(item.productId) ?? 0
+        if (available < item.quantity) {
+          throw new Error(`Stock insuficiente para producto ${item.productId}: disponible ${available}, requerido ${item.quantity}`)
+        }
+      }
+
       const created = await tx.order.create({
         data: {
           id: genId(),
@@ -210,7 +215,7 @@ export async function POST(request: Request) {
           clientEmail: clientEmail || "",
           storeId: storeId || null,
           clientContact: clientContact || "",
-          totalUSD: parseFloat(totalUSD) || 0,
+          totalUSD: Math.round(computedTotalUSD * 100) / 100,
           totalARS: computedTotalARS,
           notes: notes || null,
           exchangeRate,
@@ -250,6 +255,9 @@ export async function POST(request: Request) {
     return Response.json(order, { status: 201 })
   } catch (error) {
     console.error("Error creating order:", error)
+    if (error instanceof Error && error.message.startsWith("Stock insuficiente")) {
+      return Response.json({ error: error.message }, { status: 400 })
+    }
     return Response.json({ error: "Error al crear pedido" }, { status: 500 })
   }
 }

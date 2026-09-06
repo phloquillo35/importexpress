@@ -5,9 +5,14 @@ import { requireRole } from "@/lib/auth"
 import { createCategorySchema } from "@/lib/validators"
 import { getCategories } from "@/lib/categories"
 import { revalidateTag } from "next/cache"
+import { publicRateLimiter } from "@/lib/rate-limit"
 
 export async function GET(request: NextRequest) {
   try {
+    if (!publicRateLimiter.check(request)) {
+      return Response.json({ error: "Demasiadas solicitudes. Intentá de nuevo en un minuto." }, { status: 429 })
+    }
+
     const { searchParams } = new URL(request.url)
     const showDeleted = searchParams.get("showDeleted") === "true"
 

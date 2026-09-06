@@ -247,16 +247,27 @@ export async function DELETE(
     console.log(`[PEDIDO DELETE] id=${id} client=${existing.clientName} ${existing.clientSurname} total=${existing.totalUSD} status=${existing.status}`)
 
     await prisma.$transaction(async (tx) => {
-      await Promise.all(
-        existing.items
-          .filter(item => item.productId)
-          .map(item =>
-            tx.product.update({
-              where: { id: item.productId! },
-              data: { stock: { increment: item.quantity } },
-            })
-          )
-      )
+      // Only restore stock for products that still exist
+      const existingItemProducts = existing.items.filter(item => item.productId)
+      if (existingItemProducts.length > 0) {
+        const productIds = existingItemProducts.map(item => item.productId!)
+        const existingProducts = await tx.product.findMany({
+          where: { id: { in: productIds } },
+          select: { id: true },
+        })
+        const existingProductIds = new Set(existingProducts.map(p => p.id))
+
+        await Promise.all(
+          existingItemProducts
+            .filter(item => existingProductIds.has(item.productId!))
+            .map(item =>
+              tx.product.update({
+                where: { id: item.productId! },
+                data: { stock: { increment: item.quantity } },
+              })
+            )
+        )
+      }
       await tx.order.update({ where: { id }, data: { deletedAt: new Date() } })
     })
     return Response.json({ success: true })

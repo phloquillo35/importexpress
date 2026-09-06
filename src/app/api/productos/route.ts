@@ -4,9 +4,14 @@ import { genId, slugify } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
 import { requireRole } from "@/lib/auth"
 import { createProductSchema } from "@/lib/validators"
+import { publicRateLimiter } from "@/lib/rate-limit"
 
 export async function GET(request: NextRequest) {
   try {
+    if (!publicRateLimiter.check(request)) {
+      return Response.json({ error: "Demasiadas solicitudes. Intentá de nuevo en un minuto." }, { status: 429 })
+    }
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
     const categoriaId = searchParams.get("categoriaId") || ""
@@ -176,19 +181,17 @@ export async function POST(request: Request) {
 
     const costUSDT = data.costUSDT || 0
     const yoniEnabled = data.yoniEnabled
-    const yoniType = data.yoniType || "percentage"
     const yoniValue = data.yoniValue ?? 25
     const shippingCost = data.shippingCost ?? 0
-    const profitType = data.profitType || "percentage"
     const profitValue = data.profitValue ?? 0
 
     const pricing = calculateFinalPrice({
       costUSDT,
       yoniEnabled,
-      yoniType: yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
+      yoniType: data.yoniType,
       yoniValue,
       shippingCost,
-      profitType: profitType as "percentage" | "fixed_usdt" | "fixed_ars",
+      profitType: data.profitType,
       profitValue,
       exchangeRate,
       usdtRate,
@@ -202,16 +205,16 @@ export async function POST(request: Request) {
         description: data.description || null,
         specs: data.specs || null,
         images: data.images || undefined,
-        priceUSD: pricing.finalPriceUSD,
+        priceUSD: data.priceUSD ?? costUSDT,
         priceARS: pricing.finalPriceARS,
         costUSD: data.costUSD ?? null,
         costUSDT: costUSDT || null,
         yoniEnabled,
-        yoniType,
+        yoniType: data.yoniType,
         yoniValue,
         hasFinancing: data.hasFinancing ?? false,
         shippingCost,
-        profitType,
+        profitType: data.profitType,
         profitValue,
         finalPriceUSD: pricing.finalPriceUSD,
         finalPriceARS: pricing.finalPriceARS,

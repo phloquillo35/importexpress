@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { clearExchangeRateCache } from "@/lib/exchange-rate"
+import { clearExchangeRateCache } from "@/lib/client-exchange-rate"
 import { Save, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
