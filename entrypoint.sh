@@ -39,8 +39,8 @@ else
 fi
 
 echo "→ Limpiando migrations fallidas previas..."
-./node_modules/.bin/prisma migrate resolve --rolled-back 20260710000001_add_internal_number 2>&1 || true
-./node_modules/.bin/prisma migrate resolve --applied 20260730000000_add_subtotalARS_profitARS 2>&1 || true
+./node_modules/.bin/prisma migrate resolve --rolled-back 20260710000001_add_internal_number 2>&1 || echo "⚠️ No se pudo resolver migración (puede que ya esté aplicada)"
+./node_modules/.bin/prisma migrate resolve --applied 20260730000000_add_subtotalARS_profitARS 2>&1 || echo "⚠️ No se pudo resolver migración (puede que ya esté aplicada)"
 
 echo "→ Aplicando migraciones pendientes..."
 ./node_modules/.bin/prisma migrate deploy 2>&1 || echo "⚠️ Error en migrate deploy, continuando..."
