@@ -30,9 +30,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/next.config.ts ./
 
-RUN npm install prisma@7.8.0 pg@^8.13.0 better-sqlite3@^12.11.1
+RUN npm ci
 
 RUN mkdir -p /data && chown nextjs:nodejs /data
 
