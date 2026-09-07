@@ -1,23 +1,23 @@
 # AGENTS.md (Workflow Context) — importexpress
-> Generado: 2026-09-06 21:24:45 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
+> Generado: 2026-09-06 22:04:00 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/importexpress
 
 ## 🎯 Objetivo actual
-Auditoría completa + 12 fixes implementados + Dockerfile fix para Railway deploy
+Auditoría completa site deployado + fixes de frontend (force-dynamic home, dedup hero banners, footer dinámico) + actualización de paquetes (Prisma 7.10, Playwright 1.63, minor deps) + Dockerfile fix para Railway + 12 fixes de precios/stock del día anterior
 
 ## 📍 Estado actual
   Branch: main · Working tree: SUCIO (1 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 150 ++------------------------------------------------------------
-   1 file changed, 3 insertions(+), 147 deletions(-)
+   AGENTS.md | 126 +-------------------------------------------------------------
+   1 file changed, 2 insertions(+), 124 deletions(-)
    M AGENTS.md
 
   Últimos commits:
+  6333b73 fix(frontend): force-dynamic home, dedup hero banners, dynamic footer WhatsApp
+  f46aed7 chore(deps): update Prisma 7.8→7.10, Playwright 1.62→1.63, and minor deps
+  f498b7a docs: update AGENTS.md — cierre de día 2026-09-06
   48b427f fix(docker): use lockfile in runner stage to fix Railway build failure
   9b4925b fix(deploy): handle migration resolve errors gracefully
-  a256d1e feat(angles): add AngleCarousel, CSV import/export, and angle management
-  557d7e7 fix(csp): add Supabase Storage to Content Security Policy for images
-  06a4d05 fix(db): add @@map directives for lowercase table names
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -119,14 +119,14 @@ scripts/api-backup.mjs
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-    ### Iteración 1/5
-    - **Mac Mini Revert**: Imagen actual no distinguía de referencia Apple frontal. Revertido a `https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mac-mini-chip-unselect-202608-gallery-1`. Docs: `docs/mac-mini-revert-decision.md`, `docs/mac-mini-image-backup.md`.
-    - **Restricción 3 ángulos**: Contrato arquitectónico vinculante — máximo 1 imagen por color, ángulos front/left/right compartidos. Docs: `docs/3-angles-constraint.md`.
-    ### Iteración 2/5
-    - **Fase 3 Plan**: Categorización C1=15, C2=0, C3=220, C4=68. Plan de 4 fases con checklist. Docs: `docs/fase-3-plan.md`.
-    - **Stock Alerts**: Prototipo funcional — script CLI con severidad, API REST con filtros, UI Dashboard existente.
-    ### Iteración 3/5
-    - **C4 Resolution**: 40 productos resueltos (2 Opción A URLs únicas + 38 Opción B excepciones documentadas). 0 sameUrlAllColors restantes. Docs: `docs/c4-resolution-report.md`.
-    - **Migración Prisma angles**: Campo `angles` (JSONB nullable) + `angleMeta` (JSONB nullable). Backward compatible.
-    - **AngleCarousel**: Extensión del carousel existente, no rebuild. C1=3 vistas, C2=2 vistas, C3=1 vista.
-    - **CSV Import/Export**: Feature independiente de Fase 3. Export con BOM UTF-8, Import con dry-run/apply, 25 tests unitarios.
+      ### Iteración 1/5
+      - **Mac Mini Revert**: Imagen actual no distinguía de referencia Apple frontal. Revertido a `https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mac-mini-chip-unselect-202608-gallery-1`. Docs: `docs/mac-mini-revert-decision.md`, `docs/mac-mini-image-backup.md`.
+      - **Restricción 3 ángulos**: Contrato arquitectónico vinculante — máximo 1 imagen por color, ángulos front/left/right compartidos. Docs: `docs/3-angles-constraint.md`.
+      ### Iteración 2/5
+      - **Fase 3 Plan**: Categorización C1=15, C2=0, C3=220, C4=68. Plan de 4 fases con checklist. Docs: `docs/fase-3-plan.md`.
+      - **Stock Alerts**: Prototipo funcional — script CLI con severidad, API REST con filtros, UI Dashboard existente.
+      ### Iteración 3/5
+      - **C4 Resolution**: 40 productos resueltos (2 Opción A URLs únicas + 38 Opción B excepciones documentadas). 0 sameUrlAllColors restantes. Docs: `docs/c4-resolution-report.md`.
+      - **Migración Prisma angles**: Campo `angles` (JSONB nullable) + `angleMeta` (JSONB nullable). Backward compatible.
+      - **AngleCarousel**: Extensión del carousel existente, no rebuild. C1=3 vistas, C2=2 vistas, C3=1 vista.
+      - **CSV Import/Export**: Feature independiente de Fase 3. Export con BOM UTF-8, Import con dry-run/apply, 25 tests unitarios.
