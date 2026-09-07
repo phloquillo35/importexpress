@@ -16,7 +16,16 @@ export async function GET() {
     const carousel = banners.filter((b) => b.type === "carousel")
     const flyers = banners.filter((b) => b.type === "flyer")
 
-    return Response.json({ carousel, flyers })
+    const seen = new Set<string>()
+    const dedup = (arr: typeof banners) =>
+      arr.filter((b) => {
+        const key = `${b.type}:${b.image}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+    return Response.json({ carousel: dedup(carousel), flyers: dedup(flyers) })
   } catch (error) {
     console.error("Error fetching hero banners:", error)
     return Response.json({ error: "Error al cargar banners" }, { status: 500 })
@@ -33,6 +42,13 @@ export async function POST(request: NextRequest) {
 
     if (!image) {
       return Response.json({ error: "La imagen es requerida" }, { status: 400 })
+    }
+
+    const existing = await prisma.heroBanner.findFirst({
+      where: { type: type || "carousel", image },
+    })
+    if (existing) {
+      return Response.json({ error: "Ya existe un banner con esta imagen para este tipo" }, { status: 409 })
     }
 
     let order = 0

@@ -2,6 +2,8 @@ import { HomeContent } from "@/components/public/HomeContent"
 import { getCategories } from "@/lib/categories"
 import { getHeroBanners, cdnTransform } from "@/lib/hero"
 
+export const dynamic = "force-dynamic"
+
 export default async function HomePage() {
   const [categories, heroBanners] = await Promise.all([
     getCategories().catch(() => []),

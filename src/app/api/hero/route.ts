@@ -16,7 +16,16 @@ export async function GET(_request: NextRequest) {
     const carousel = banners.filter((b) => b.type === "carousel")
     const flyers = banners.filter((b) => b.type === "flyer")
 
-    return Response.json({ carousel, flyers })
+    const seen = new Set<string>()
+    const dedup = (arr: typeof banners) =>
+      arr.filter((b) => {
+        const key = `${b.type}:${b.image}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+    return Response.json({ carousel: dedup(carousel), flyers: dedup(flyers) })
   } catch (error) {
     console.error("Error fetching hero banners:", error)
     return Response.json({ error: "Error al cargar hero" }, { status: 500 })

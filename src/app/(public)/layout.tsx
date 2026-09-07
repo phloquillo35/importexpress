@@ -5,6 +5,7 @@ import { Navbar } from "@/components/public/Navbar"
 import { HeroBackground } from "@/components/public/HeroBackground"
 import { CartProvider } from "@/context/CartContext"
 import { getCategories } from "@/lib/categories"
+import { prisma } from "@/lib/prisma"
 
 export const metadata: Metadata = {
   title: "Lo Pedís, Lo Tenes - Importación directa desde Ciudad del Este, Paraguay",
@@ -23,20 +24,35 @@ export const metadata: Metadata = {
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const categories = await getCategories().catch(() => [])
+  const [categories, settings] = await Promise.all([
+    getCategories().catch(() => []),
+    prisma.setting.findMany({
+      where: { key: { in: ["whatsapp_david", "whatsapp_david_name", "whatsapp_brian", "whatsapp_brian_name", "instagram"] } },
+    }).catch(() => []),
+  ])
+
+  const config: Record<string, string> = {}
+  for (const s of settings) config[s.key] = s.value
+
   return (
     <CartProvider>
     <div className="min-h-screen flex flex-col">
       <HeroBackground />
       <Navbar initialCategories={categories} />
       <main className="flex-1"><Suspense fallback={null}>{children}</Suspense></main>
-      <Footer />
+      <Footer config={config} />
     </div>
     </CartProvider>
   )
 }
 
-function Footer() {
+function Footer({ config }: { config: Record<string, string> }) {
+  const whatsappDavid = config.whatsapp_david || "5493813360558"
+  const whatsappDavidName = config.whatsapp_david_name || "David"
+  const whatsappBrian = config.whatsapp_brian || "5493816658420"
+  const whatsappBrianName = config.whatsapp_brian_name || "Brian"
+  const instagram = config.instagram || "@lopedis_lotenes.01"
+
   return (
     <footer className="bg-secondary border-t border-border/50 rounded-t-2xl overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -70,22 +86,22 @@ function Footer() {
             <h3 className="text-xs font-semibold text-secondary-foreground uppercase tracking-wider mb-4">Contacto</h3>
             <div className="space-y-2.5 text-xs text-muted-foreground">
               <Link
-                href="https://wa.me/5493813360558"
+                href={`https://wa.me/${whatsappDavid}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block hover:text-primary transition-colors"
               >
-                WhatsApp: David — +54 9 381 336-0558
+                WhatsApp: {whatsappDavidName} — +{whatsappDavid.replace(/^549/, "54 9 ")}
               </Link>
               <Link
-                href="https://wa.me/5493816658420"
+                href={`https://wa.me/${whatsappBrian}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block hover:text-primary transition-colors"
               >
-                WhatsApp: Brian — +54 9 381 665-8420
+                WhatsApp: {whatsappBrianName} — +{whatsappBrian.replace(/^549/, "54 9 ")}
               </Link>
-              <p>Instagram: @lopedis_lotenes.01</p>
+              <p>Instagram: {instagram}</p>
               <p>Tucumán, Argentina</p>
             </div>
           </div>
