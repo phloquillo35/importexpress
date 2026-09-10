@@ -304,16 +304,23 @@ export default function AdminProductosPage() {
   }
 
   async function handleToggleAvailability(product: Product) {
+    const newValue = !product.isAvailable
+    setProducts(prev =>
+      prev.map(p => p.id === product.id ? { ...p, isAvailable: newValue } : p)
+    )
     try {
       const res = await fetch(`/api/productos/${product.slug}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isAvailable: !product.isAvailable }),
+        body: JSON.stringify({ isAvailable: newValue }),
       })
       if (!res.ok) throw new Error("Error al actualizar")
-      toast.success(product.isAvailable ? "Producto ocultado" : "Producto visible")
+      toast.success(newValue ? "Producto visible" : "Producto ocultado")
       setRefreshKey(k => k + 1)
     } catch {
+      setProducts(prev =>
+        prev.map(p => p.id === product.id ? { ...p, isAvailable: !newValue } : p)
+      )
       toast.error("Error al cambiar disponibilidad")
     }
   }

@@ -4,6 +4,7 @@ import { slugify } from "@/lib/utils"
 import { calculateFinalPrice } from "@/lib/pricing"
 import { requireRole } from "@/lib/auth"
 import { updateProductSchema } from "@/lib/validators"
+import { z } from "zod"
 
 export async function GET(
   request: NextRequest,
@@ -147,6 +148,43 @@ export async function PUT(
   } catch (error) {
     console.error("Error updating product:", error)
     return Response.json({ error: "Error al actualizar producto" }, { status: 500 })
+  }
+}
+
+const toggleAvailabilitySchema = z.object({
+  isAvailable: z.boolean(),
+})
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  try {
+    const session = await requireRole("admin")
+    if (session instanceof Response) return session
+
+    const { slug } = await params
+    const body = await request.json()
+    const parsed = toggleAvailabilitySchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: "Validation error", details: parsed.error.issues }, { status: 400 })
+    }
+
+    const existing = await prisma.product.findUnique({ where: { slug }, select: { id: true } })
+    if (!existing) {
+      return Response.json({ error: "Producto no encontrado" }, { status: 404 })
+    }
+
+    const updated = await prisma.product.update({
+      where: { slug },
+      data: { isAvailable: parsed.data.isAvailable },
+      select: { id: true, slug: true, isAvailable: true },
+    })
+
+    return Response.json(updated)
+  } catch (error) {
+    console.error("Error toggling availability:", error)
+    return Response.json({ error: "Error al cambiar disponibilidad" }, { status: 500 })
   }
 }
 
