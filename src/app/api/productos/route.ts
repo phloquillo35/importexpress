@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
     }
     const where: Record<string, unknown> = {}
     if (!showDeleted) where.deletedAt = null
+    if (!admin && disponible !== "false") where.isAvailable = true
 
     if (search) {
       // Soporte para formato argentino y decimal estándar
