@@ -173,7 +173,7 @@ function ProductDetailContent() {
 
 const specs = product.specs
 const arsPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
-const outOfStock = !product.isAvailable || product.stock <= 0
+const outOfStock = !product.isAvailable
 
 function handleSubmit(e: React.FormEvent) {
   e.preventDefault();
@@ -214,7 +214,7 @@ function handleSubmit(e: React.FormEvent) {
               images={currentImages}
               angleMeta={product.angleMeta}
               productName={product.name}
-              fallbackImages={Object.values(parsed.byColor).flat()}
+              fallbackImages={currentImages}
             />
           </div>
 
@@ -289,7 +289,7 @@ function handleSubmit(e: React.FormEvent) {
                   name: product.name,
                   price: Math.round(arsPrice ?? 0),
                   image: (currentImages[0] || product.images?.[0]) ?? null,
-                  maxQuantity: product.stock,
+                  maxQuantity: product.stock > 0 ? product.stock : 99,
                 })
               }}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#34c759]"

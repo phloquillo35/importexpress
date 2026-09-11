@@ -61,7 +61,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
   const displayPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
   const price = Math.round(displayPrice)
   const href = colorName ? `/productos/${product.slug}?color=${encodeURIComponent(colorName)}` : `/productos/${product.slug}`
-  const outOfStock = !product.isAvailable || product.stock <= 0
+  const outOfStock = !product.isAvailable
 
   function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
@@ -74,7 +74,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
       name: colorName ? `${product.name} (${colorName})` : product.name,
       price,
       image: cardImage,
-      maxQuantity: product.stock,
+      maxQuantity: product.stock > 0 ? product.stock : 99,
     })
   }
 
