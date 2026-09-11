@@ -127,7 +127,10 @@ export default function FinanzasPage() {
   useEffect(() => {
     fetch("/api/pedidos?limit=200").then(r => r.json()).then(d => {
       if (Array.isArray(d)) setOrderOptions(d.map((o: OrderOption) => ({ id: o.id, internalNumber: o.internalNumber, clientName: o.clientName, clientSurname: o.clientSurname })))
-    }).catch(() => {})
+    }).catch((err) => {
+      console.error("Error al cargar pedidos:", err)
+      toast.error("No se pudieron cargar los pedidos para vincular transacciones")
+    })
   }, [])
 
   const balance = income - expense

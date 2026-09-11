@@ -30,7 +30,12 @@ export function WhatsAppAgentSelector({
   if (!open) return null
 
   function handleSelect(number: string) {
-    window.open(`https://wa.me/${number}?text=${encodeURIComponent(message)}`, "_blank")
+    const digitsOnly = number?.replace(/\D/g, "")
+    if (!digitsOnly) {
+      alert("Este contacto no tiene un número de WhatsApp válido configurado.")
+      return
+    }
+    window.open(`https://wa.me/${digitsOnly}?text=${encodeURIComponent(message)}`, "_blank")
     onClose()
   }
 

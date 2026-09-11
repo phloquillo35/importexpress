@@ -8,8 +8,8 @@ import { lockScroll, unlockScroll } from "@/lib/utils"
 const STORAGE_KEY = "lopedis_cart"
 
 const mockItems: CartItem[] = [
-  { slug: "prod-1", color: "red", name: "Product 1 (red)", price: 1000, quantity: 2, image: "img1.jpg" },
-  { slug: "prod-2", color: null, name: "Product 2", price: 2000, quantity: 1, image: null },
+  { slug: "prod-1", color: "red", name: "Product 1 (red)", price: 1000, quantity: 2, image: "img1.jpg", maxQuantity: 99 },
+  { slug: "prod-2", color: null, name: "Product 2", price: 2000, quantity: 1, image: null, maxQuantity: 99 },
 ]
 
 const renderWithProvider = (ui: React.ReactNode) => {
@@ -115,7 +115,7 @@ describe("CartDrawer", () => {
 
   it("should remove item when quantity reaches 0", () => {
     const singleItem: CartItem[] = [
-      { slug: "prod-1", color: null, name: "Product 1", price: 1000, quantity: 1, image: null },
+      { slug: "prod-1", color: null, name: "Product 1", price: 1000, quantity: 1, image: null, maxQuantity: 99 },
     ]
     localStorage.setItem(STORAGE_KEY, JSON.stringify(singleItem))
 
@@ -214,7 +214,7 @@ describe("CartDrawer", () => {
 
   it("should show placeholder when no image", () => {
     const itemsNoImage: CartItem[] = [
-      { slug: "prod-1", color: null, name: "Product 1", price: 1000, quantity: 1, image: null },
+      { slug: "prod-1", color: null, name: "Product 1", price: 1000, quantity: 1, image: null, maxQuantity: 99 },
     ]
     localStorage.setItem(STORAGE_KEY, JSON.stringify(itemsNoImage))
 
@@ -226,7 +226,7 @@ describe("CartDrawer", () => {
 
   it("should format prices in ARS locale", () => {
     const itemsHighPrice: CartItem[] = [
-      { slug: "prod-1", color: null, name: "Expensive", price: 1234567, quantity: 1, image: null },
+      { slug: "prod-1", color: null, name: "Expensive", price: 1234567, quantity: 1, image: null, maxQuantity: 99 },
     ]
     localStorage.setItem(STORAGE_KEY, JSON.stringify(itemsHighPrice))
 

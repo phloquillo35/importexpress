@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react"
 import { useCart } from "@/context/CartContext"
 import { lockScroll, unlockScroll } from "@/lib/utils"
+import { buildWhatsAppOrderMessage } from "@/lib/whatsapp-message"
 import { WhatsAppAgentSelector } from "./WhatsAppAgentSelector"
 
 interface CartDrawerProps {
@@ -24,33 +25,9 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     }
   }, [open])
 
-  function buildMessage() {
-    const origin = typeof window !== "undefined" ? window.location.origin : ""
-    const lines: string[] = ["¡Hola! Quiero hacer un pedido:\n"]
-    lines.push("🛒 *Productos:*")
-    items.forEach((item, i) => {
-      const subtotal = item.price * item.quantity
-      lines.push(
-        `${i + 1}. ${item.name} - $${item.price.toLocaleString("es-AR")} ARS x ${item.quantity} = $${subtotal.toLocaleString("es-AR")} ARS`
-      )
-      const productUrl = origin ? `${origin}/productos/${item.slug}` : ""
-      if (productUrl) {
-        lines.push(`   🔗 ${productUrl}`)
-      }
-    })
-    lines.push(`\n💰 *Total:* $${total.toLocaleString("es-AR")} ARS`)
-    lines.push(`\n👤 *Datos:*`)
-    lines.push(`Nombre: ${form.name}`)
-    lines.push(`Teléfono: ${form.phone}`)
-    lines.push(`Dirección: ${form.address}`)
-    lines.push(`Email: ${form.email}`)
-    lines.push("\n¡Gracias!")
-    return lines.join("\n")
-  }
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const msg = buildMessage()
+    const msg = buildWhatsAppOrderMessage(items, form)
     setPendingWhatsAppMessage(msg)
     setForm({ name: "", phone: "", address: "", email: "" })
     setShowForm(false)
@@ -113,7 +90,8 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                     <span data-testid="quantity" className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity + 1, item.color)}
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
+                      disabled={item.quantity >= item.maxQuantity}
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       aria-label="Aumentar cantidad"
                       data-testid="increase-quantity"
                     >

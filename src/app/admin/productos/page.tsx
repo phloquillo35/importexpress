@@ -174,14 +174,20 @@ export default function AdminProductosPage() {
   useEffect(() => {
     fetch("/api/categorias").then(r => r.json()).then(data => {
       setCategories(Array.isArray(data) ? data : [])
-    }).catch(() => {})
+    }).catch((err) => {
+      console.error("Error al cargar categorías:", err)
+      toast.error("No se pudieron cargar las categorías del filtro")
+    })
   }, [])
 
   useEffect(() => {
     fetch("/api/configuracion").then(r => r.json()).then(data => {
       setExchangeRate(Number(data.exchange_rate) || 1)
       setUsdtRate(Number(data.usdt_rate) || 1)
-    }).catch(() => {})
+    }).catch((err) => {
+      console.error("Error al cargar configuración:", err)
+      toast.error("No se pudo cargar la cotización — los precios podrían estar desactualizados")
+    })
   }, [])
 
   useEffect(() => {

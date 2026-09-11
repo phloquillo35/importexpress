@@ -156,7 +156,10 @@ export default function BultosPage() {
         }
         setPendingItems(items)
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error("Error al cargar pedidos pendientes:", err)
+        toast.error("No se pudieron cargar los productos pendientes de bulto")
+      })
   }, [])
 
   function toggleItem(id: string) {

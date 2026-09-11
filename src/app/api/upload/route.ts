@@ -1,9 +1,15 @@
 import { NextRequest } from "next/server"
-import { randomUUID } from "crypto"
 import { requireRole } from "@/lib/auth"
+import { uploadToSupabase } from "@/lib/supabase-storage"
 
 const MAX_SIZE = 10 * 1024 * 1024
-const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"]
+const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+const EXTENSION_BY_MIME: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,29 +34,9 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Import dinámico de Cloudinary (solo se carga cuando se usa esta ruta)
-    const { v2: cloudinary } = await import("cloudinary")
+    const url = await uploadToSupabase(buffer, file.type, EXTENSION_BY_MIME[file.type])
 
-    cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
-    })
-
-    // Subir a Cloudinary como base64 (más compatible con serverless)
-    const base64 = buffer.toString("base64")
-    const dataUri = `data:${file.type};base64,${base64}`
-
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder: "importexpress",
-      public_id: randomUUID(),
-      resource_type: "auto",
-    })
-
-    return Response.json({
-      url: result.secure_url,
-      public_id: result.public_id,
-    })
+    return Response.json({ url })
   } catch (error) {
     console.error("Upload error:", error)
     return Response.json({ error: "Upload failed" }, { status: 500 })

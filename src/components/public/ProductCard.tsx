@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from "react"
 import { Package, ShoppingBag } from "lucide-react"
 import { fetchExchangeRate } from "@/lib/client-exchange-rate"
 import { useCart } from "@/context/CartContext"
-import { colorSwatch, swatchStyle } from "@/lib/colors"
+import { swatchStyle } from "@/lib/colors"
 import { flyToCart } from "@/lib/flyToCart"
 
 interface ProductCardProps {
@@ -61,10 +61,12 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
   const displayPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
   const price = Math.round(displayPrice)
   const href = colorName ? `/productos/${product.slug}?color=${encodeURIComponent(colorName)}` : `/productos/${product.slug}`
+  const outOfStock = !product.isAvailable || product.stock <= 0
 
   function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
     e.stopPropagation()
+    if (outOfStock) return
     flyToCart(e.currentTarget)
     addItem({
       slug: product.slug,
@@ -72,6 +74,7 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
       name: colorName ? `${product.name} (${colorName})` : product.name,
       price,
       image: cardImage,
+      maxQuantity: product.stock,
     })
   }
 
@@ -138,11 +141,13 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
           )}
 
           <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[11px]">
-            <span className="font-medium text-[#34c759] sm:hidden">
-              {product.freeShipping ? "Envío gratis" : "Disponible"}
+            <span className={`font-medium sm:hidden ${outOfStock ? "text-destructive" : "text-[#34c759]"}`}>
+              {outOfStock ? "Sin stock" : product.freeShipping ? "Envío gratis" : "Disponible"}
             </span>
-            <span className="hidden sm:inline font-medium text-[#34c759]">Disponible</span>
-            {product.freeShipping && (
+            <span className={`hidden sm:inline font-medium ${outOfStock ? "text-destructive" : "text-[#34c759]"}`}>
+              {outOfStock ? "Sin stock" : "Disponible"}
+            </span>
+            {!outOfStock && product.freeShipping && (
               <span className="hidden sm:inline font-medium text-[#34c759]">Envío gratis</span>
             )}
           </div>
@@ -152,11 +157,12 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
       <div className="px-2.5 pb-2.5 sm:px-5 sm:pb-5">
         <button
           onClick={handleAdd}
+          disabled={outOfStock}
           data-testid="add-to-cart"
-          className="w-full flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-medium rounded-full transition-colors sm:gap-1.5 sm:py-2.5 sm:text-xs cursor-pointer"
+          className="w-full flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-medium rounded-full transition-colors sm:gap-1.5 sm:py-2.5 sm:text-xs cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary"
         >
           <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          Agregar
+          {outOfStock ? "Sin stock" : "Agregar"}
         </button>
       </div>
     </div>

@@ -1,11 +1,9 @@
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 
 export async function GET() {
-  const session = await auth()
-  if (!session) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const session = await requireRole("admin")
+  if (session instanceof Response) return session
 
   try {
     const totalProducts = await prisma.product.count()

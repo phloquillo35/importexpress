@@ -27,7 +27,7 @@ describe("CartContext", () => {
         <span data-testid="count">{cart.count}</span>
         <span data-testid="total">{cart.total}</span>
         <span data-testid="items">{JSON.stringify(cart.items)}</span>
-        <button onClick={() => cart.addItem({ slug: "prod-1", color: null, name: "Test", price: 100, image: null })}>Add</button>
+        <button onClick={() => cart.addItem({ slug: "prod-1", color: null, name: "Test", price: 100, image: null, maxQuantity: 99 })}>Add</button>
         <button onClick={() => cart.removeItem("prod-1")}>Remove</button>
         <button onClick={() => cart.updateQuantity("prod-1", 5)}>Update</button>
         <button onClick={() => cart.clearCart()}>Clear</button>
@@ -45,7 +45,7 @@ describe("CartContext", () => {
 
     it("should load from localStorage on init", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: "red", name: "Product 1", price: 100, quantity: 2, image: "img1.jpg" },
+        { slug: "prod-1", color: "red", name: "Product 1", price: 100, quantity: 2, image: "img1.jpg", maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -96,8 +96,8 @@ describe("CartContext", () => {
           <div>
             <span data-testid="count">{cart.count}</span>
             <span data-testid="total">{cart.total}</span>
-            <button onClick={() => cart.addItem({ slug: "test", color: "red", name: "Test Red", price: 100, image: null })}>Add Red</button>
-            <button onClick={() => cart.addItem({ slug: "test", color: "blue", name: "Test Blue", price: 200, image: null })}>Add Blue</button>
+            <button onClick={() => cart.addItem({ slug: "test", color: "red", name: "Test Red", price: 100, image: null, maxQuantity: 99 })}>Add Red</button>
+            <button onClick={() => cart.addItem({ slug: "test", color: "blue", name: "Test Blue", price: 200, image: null, maxQuantity: 99 })}>Add Blue</button>
           </div>
         )
       }
@@ -111,6 +111,48 @@ describe("CartContext", () => {
 
       expect(screen.getByTestId("count").textContent).toBe("2")
       expect(screen.getByTestId("total").textContent).toBe("300")
+    })
+
+    it("should not add item when maxQuantity is 0", () => {
+      const TestComponentNoStock = () => {
+        const cart = useCart()
+        return (
+          <div>
+            <span data-testid="count">{cart.count}</span>
+            <button onClick={() => cart.addItem({ slug: "prod-1", color: null, name: "Test", price: 100, image: null, maxQuantity: 0 })}>Add</button>
+          </div>
+        )
+      }
+
+      renderWithProvider(<TestComponentNoStock />)
+
+      act(() => {
+        screen.getByText("Add").click()
+      })
+
+      expect(screen.getByTestId("count").textContent).toBe("0")
+    })
+
+    it("should cap quantity at maxQuantity when adding repeatedly", () => {
+      const TestComponentLimitedStock = () => {
+        const cart = useCart()
+        return (
+          <div>
+            <span data-testid="count">{cart.count}</span>
+            <button onClick={() => cart.addItem({ slug: "prod-1", color: null, name: "Test", price: 100, image: null, maxQuantity: 2 })}>Add</button>
+          </div>
+        )
+      }
+
+      renderWithProvider(<TestComponentLimitedStock />)
+
+      act(() => {
+        screen.getByText("Add").click()
+        screen.getByText("Add").click()
+        screen.getByText("Add").click()
+      })
+
+      expect(screen.getByTestId("count").textContent).toBe("2")
     })
 
     it("should persist to localStorage after add", () => {
@@ -131,7 +173,7 @@ describe("CartContext", () => {
   describe("removeItem", () => {
     it("should remove item by slug", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -147,8 +189,8 @@ describe("CartContext", () => {
 
     it("should remove specific color variant", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: "red", name: "Product Red", price: 100, quantity: 1, image: null },
-        { slug: "prod-1", color: "blue", name: "Product Blue", price: 200, quantity: 1, image: null },
+        { slug: "prod-1", color: "red", name: "Product Red", price: 100, quantity: 1, image: null, maxQuantity: 99 },
+        { slug: "prod-1", color: "blue", name: "Product Blue", price: 200, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -173,7 +215,7 @@ describe("CartContext", () => {
 
     it("should persist to localStorage after remove", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -194,7 +236,7 @@ describe("CartContext", () => {
   describe("updateQuantity", () => {
     it("should update quantity to positive value", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -208,9 +250,24 @@ describe("CartContext", () => {
       expect(screen.getByTestId("total").textContent).toBe("500")
     })
 
+    it("should cap quantity at the item's maxQuantity", () => {
+      const storedItems: CartItem[] = [
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null, maxQuantity: 3 },
+      ]
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
+
+      renderWithProvider(<TestComponent />)
+
+      act(() => {
+        screen.getByText("Update").click()
+      })
+
+      expect(screen.getByTestId("count").textContent).toBe("3")
+    })
+
     it("should remove item when quantity set to 0", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 3, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 3, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -235,7 +292,7 @@ describe("CartContext", () => {
 
     it("should remove item when quantity set to negative", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 3, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 3, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -260,8 +317,8 @@ describe("CartContext", () => {
 
     it("should update specific color variant", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: "red", name: "Product Red", price: 100, quantity: 1, image: null },
-        { slug: "prod-1", color: "blue", name: "Product Blue", price: 200, quantity: 1, image: null },
+        { slug: "prod-1", color: "red", name: "Product Red", price: 100, quantity: 1, image: null, maxQuantity: 99 },
+        { slug: "prod-1", color: "blue", name: "Product Blue", price: 200, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -288,7 +345,7 @@ describe("CartContext", () => {
 
     it("should persist to localStorage after update", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -309,8 +366,8 @@ describe("CartContext", () => {
   describe("clearCart", () => {
     it("should remove all items", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 2, image: null },
-        { slug: "prod-2", color: "red", name: "Product 2 Red", price: 200, quantity: 1, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 2, image: null, maxQuantity: 99 },
+        { slug: "prod-2", color: "red", name: "Product 2 Red", price: 200, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -327,7 +384,7 @@ describe("CartContext", () => {
 
     it("should persist empty array to localStorage", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 1, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -348,8 +405,8 @@ describe("CartContext", () => {
   describe("total and count calculations", () => {
     it("should calculate total correctly with multiple items", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 2, image: null },
-        { slug: "prod-2", color: "red", name: "Product 2", price: 250, quantity: 3, image: null },
+        { slug: "prod-1", color: null, name: "Product 1", price: 100, quantity: 2, image: null, maxQuantity: 99 },
+        { slug: "prod-2", color: "red", name: "Product 2", price: 250, quantity: 3, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 
@@ -361,7 +418,7 @@ describe("CartContext", () => {
 
     it("should handle zero price items", () => {
       const storedItems: CartItem[] = [
-        { slug: "prod-1", color: null, name: "Free Product", price: 0, quantity: 5, image: null },
+        { slug: "prod-1", color: null, name: "Free Product", price: 0, quantity: 5, image: null, maxQuantity: 99 },
       ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems))
 

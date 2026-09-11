@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useCart } from "@/context/CartContext"
 import { swatchStyle } from "@/lib/colors"
 import { flyToCart } from "@/lib/flyToCart"
+import { buildWhatsAppOrderMessage } from "@/lib/whatsapp-message"
 
 interface SpecItem {
   key: string
@@ -172,32 +173,23 @@ function ProductDetailContent() {
 
 const specs = product.specs
 const arsPrice = product.finalPriceARS || (exchangeRate ? product.priceUSD * exchangeRate : product.priceARS) || 0
-
-function buildProductMessage() {
-  if (!product) return "";
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const productUrl = origin ? `${origin}/productos/${product.slug}` : "";
-  const lines: string[] = ["¡Hola! Quiero hacer un pedido:\n"];
-  lines.push("🛒 *Producto:*");
-  lines.push(
-    `1. ${product.name} - $${Math.round(arsPrice).toLocaleString("es-AR")} ARS`
-  );
-  if (productUrl) {
-    lines.push(`   🔗 ${productUrl}`);
-  }
-  lines.push(`\n💰 *Total:* $${Math.round(arsPrice).toLocaleString("es-AR")} ARS`);
-  lines.push(`\n👤 *Datos:*`);
-  lines.push(`Nombre: ${form.name}`);
-  lines.push(`Teléfono: ${form.phone}`);
-  lines.push(`Dirección: ${form.address}`);
-  lines.push(`Email: ${form.email}`);
-  lines.push("\n¡Gracias!");
-  return lines.join("\n");
-}
+const outOfStock = !product.isAvailable || product.stock <= 0
 
 function handleSubmit(e: React.FormEvent) {
   e.preventDefault();
-  const msg = buildProductMessage();
+  if (!product) return;
+  const msg = buildWhatsAppOrderMessage(
+    [
+      {
+        slug: product.slug,
+        name: product.name,
+        color: parsed.colors.length > 1 ? selectedColor : null,
+        price: Math.round(arsPrice ?? 0),
+        quantity: 1,
+      },
+    ],
+    form
+  );
   setPendingMessage(msg);
   setForm({ name: "", phone: "", address: "", email: "" });
   setShowForm(false);
@@ -269,9 +261,9 @@ function handleSubmit(e: React.FormEvent) {
           )}
 
           <div className="flex flex-wrap gap-3 mb-8">
-            <span className="inline-flex items-center gap-1.5 text-sm text-[#34c759] bg-muted px-3 py-1.5 rounded-full">
+            <span className={`inline-flex items-center gap-1.5 text-sm bg-muted px-3 py-1.5 rounded-full ${outOfStock ? "text-destructive" : "text-[#34c759]"}`}>
               <ShieldCheck className="w-4 h-4" />
-              Disponible
+              {outOfStock ? "Sin stock" : "Disponible"}
             </span>
             <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
               <Truck className="w-4 h-4" />
@@ -286,19 +278,29 @@ function handleSubmit(e: React.FormEvent) {
 
           <div className="flex flex-wrap gap-3">
             <button
+              disabled={outOfStock}
               onClick={(e) => {
                 e.preventDefault()
+                if (outOfStock) return
                 flyToCart(e.currentTarget, imagePanelRef.current)
-                addItem({ slug: product.slug, color: parsed.colors.length <= 1 ? null : selectedColor, name: product.name, price: Math.round(arsPrice ?? 0), image: (currentImages[0] || product.images?.[0]) ?? null })
+                addItem({
+                  slug: product.slug,
+                  color: parsed.colors.length <= 1 ? null : selectedColor,
+                  name: product.name,
+                  price: Math.round(arsPrice ?? 0),
+                  image: (currentImages[0] || product.images?.[0]) ?? null,
+                  maxQuantity: product.stock,
+                })
               }}
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#34c759] hover:bg-[#28a745] text-white font-medium rounded-full transition-colors w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#34c759]"
             >
               <Plus className="w-5 h-5" />
-              Agregar al carrito
+              {outOfStock ? "Sin stock" : "Agregar al carrito"}
             </button>
 <button
+               disabled={outOfStock}
                onClick={() => setShowForm(true)}
-               className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors w-full sm:w-auto justify-center"
+               className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-full transition-colors w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
              >
                <ShoppingBag className="w-5 h-5" />
                Consultar por WhatsApp

@@ -9,6 +9,7 @@ export interface CartItem {
   price: number
   quantity: number
   image: string | null
+  maxQuantity: number
 }
 
 function itemKey(item: { slug: string; color: string | null }) {
@@ -44,13 +45,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items])
 
   const addItem = useCallback((newItem: Omit<CartItem, "quantity">) => {
+    if (newItem.maxQuantity <= 0) return
     setItems(prev => {
       const key = itemKey(newItem)
       const existing = prev.find(i => itemKey(i) === key)
       if (existing) {
-        return prev.map(i =>
-          itemKey(i) === key ? { ...i, quantity: i.quantity + 1 } : i
-        )
+        const nextQuantity = Math.min(existing.quantity + 1, newItem.maxQuantity)
+        return prev.map(i => (itemKey(i) === key ? { ...i, quantity: nextQuantity, maxQuantity: newItem.maxQuantity } : i))
       }
       return [...prev, { ...newItem, quantity: 1 }]
     })
@@ -65,7 +66,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(slug, color)
       return
     }
-    setItems(prev => prev.map(i => (i.slug === slug && (color === undefined || i.color === color) ? { ...i, quantity } : i)))
+    setItems(prev => prev.map(i => (i.slug === slug && (color === undefined || i.color === color) ? { ...i, quantity: Math.min(quantity, i.maxQuantity) } : i)))
   }, [removeItem])
 
   const clearCart = useCallback(() => {

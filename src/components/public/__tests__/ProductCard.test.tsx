@@ -9,7 +9,7 @@ vi.mock("@/lib/flyToCart", () => ({
 }))
 
 // Mock exchange-rate at top level
-vi.mock("@/lib/exchange-rate", () => ({
+vi.mock("@/lib/client-exchange-rate", () => ({
   fetchExchangeRate: vi.fn().mockResolvedValue(1000),
 }))
 

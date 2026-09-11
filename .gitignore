@@ -58,3 +58,4 @@ yarn-error.log*
 next-env.d.ts
 
 
+scripts/backups/

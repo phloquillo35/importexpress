@@ -1,9 +1,7 @@
 import { NextRequest } from "next/server"
 import fs from "fs"
 import path from "path"
-import { promisify } from "util"
 
-const unlinkAsync = promisify(fs.unlink)
 const UPLOAD_DIR = process.env.UPLOADS_DIR || path.join(process.cwd(), "public", "uploads")
 const DATA_DIR = process.env.DATA_DIR || "/data"
 
@@ -98,47 +96,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
-  const auth = request.headers.get("x-cron-secret")
-  if (auth !== process.env.CRON_SECRET) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  try {
-    const files = fs.readdirSync(UPLOAD_DIR).filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f))
-    let deletedBytes = 0
-    let deleted = 0
-    let failed = 0
-
-    for (const f of files) {
-      const fp = path.join(UPLOAD_DIR, f)
-      try {
-        const size = fs.statSync(fp).size
-        await unlinkAsync(fp)
-        deletedBytes += size
-        deleted++
-      } catch {
-        failed++
-      }
-    }
-
-    const dataStats = dirSize(DATA_DIR)
-    return Response.json({
-      deleted,
-      failed,
-      freedBytes: deletedBytes,
-      freedMB: Math.round((deletedBytes / 1024 / 1024) * 10) / 10,
-      remainingFiles: fs.readdirSync(UPLOAD_DIR).length,
-      dataDir: {
-        path: DATA_DIR,
-        totalBytes: dataStats.bytes,
-        totalMB: Math.round((dataStats.bytes / 1024 / 1024) * 10) / 10,
-        entries: dataStats.entries,
-        top: topLevel(DATA_DIR),
-      },
-    })
-  } catch (error) {
-    console.error("Error cleaning uploads dir:", error)
-    return Response.json({ error: "Error limpiando directorio de uploads" }, { status: 500 })
-  }
+/**
+ * Deshabilitado: las imágenes de productos ahora viven en Supabase Storage,
+ * no en este volumen local. Borrar archivos acá sin cruzar contra la DB fue
+ * exactamente el tipo de incidente que ya nos costó las fotos una vez —
+ * no lo repetimos. Si en el futuro hace falta limpiar algo, hacerlo contra
+ * Supabase Storage cruzando primero contra Product.images / HeroBanner.image.
+ */
+export async function POST() {
+  return Response.json(
+    { error: "Deshabilitado: el storage de imágenes ya no vive en este volumen local." },
+    { status: 410 }
+  )
 }

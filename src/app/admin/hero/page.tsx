@@ -184,24 +184,33 @@ export default function HeroAdminPage() {
   async function reorder(slideId: string, direction: "up" | "down") {
     const idx = carousel.findIndex((s) => s.id === slideId)
     if (idx === -1) return
-    const items = [...carousel]
     const swapIdx = direction === "up" ? idx - 1 : idx + 1
-    if (swapIdx < 0 || swapIdx >= items.length) return
-    const temp = items[idx].order
-    items[idx].order = items[swapIdx].order
-    items[swapIdx].order = temp
-    ;[items[idx], items[swapIdx]] = [items[swapIdx], items[idx]]
+    if (swapIdx < 0 || swapIdx >= carousel.length) return
 
-    await Promise.all(
-      items.map((s) =>
-        fetch(`/api/admin/hero/${s.id}`, {
+    const a = carousel[idx]
+    const b = carousel[swapIdx]
+
+    try {
+      const results = await Promise.all([
+        fetch(`/api/admin/hero/${a.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order: s.order }),
-        })
-      )
-    )
-    loadBanners()
+          body: JSON.stringify({ order: b.order }),
+        }),
+        fetch(`/api/admin/hero/${b.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: a.order }),
+        }),
+      ])
+      if (results.some((r) => !r.ok)) {
+        toast.error("No se pudo reordenar. Probá de nuevo.")
+      }
+    } catch {
+      toast.error("No se pudo reordenar. Revisá tu conexión.")
+    } finally {
+      loadBanners()
+    }
   }
 
   return (

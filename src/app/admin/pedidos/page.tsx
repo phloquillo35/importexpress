@@ -965,7 +965,10 @@ export default function PedidosPage() {
     fetch("/api/configuracion").then(r => r.json()).then(data => {
       setExchangeRate(Number(data.exchange_rate) || 1)
       setUsdtRate(Number(data.usdt_rate) || 1)
-    }).catch(() => {})
+    }).catch((err) => {
+      console.error("Error al cargar configuración:", err)
+      toast.error("No se pudo cargar la cotización — los precios podrían estar desactualizados")
+    })
   }, [])
 
   // Search functions for server-side product search with pagination
