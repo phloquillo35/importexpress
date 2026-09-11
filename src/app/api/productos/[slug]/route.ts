@@ -38,6 +38,7 @@ export async function GET(
         finalPriceARS: true,
         images: true,
         stock: true,
+        isAvailable: true,
         hasFinancing: true,
         freeShipping: true,
         category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } },
