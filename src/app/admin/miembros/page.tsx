@@ -39,7 +39,11 @@ export default function MiembrosPage() {
   const [editForm, setEditForm] = useState({ name: "", email: "", role: "" })
 
   useEffect(() => {
-    if (status !== "authenticated" || !isAdmin) { setLoading(false); return }
+    if (status !== "authenticated" || !isAdmin) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLoading(false)
+      return
+    }
     fetchAdmins()
   }, [status, isAdmin])
 

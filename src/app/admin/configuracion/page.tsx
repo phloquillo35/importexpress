@@ -42,7 +42,11 @@ export default function ConfiguracionPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (status !== "authenticated" || !isAdmin) { setLoading(false); return }
+    if (status !== "authenticated" || !isAdmin) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLoading(false)
+      return
+    }
     fetch("/api/configuracion")
       .then(r => r.json())
       .then(data => {
