@@ -222,7 +222,7 @@ function handleSubmit(e: React.FormEvent) {
               images={currentImages}
               angleMeta={product.angleMeta}
               productName={product.name}
-              fallbackImages={product.images?.filter((img): img is string => typeof img === "string") ?? []}
+              fallbackImages={Object.values(parsed.byColor).flat()}
             />
           </div>
 
