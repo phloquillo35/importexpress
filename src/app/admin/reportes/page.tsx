@@ -160,22 +160,30 @@ export default function ReportesPage() {
         <div className="bg-muted/40 rounded-lg p-4 space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">Contenido del reporte</h3>
           <ul className="text-sm text-muted-foreground space-y-1.5">
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] flex-shrink-0" />
-              Productos: total, por categoría, destacados, disponibles
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] flex-shrink-0" />
-              Pedidos: cantidad por estado, ingreso total, últimos 30 días
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] flex-shrink-0" />
-              Finanzas: ingresos, egresos, balance
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] flex-shrink-0" />
-              Stock bajo: productos por debajo del mínimo
-            </li>
+            {(tipo === "completo") && (
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] flex-shrink-0" />
+                Productos: total, por categoría, destacados, disponibles
+              </li>
+            )}
+            {(tipo === "completo" || tipo === "ventas") && (
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] flex-shrink-0" />
+                Pedidos: cantidad por estado, ingreso total, últimos 30 días
+              </li>
+            )}
+            {(tipo === "completo" || tipo === "finanzas") && (
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] flex-shrink-0" />
+                Finanzas: ingresos, egresos, balance
+              </li>
+            )}
+            {(tipo === "completo" || tipo === "stock") && (
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] flex-shrink-0" />
+                Stock bajo: productos por debajo del mínimo
+              </li>
+            )}
           </ul>
         </div>
 

@@ -65,15 +65,16 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
         </button>
 
         <Popover open={lowStockOpen} onOpenChange={setLowStockOpen}>
-          <PopoverTrigger onClick={openLowStock}>
-            <button className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-              <Bell className="w-5 h-5" />
-              {lowStockItems.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
-                  {lowStockItems.length > 9 ? "9+" : lowStockItems.length}
-                </span>
-              )}
-            </button>
+          <PopoverTrigger
+            onClick={openLowStock}
+            className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Bell className="w-5 h-5" />
+            {lowStockItems.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
+                {lowStockItems.length > 9 ? "9+" : lowStockItems.length}
+              </span>
+            )}
           </PopoverTrigger>
           <PopoverContent className="w-80" align="end">
             <div className="p-1">

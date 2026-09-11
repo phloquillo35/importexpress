@@ -118,8 +118,8 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
                   <XAxis dataKey="date" stroke="#6e6e73" fontSize={12} />
                   <YAxis stroke="#6e6e73" fontSize={12} />
                   <Tooltip contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--foreground)" }} />
-                  <Line type="monotone" dataKey="income" stroke="#22C55E" strokeWidth={2} name="Ingresos" />
-                  <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Egresos" />
+                  <Line type="monotone" dataKey="income" stroke="#22C55E" strokeWidth={2} name="Ingresos" isAnimationActive={false} />
+                  <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Egresos" isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -135,7 +135,7 @@ export function DashboardClient({ data, period: initialPeriod }: { data: Dashboa
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="count" nameKey="name" paddingAngle={2}>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="count" nameKey="name" paddingAngle={2} isAnimationActive={false}>
                       {pieData.map((_, i) => (
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}

@@ -249,8 +249,8 @@ export default function FinanzasPage() {
                 <XAxis dataKey="month" stroke="#71717a" fontSize={12} />
                 <YAxis stroke="#71717a" fontSize={12} />
                 <Tooltip contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--foreground)" }} />
-                <Line type="monotone" dataKey="income" stroke="#22C55E" strokeWidth={2} name="Ingresos" />
-                <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Egresos" />
+                <Line type="monotone" dataKey="income" stroke="#22C55E" strokeWidth={2} name="Ingresos" isAnimationActive={false} />
+                <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Egresos" isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

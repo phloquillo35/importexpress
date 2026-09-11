@@ -405,7 +405,14 @@ export default function AdminCategoriasPage() {
                 const isExpanded = expandedParents.has(cat.id)
                 const hasChildren = cat.children.length > 0
                 const parentRow = (
-                  <TableRow key={cat.id} className="border-border/60 hover:bg-muted/60 hover:shadow-sm transition-all duration-150 cursor-pointer" onClick={() => { hoverExpandedRef.current.delete(cat.id); if (hasChildren) toggleParent(cat.id); else openEdit(cat) }} onMouseEnter={() => { if (!hasChildren || isTouchDevice()) return; if (hoverTimerRef.current?.id === cat.id) clearHoverTimer(); if (!expandedParents.has(cat.id)) { hoverExpandedRef.current.add(cat.id); toggleParent(cat.id) } }} onMouseLeave={() => { if (hasChildren && !isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
+                  <TableRow key={cat.id} className="border-border/60 hover:bg-muted/60 hover:shadow-sm transition-all duration-150 cursor-pointer" onClick={() => {
+                    const wasHoverExpanded = hoverExpandedRef.current.has(cat.id)
+                    hoverExpandedRef.current.delete(cat.id)
+                    if (!hasChildren) { openEdit(cat); return }
+                    // Si ya se expandió por el hover, el click no debe volver a colapsarlo
+                    // (si no, un click normal después de pasar el mouse siempre cerraba la fila).
+                    if (!wasHoverExpanded) toggleParent(cat.id)
+                  }} onMouseEnter={() => { if (!hasChildren || isTouchDevice()) return; if (hoverTimerRef.current?.id === cat.id) clearHoverTimer(); if (!expandedParents.has(cat.id)) { hoverExpandedRef.current.add(cat.id); toggleParent(cat.id) } }} onMouseLeave={() => { if (hasChildren && !isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
                     <TableCell className="font-semibold text-foreground py-3">
                       <span className="flex items-center gap-2">
                         {hasChildren ? (

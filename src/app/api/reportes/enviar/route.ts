@@ -8,12 +8,18 @@ function formatARS(n: number) {
 
 type ReportData = Awaited<ReturnType<typeof gatherReportData>>
 
-function buildReportHTML(data: ReportData) {
+function buildReportHTML(data: ReportData, tipo: string = "completo") {
   const now = new Date().toLocaleString("es-AR", {
     timeZone: "America/Argentina/Buenos_Aires",
     dateStyle: "long",
     timeStyle: "short",
   })
+
+  const sections =
+    tipo === "ventas" ? ordersSection(data) :
+    tipo === "stock" ? stockSection(data) :
+    tipo === "finanzas" ? financesSection(data) :
+    `${productsSection(data)}${ordersSection(data)}${financesSection(data)}${stockSection(data)}`
 
   return `
 <!DOCTYPE html>
@@ -31,10 +37,7 @@ function buildReportHTML(data: ReportData) {
     <tr>
       <td style="background: white; padding: 24px; border-radius: 0 0 12px 12px;">
         ${kpiCards(data)}
-        ${productsSection(data)}
-        ${ordersSection(data)}
-        ${financesSection(data)}
-        ${stockSection(data)}
+        ${sections}
       </td>
     </tr>
   </table>
@@ -268,12 +271,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "Email destino requerido" }, { status: 400 })
     }
 
+    const tipo = body.tipo || "completo"
     const data = await gatherReportData({
       fechaDesde: body.fechaDesde || null,
       fechaHasta: body.fechaHasta || null,
-      tipo: body.tipo || "completo",
+      tipo,
     })
-    const html = buildReportHTML(data)
+    const html = buildReportHTML(data, tipo)
     const sent = await sendEmail({ to: email, subject: `Reporte ${data.businessName}`, text: `Reporte adjunto de ${data.businessName}`, html })
 
     if (!sent) {
