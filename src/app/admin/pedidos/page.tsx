@@ -1245,11 +1245,12 @@ export default function PedidosPage() {
       let next = [...prev]
       for (const { parsed, product } of readerMatched) {
         if (!product) continue
-        const idx = next.findIndex(c => c.productId === product.id && !c.color && !c.storage)
+        const color = parsed.color || undefined
+        const idx = next.findIndex(c => c.productId === product.id && c.color === color && !c.storage)
         if (idx >= 0) {
           next[idx] = { ...next[idx], quantity: next[idx].quantity + parsed.quantity }
         } else {
-          next = [...next, { productId: product.id, name: product.name, quantity: parsed.quantity, priceUSD: product.priceUSD }]
+          next = [...next, { productId: product.id, name: product.name, quantity: parsed.quantity, priceUSD: product.priceUSD, color }]
         }
       }
       return next
@@ -1529,7 +1530,7 @@ export default function PedidosPage() {
                   <p className="text-xs text-muted-foreground">Productos</p>
                   {readerMatched.map(({ parsed, product }, i) => (
                     <div key={i} className="flex items-center justify-between gap-2 text-sm">
-                      <span className="truncate text-muted-foreground">{parsed.name} × {parsed.quantity}</span>
+                      <span className="truncate text-muted-foreground">{parsed.name}{parsed.color ? ` (${parsed.color})` : ""} × {parsed.quantity}</span>
                       {product ? (
                         <span className="text-[#22C55E] text-xs shrink-0 whitespace-nowrap">✓ En catálogo</span>
                       ) : (

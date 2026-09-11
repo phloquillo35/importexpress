@@ -2,6 +2,7 @@ export interface ParsedOrderItem {
   name: string
   slug?: string
   quantity: number
+  color?: string | null
 }
 
 export interface ParsedOrder {
@@ -70,9 +71,15 @@ export function parseWhatsAppOrder(text: string): ParsedOrder {
     /(\d+)[.)]\s+(.+?)\s+-\s+\$[\d.,]+\s*ARS(?:\s*x\s*(\d+))?/gi
   let itemMatch: RegExpExecArray | null
   while ((itemMatch = itemRe.exec(normalized))) {
+    // El mensaje del carrito arma el nombre como "Producto (Color: X)" cuando
+    // el cliente eligió un color — hay que separarlo para no romper el match
+    // por nombre contra el catálogo (donde el producto no tiene ese sufijo).
+    const rawName = itemMatch[2].trim()
+    const colorMatch = rawName.match(/^(.*?)\s*\(Color:\s*(.+?)\)\s*$/i)
     items.push({
-      name: itemMatch[2].trim(),
+      name: colorMatch ? colorMatch[1].trim() : rawName,
       quantity: itemMatch[3] ? parseInt(itemMatch[3], 10) : 1,
+      ...(colorMatch ? { color: colorMatch[2].trim() } : {}),
     })
   }
 

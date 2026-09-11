@@ -188,6 +188,21 @@ Teléfono: 123`
     ])
   })
 
+  it("should extract the color and strip it from the product name", () => {
+    const text = `🛒 *Productos:*
+1. Auricular Gamer H510 (Color: Rosa) - $95.000 ARS x 1 = $95.000 ARS
+   🔗 https://dominio/productos/auricular-gamer-h510
+
+👤 *Datos:*
+Nombre: Ana
+Teléfono: 123`
+
+    const parsed = parseWhatsAppOrder(text)
+    expect(parsed.items).toEqual([
+      { name: "Auricular Gamer H510", slug: "auricular-gamer-h510", quantity: 1, color: "Rosa" },
+    ])
+  })
+
   it("should parse cart message with multiple products without line breaks", () => {
     const text = `¡Hola! Quiero hacer un pedido: 🛒 *Productos:* 1. Apple iPhone 15 - $1.234.567 ARS x 2 = $2.469.134 ARS 🔗 https://dominio/productos/iphone-15 2. Notebook Samsung NP750 - $999.999 ARS x 1 = $999.999 ARS 🔗 https://dominio/productos/notebook-samsung-np750 💰 *Total:* $3.469.133 ARS 👤 *Datos:* Nombre: Juan Carlos Perez Teléfono: +5491112345678 Dirección: Calle Falsa 123 Email: juan@mail.com ¡Gracias!`
 
