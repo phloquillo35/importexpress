@@ -25,6 +25,7 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_URL || "https://lopedis-lotenes.up.railway.app"),
   title: {
     default: "Lo Pedís, Lo Tenes",
     template: "%s | Lo Pedís, Lo Tenes",

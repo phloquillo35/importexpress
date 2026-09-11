@@ -8,10 +8,9 @@ import { getCategories } from "@/lib/categories"
 import { prisma } from "@/lib/prisma"
 
 export const metadata: Metadata = {
-  title: "Lo Pedís, Lo Tenes - Importación directa desde Ciudad del Este, Paraguay",
   description: "Importamos desde Ciudad del Este, Paraguay directo a tu casa. Electrónica, bicicletas, celulares y más.",
   openGraph: {
-    title: "Lo Pedís, Lo Tenes - Importación directa desde Ciudad del Este, Paraguay",
+    title: "Lo Pedís, Lo Tenes",
     description: "Todo lo que necesitás, importado para vos. Electrónica, bicicletas, celulares y más.",
     images: [{ url: "/images/og-whatsapp.jpg", width: 1200, height: 630, alt: "Lo Pedís, Lo Tenes" }],
   },
