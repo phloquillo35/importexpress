@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useCanEdit } from "@/hooks/useCanEdit"
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ interface StockProduct {
 }
 
 export default function AdminStockPage() {
+  const canEdit = useCanEdit()
   const searchParams = useSearchParams()
   const highlightId = searchParams.get("highlight")
   const tableRef = useRef<HTMLDivElement>(null)
@@ -215,14 +217,16 @@ export default function AdminStockPage() {
                       </TableCell>
                       <TableCell className="text-center text-muted-foreground cursor-pointer" onClick={() => setViewProduct(product)}>{product.minStock}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); openAdjust(product) }}
-                          className="text-muted-foreground hover:text-[#22C55E] text-xs"
-                        >
-                          Ajustar
-                        </Button>
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); openAdjust(product) }}
+                            className="text-muted-foreground hover:text-[#22C55E] text-xs"
+                          >
+                            Ajustar
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const showDeleted = searchParams.get("showDeleted") === "true"
 
     if (admin || showDeleted) {
-      const session = await requireRole("admin")
+      const session = await requireRole("admin", "viewer")
       if (session instanceof Response) return session
     }
     const where: Record<string, unknown> = {}

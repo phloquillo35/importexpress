@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Trash2, RotateCcw, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
+import { useCanEdit } from "@/hooks/useCanEdit"
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,7 @@ interface PapeleraModalProps {
 }
 
 export function PapeleraModal({ model, sectionLabel, onRestore }: PapeleraModalProps) {
+  const canEdit = useCanEdit()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<PapeleraItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -192,24 +194,30 @@ export function PapeleraModal({ model, sectionLabel, onRestore }: PapeleraModalP
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRestore(item)}
-                          className="text-muted-foreground hover:text-[#22C55E]"
-                          title="Restaurar"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handlePermanentDelete(item)}
-                          className="text-muted-foreground hover:text-red-400"
-                          title="Eliminar permanentemente"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {canEdit ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRestore(item)}
+                              className="text-muted-foreground hover:text-[#22C55E]"
+                              title="Restaurar"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handlePermanentDelete(item)}
+                              className="text-muted-foreground hover:text-red-400"
+                              title="Eliminar permanentemente"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

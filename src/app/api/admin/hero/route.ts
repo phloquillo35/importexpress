@@ -6,7 +6,7 @@ import { revalidateTag } from "next/cache"
 
 export async function GET() {
   try {
-    const session = await requireRole("admin")
+    const session = await requireRole("admin", "viewer")
     if (session instanceof Response) return session
 
     const banners = await prisma.heroBanner.findMany({

@@ -1,14 +1,27 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { clearExchangeRateCache } from "@/lib/client-exchange-rate"
-import { Save, Mail } from "lucide-react"
+import { Save, Mail, ShieldAlert } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+function AccesoRestringido() {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <ShieldAlert className="w-10 h-10 text-muted-foreground mb-3" />
+      <p className="text-foreground font-medium">Acceso restringido</p>
+      <p className="text-muted-foreground text-sm mt-1">Esta sección es solo para administradores.</p>
+    </div>
+  )
+}
+
 export default function ConfiguracionPage() {
+  const { data: session, status } = useSession()
+  const isAdmin = session?.user?.role === "admin"
   const [form, setForm] = useState({
     exchange_rate: "",
     usdt_rate: "",
@@ -29,6 +42,7 @@ export default function ConfiguracionPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    if (status !== "authenticated" || !isAdmin) { setLoading(false); return }
     fetch("/api/configuracion")
       .then(r => r.json())
       .then(data => {
@@ -51,7 +65,7 @@ export default function ConfiguracionPage() {
       })
       .catch(() => toast.error("Error al cargar configuración"))
       .finally(() => setLoading(false))
-  }, [])
+  }, [status, isAdmin])
 
   // Normaliza un número de WhatsApp: quita todo lo no numérico y antepone 549 si falta.
   function normalizeWhatsAppNumber(input: string): string {
@@ -82,6 +96,10 @@ export default function ConfiguracionPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  if (status === "authenticated" && !isAdmin) {
+    return <AccesoRestringido />
   }
 
   if (loading) {

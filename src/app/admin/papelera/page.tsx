@@ -5,6 +5,7 @@ import { Trash2, RotateCcw, Package, Tags, ShoppingCart, Ship, DollarSign, Store
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useCanEdit } from "@/hooks/useCanEdit"
 
 interface TrashItem {
   id: string
@@ -41,6 +42,7 @@ const SECTION_CONFIG: Record<string, { label: string; icon: React.ElementType; c
 }
 
 export default function PapeleraPage() {
+  const canEdit = useCanEdit()
   const [data, setData] = useState<TrashData | null>(null)
   const [search, setSearch] = useState("")
   const [restoring, setRestoring] = useState<string | null>(null)
@@ -182,24 +184,30 @@ export default function PapeleraPage() {
                           </td>
                           <td className="p-3 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRestore(key, item.id)}
-                                disabled={restoring === `${key}-${item.id}`}
-                              >
-                                <RotateCcw className="w-4 h-4 mr-1" />
-                                Restaurar
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                onClick={() => handlePermanentDelete(key, item.id)}
-                                disabled={deleting === `${key}-${item.id}`}
-                              >
-                                Eliminar
-                              </Button>
+                              {canEdit ? (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleRestore(key, item.id)}
+                                    disabled={restoring === `${key}-${item.id}`}
+                                  >
+                                    <RotateCcw className="w-4 h-4 mr-1" />
+                                    Restaurar
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                    onClick={() => handlePermanentDelete(key, item.id)}
+                                    disabled={deleting === `${key}-${item.id}`}
+                                  >
+                                    Eliminar
+                                  </Button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
                             </div>
                           </td>
                         </tr>

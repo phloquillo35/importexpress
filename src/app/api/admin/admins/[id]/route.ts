@@ -18,6 +18,17 @@ export async function PATCH(
       return Response.json({ error: "Miembro no encontrado" }, { status: 404 })
     }
 
+    if (body.role && !["admin", "viewer"].includes(body.role)) {
+      return Response.json({ error: "Rol inválido" }, { status: 400 })
+    }
+
+    if (body.role === "viewer" && existing.role === "admin") {
+      const adminCount = await prisma.admin.count({ where: { role: "admin" } })
+      if (adminCount <= 1) {
+        return Response.json({ error: "No podés quitarle el rol admin al único administrador restante" }, { status: 400 })
+      }
+    }
+
     const data: Record<string, unknown> = {}
     if (body.name) data.name = body.name
     if (body.email) data.email = body.email

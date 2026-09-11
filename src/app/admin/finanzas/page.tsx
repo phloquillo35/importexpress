@@ -39,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useCanEdit } from "@/hooks/useCanEdit"
 
 interface LinkedOrder {
   id: string
@@ -66,6 +67,7 @@ interface OrderOption {
 }
 
 export default function FinanzasPage() {
+  const canEdit = useCanEdit()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [tipoFilter, setTipoFilter] = useState("")
@@ -216,9 +218,11 @@ export default function FinanzasPage() {
         </div>
         <div className="flex items-center gap-2">
           <PapeleraModal model="transacciones" sectionLabel="Finanzas" onRestore={fetchTransactions} />
-          <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="w-4 h-4 mr-2" /> Nueva transacción
-          </Button>
+          {canEdit && (
+            <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="w-4 h-4 mr-2" /> Nueva transacción
+            </Button>
+          )}
         </div>
       </div>
 
@@ -311,9 +315,11 @@ export default function FinanzasPage() {
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground text-sm">{formatDate(t.date)}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(t)} className="text-muted-foreground hover:text-red-400">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(t)} className="text-muted-foreground hover:text-red-400">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

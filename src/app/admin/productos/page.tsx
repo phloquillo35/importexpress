@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog"
 import { calculateFinalPrice } from "@/lib/pricing"
 import { useSidebar } from "@/context/SidebarContext"
+import { useCanEdit } from "@/hooks/useCanEdit"
 
 interface Product {
   id: string
@@ -64,6 +65,7 @@ export default function AdminProductosPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { collapsed: isSidebarCollapsed } = useSidebar()
+  const canEdit = useCanEdit()
   const [products, setProducts] = useState<Product[]>([])
   const [total, setTotal] = useState(0)
   const [totalAll, setTotalAll] = useState(0)
@@ -347,33 +349,37 @@ export default function AdminProductosPage() {
             <Download className="w-4 h-4 mr-2" />
             Export CSV
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
-            className="border-border text-muted-foreground hover:text-foreground"
-          >
-            {importing ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Upload className="w-4 h-4 mr-2" />
-            )}
-            Import CSV
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            className="hidden"
-            onChange={handleFileSelect}
-          />
-          <Button
-            onClick={() => router.push("/admin/productos/nuevo")}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo producto
-          </Button>
+          {canEdit && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+                className="border-border text-muted-foreground hover:text-foreground"
+              >
+                {importing ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                Import CSV
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+              <Button
+                onClick={() => router.push("/admin/productos/nuevo")}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo producto
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -554,37 +560,41 @@ return (
                   </TableCell>
                   <TableCell className={`text-right ${isSidebarCollapsed ? "w-[60px] sm:w-[55px] md:w-[70px] lg:w-[80px]" : "w-[60px] sm:w-[55px] md:w-[70px] lg:w-[80px]"} transition-all duration-200`}>
                     <div className="flex items-center justify-end gap-1 w-full">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); router.push(`/admin/productos/${product.slug}/editar`) }}
-                        className="hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E] w-3.5 h-3.5"
-                        title="Editar producto"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); handleToggleAvailability(product) }}
-                        className={product.isAvailable ? "hover:bg-accent/10 text-muted-foreground hover:text-red-400 w-3.5 h-3.5" : "hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E] w-3.5 h-3.5"}
-                        title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
-                      >
-                        {product.isAvailable ? (
-                          <EyeOff className="w-3.5 h-3.5" />
-                        ) : (
-                          <Eye className="w-3.5 h-3.5" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); handleDelete(product) }}
-                        className="hover:bg-accent/10 text-muted-foreground hover:text-red-400 w-3.5 h-3.5"
-                        title="Eliminar producto"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      {canEdit && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); router.push(`/admin/productos/${product.slug}/editar`) }}
+                            className="hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E] w-3.5 h-3.5"
+                            title="Editar producto"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); handleToggleAvailability(product) }}
+                            className={product.isAvailable ? "hover:bg-accent/10 text-muted-foreground hover:text-red-400 w-3.5 h-3.5" : "hover:bg-accent/10 text-muted-foreground hover:text-[#22C55E] w-3.5 h-3.5"}
+                            title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
+                          >
+                            {product.isAvailable ? (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            ) : (
+                              <Eye className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(product) }}
+                            className="hover:bg-accent/10 text-muted-foreground hover:text-red-400 w-3.5 h-3.5"
+                            title="Eliminar producto"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

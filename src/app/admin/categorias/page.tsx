@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { formatDate, formatUSD } from "@/lib/utils"
+import { useCanEdit } from "@/hooks/useCanEdit"
 
 interface Subcategory {
   id: string
@@ -58,6 +59,7 @@ function isTouchDevice() {
 }
 
 export default function AdminCategoriasPage() {
+  const canEdit = useCanEdit()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -237,10 +239,12 @@ export default function AdminCategoriasPage() {
         <div className="flex items-center gap-2">
           <PapeleraModal model="categorias" sectionLabel="Categorías" onRestore={loadCategories} />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva categoría
-          </Button>
+          {canEdit && (
+            <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva categoría
+            </Button>
+          )}
           <DialogContent className="bg-popover border-border text-foreground">
             <DialogHeader>
               <DialogTitle>{editing ? "Editar categoría" : "Nueva categoría"}</DialogTitle>
@@ -408,7 +412,7 @@ export default function AdminCategoriasPage() {
                   <TableRow key={cat.id} className="border-border/60 hover:bg-muted/60 hover:shadow-sm transition-all duration-150 cursor-pointer" onClick={() => {
                     const wasHoverExpanded = hoverExpandedRef.current.has(cat.id)
                     hoverExpandedRef.current.delete(cat.id)
-                    if (!hasChildren) { openEdit(cat); return }
+                    if (!hasChildren) { canEdit ? openEdit(cat) : openView(cat); return }
                     // Si ya se expandió por el hover, el click no debe volver a colapsarlo
                     // (si no, un click normal después de pasar el mouse siempre cerraba la fila).
                     if (!wasHoverExpanded) toggleParent(cat.id)
@@ -447,8 +451,12 @@ export default function AdminCategoriasPage() {
                     <TableCell className="text-right py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => openView(cat)} className="text-muted-foreground hover:text-blue-400"><Eye className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(cat)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                        {canEdit && (
+                          <>
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(cat)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -457,7 +465,7 @@ export default function AdminCategoriasPage() {
                   ? cat.children.map((child) => {
                       const fullChild = categories.find((c: Category) => c.id === child.id)
                       return (
-                        <TableRow key={child.id} className="border-border/60 hover:bg-muted/40 cursor-pointer bg-muted/20 transition-colors animate-in fade-in slide-in-from-top-1 duration-150" onClick={() => fullChild && openEdit(fullChild)} onMouseEnter={() => { if (hoverTimerRef.current?.id === cat.id) clearHoverTimer() }} onMouseLeave={() => { if (!isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
+                        <TableRow key={child.id} className="border-border/60 hover:bg-muted/40 cursor-pointer bg-muted/20 transition-colors animate-in fade-in slide-in-from-top-1 duration-150" onClick={() => fullChild && (canEdit ? openEdit(fullChild) : openView(fullChild))} onMouseEnter={() => { if (hoverTimerRef.current?.id === cat.id) clearHoverTimer() }} onMouseLeave={() => { if (!isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
                           <TableCell className="font-medium text-foreground/90 py-3">
                             <span className="inline-flex items-center gap-2 border-l-2 border-border/40 pl-2 ml-6 animate-in fade-in slide-in-from-top-1 duration-150">
                               <span className="w-1 h-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
@@ -476,8 +484,12 @@ export default function AdminCategoriasPage() {
                           <TableCell className="text-right py-3" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
                               <Button variant="ghost" size="icon" onClick={() => fullChild && openView(fullChild)} className="text-muted-foreground hover:text-blue-400"><Eye className="w-4 h-4" /></Button>
-                              <Button variant="ghost" size="icon" onClick={() => fullChild && openEdit(fullChild)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
-                              <Button variant="ghost" size="icon" onClick={() => fullChild && handleDelete(fullChild)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                              {canEdit && (
+                                <>
+                                  <Button variant="ghost" size="icon" onClick={() => fullChild && openEdit(fullChild)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => fullChild && handleDelete(fullChild)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                                </>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

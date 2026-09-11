@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useCanEdit } from "@/hooks/useCanEdit"
 
 
 const courierLabel: Record<string, string> = {
@@ -95,6 +96,7 @@ interface PendingOrderItem {
 }
 
 export default function BultosPage() {
+  const canEdit = useCanEdit()
   const [bulks, setBulks] = useState<Bulk[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("")
@@ -324,9 +326,11 @@ export default function BultosPage() {
         </div>
         <div className="flex items-center gap-2">
           <PapeleraModal model="bultos" sectionLabel="Bultos" onRestore={() => setRefreshKey(k => k + 1)} />
-          <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="w-4 h-4 mr-2" /> Nuevo bulto
-          </Button>
+          {canEdit && (
+            <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="w-4 h-4 mr-2" /> Nuevo bulto
+            </Button>
+          )}
         </div>
       </div>
 
@@ -388,12 +392,16 @@ export default function BultosPage() {
                         <Button variant="ghost" size="icon" onClick={() => openView(b)} className="text-muted-foreground hover:text-blue-400">
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(b)} className="text-muted-foreground hover:text-[#22C55E]">
-                          Editar
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { setDeleteTarget(b); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {canEdit && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(b)} className="text-muted-foreground hover:text-[#22C55E]">
+                              Editar
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => { setDeleteTarget(b); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -583,7 +591,7 @@ export default function BultosPage() {
                 <div className="border border-border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-muted-foreground">Seguimiento del courier</p>
-                    {!editingTracking && (
+                    {!editingTracking && canEdit && (
                       <Button type="button" variant="ghost" size="sm" onClick={() => { setTrackingDraft(viewBulk.trackingCode || ""); setEditingTracking(true) }} className="text-muted-foreground hover:text-blue-400">
                         <Pencil className="w-3.5 h-3.5 mr-1" /> {viewBulk.trackingCode ? "Editar" : "Agregar"}
                       </Button>

@@ -3,7 +3,7 @@ import { requireRole } from "@/lib/auth"
 
 export async function GET() {
   try {
-    const session = await requireRole("admin")
+    const session = await requireRole("admin", "viewer")
     if (session instanceof Response) return session
 
     const [products, categories, orders, bulks, transactions, stores] = await Promise.all([

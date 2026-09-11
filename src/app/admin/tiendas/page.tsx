@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useCanEdit } from "@/hooks/useCanEdit"
 
 interface StoreType {
   id: string
@@ -34,6 +35,7 @@ interface StoreType {
 }
 
 export default function TiendasPage() {
+  const canEdit = useCanEdit()
   const [stores, setStores] = useState<StoreType[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -107,9 +109,11 @@ export default function TiendasPage() {
         </div>
         <div className="flex items-center gap-2">
           <PapeleraModal model="tiendas" sectionLabel="Tiendas" onRestore={() => setRefreshKey(k => k + 1)} />
-          <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="w-4 h-4 mr-2" /> Nueva tienda
-          </Button>
+          {canEdit && (
+            <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="w-4 h-4 mr-2" /> Nueva tienda
+            </Button>
+          )}
         </div>
       </div>
 
@@ -138,8 +142,12 @@ export default function TiendasPage() {
                   <TableCell className="text-muted-foreground text-sm">{formatDate(s.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(s)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(s)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                      {canEdit && (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(s)} className="text-muted-foreground hover:text-[#22C55E]"><Pencil className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(s)} className="text-muted-foreground hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import {
   LayoutDashboard,
   Package,
@@ -34,10 +34,10 @@ const links = [
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/tiendas", label: "Tiendas", icon: Store },
   { href: "/admin/bultos", label: "Bultos", icon: Ship },
-  { href: "/admin/miembros", label: "Miembros", icon: Users },
+  { href: "/admin/miembros", label: "Miembros", icon: Users, adminOnly: true },
   { href: "/admin/reportes", label: "Reportes", icon: FileText },
   { href: "/admin/papelera", label: "Papelera", icon: Trash2 },
-  { href: "/admin/configuracion", label: "Configuración", icon: Settings },
+  { href: "/admin/configuracion", label: "Configuración", icon: Settings, adminOnly: true },
 ]
 
 interface SidebarProps {
@@ -47,7 +47,10 @@ interface SidebarProps {
 
 export function Sidebar({ onClose, isOpen = false }: SidebarProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === "admin"
   const { collapsed, toggleCollapsed, isMobile } = useSidebar()
+  const visibleLinks = links.filter((link) => !link.adminOnly || isAdmin)
 
   // On mobile: expanded when sidebar is opened via hamburger, collapsed otherwise
   // On desktop: uses collapsed state from context
@@ -69,7 +72,7 @@ export function Sidebar({ onClose, isOpen = false }: SidebarProps) {
       </div>
 
       <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-        {links.map((link) => {
+        {visibleLinks.map((link) => {
           const Icon = link.icon
           const isActive =
             link.href === "/admin"
@@ -97,6 +100,11 @@ export function Sidebar({ onClose, isOpen = false }: SidebarProps) {
       </nav>
 
       <div className="border-t border-sidebar-border p-2 space-y-1">
+        {!isAdmin && session?.user && isExpanded && (
+          <div className="px-3 py-1.5 mb-1 rounded-lg bg-amber-500/10 text-amber-500 text-xs font-medium text-center">
+            Solo lectura
+          </div>
+        )}
         {!isMobile && (
           <button
             onClick={toggleCollapsed}

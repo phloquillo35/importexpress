@@ -9,7 +9,7 @@ const inviteSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Contraseña debe tener al menos 6 caracteres"),
   name: z.string().min(1).optional(),
-  role: z.enum(["admin", "customer"]).optional(),
+  role: z.enum(["admin", "viewer"]).optional(),
 })
 
 export async function POST(request: Request) {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     const hashedPassword = await hash(password, 12)
-    const memberRole = role || "customer"
+    const memberRole = role || "viewer"
 
     const admin = await prisma.admin.create({
       data: {

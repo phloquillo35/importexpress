@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { ImagePlus, Plus, Trash2, Link as LinkIcon } from "lucide-react"
 import { toast } from "sonner"
+import { useCanEdit } from "@/hooks/useCanEdit"
 
 interface HeroBanner {
   id: string
@@ -23,6 +24,7 @@ const FLYER_POSITIONS = [
 ]
 
 export default function HeroAdminPage() {
+  const canEdit = useCanEdit()
   const [carousel, setCarousel] = useState<HeroBanner[]>([])
   const [flyers, setFlyers] = useState<HeroBanner[]>([])
   const [uploading, setUploading] = useState(false)
@@ -220,8 +222,12 @@ export default function HeroAdminPage() {
         <p className="text-sm text-muted-foreground mt-1">
           Administrá el carrusel principal y los flyers de la página de inicio
         </p>
+        {!canEdit && (
+          <p className="text-xs text-amber-500 mt-2">Modo solo lectura — no podés modificar el hero.</p>
+        )}
       </div>
 
+      <div className={!canEdit ? "pointer-events-none opacity-70 space-y-10" : "space-y-10"}>
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground font-heading">🎠 Carrusel Principal (Cuadrado)</h2>
@@ -384,6 +390,7 @@ export default function HeroAdminPage() {
           })}
         </div>
       </section>
+      </div>
     </div>
   )
 }

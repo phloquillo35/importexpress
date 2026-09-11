@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { UserPlus, Users, Mail, Key, User, Pencil, Trash2 } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { UserPlus, Users, Mail, Key, User, Pencil, Trash2, ShieldAlert } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,16 +29,19 @@ interface Admin {
 }
 
 export default function MiembrosPage() {
+  const { data: session, status } = useSession()
+  const isAdmin = session?.user?.role === "admin"
   const [admins, setAdmins] = useState<Admin[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ email: "", password: "", name: "", role: "customer" })
+  const [form, setForm] = useState({ email: "", password: "", name: "", role: "viewer" })
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null)
   const [editForm, setEditForm] = useState({ name: "", email: "", role: "" })
 
   useEffect(() => {
+    if (status !== "authenticated" || !isAdmin) { setLoading(false); return }
     fetchAdmins()
-  }, [])
+  }, [status, isAdmin])
 
   async function fetchAdmins() {
     try {
@@ -67,7 +71,7 @@ export default function MiembrosPage() {
         return
       }
       toast.success("Miembro invitado exitosamente")
-      setForm({ email: "", password: "", name: "", role: "customer" })
+      setForm({ email: "", password: "", name: "", role: "viewer" })
       fetchAdmins()
     } catch {
       toast.error("Error al invitar miembro")
@@ -117,6 +121,16 @@ export default function MiembrosPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al eliminar")
     }
+  }
+
+  if (status === "authenticated" && !isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="w-10 h-10 text-muted-foreground mb-3" />
+        <p className="text-foreground font-medium">Acceso restringido</p>
+        <p className="text-muted-foreground text-sm mt-1">Esta sección es solo para administradores.</p>
+      </div>
+    )
   }
 
   return (
@@ -181,15 +195,18 @@ export default function MiembrosPage() {
 
           <div className="space-y-2">
             <Label className="text-muted-foreground">Rol</Label>
-            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v || "customer" })}>
+            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v || "viewer" })}>
               <SelectTrigger className="bg-muted border-border text-foreground">
-                <SelectValue placeholder="Seleccionar rol">{(value) => value === "admin" ? "Admin" : value === "customer" ? "Customer" : "Seleccionar"}</SelectValue>
+                <SelectValue placeholder="Seleccionar rol">{(value) => value === "admin" ? "Admin" : value === "viewer" ? "Solo lectura" : "Seleccionar"}</SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover text-popover-foreground">
                 <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="customer">Customer</SelectItem>
+                <SelectItem value="viewer">Solo lectura</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              &quot;Solo lectura&quot; puede ver todo el panel pero no crear, editar ni eliminar nada. Ideal para el contador.
+            </p>
           </div>
 
           <div className="flex justify-end">
@@ -240,9 +257,9 @@ export default function MiembrosPage() {
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                         admin.role === "admin"
                           ? "bg-[#22C55E]/10 text-[#22C55E]"
-                          : "bg-muted text-muted-foreground"
+                          : "bg-amber-500/10 text-amber-500"
                       }`}>
-                        {admin.role === "admin" ? "Admin" : "Customer"}
+                        {admin.role === "admin" ? "Admin" : "Solo lectura"}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
@@ -297,13 +314,13 @@ export default function MiembrosPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-muted-foreground">Rol</Label>
-              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v || "customer" })}>
+              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v || "viewer" })}>
                 <SelectTrigger className="bg-muted border-border text-foreground">
-                  <SelectValue placeholder="Seleccionar rol">{(value) => value === "admin" ? "Admin" : "Customer"}</SelectValue>
+                  <SelectValue placeholder="Seleccionar rol">{(value) => value === "admin" ? "Admin" : "Solo lectura"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-popover text-popover-foreground">
                   <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="customer">Customer</SelectItem>
+                  <SelectItem value="viewer">Solo lectura</SelectItem>
                 </SelectContent>
               </Select>
             </div>

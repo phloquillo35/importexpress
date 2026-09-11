@@ -9,6 +9,7 @@ import { formatUSD, formatARS } from "@/lib/utils"
 import { formatWhatsAppDisplay } from "@/hooks/useWhatsAppConfig"
 import { getItemEffectivePricing } from "@/lib/pricing"
 import { parseWhatsAppOrder, normalizeName, type ParsedOrder } from "@/lib/whatsapp-order-parser"
+import { useCanEdit } from "@/hooks/useCanEdit"
 import {
   Table,
   TableBody,
@@ -263,6 +264,7 @@ function DetailDialogContent({
   courierLabel,
   stores,
 }: DetailDialogContentProps) {
+  const canEdit = useCanEdit()
   const order = productDetail.order
   const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
   const allPricing = order.items.map(i => ({
@@ -413,7 +415,7 @@ function DetailDialogContent({
                 <MessageSquare className="w-4 h-4 mr-1" /> WhatsApp
               </Button>
             )}
-            {!editingOrder && (
+            {!editingOrder && canEdit && (
               <Button variant="ghost" size="sm" onClick={() => startEditing(order)} className="text-muted-foreground hover:text-foreground">
                 <Pencil className="w-4 h-4 mr-1" /> Editar
               </Button>
@@ -641,40 +643,42 @@ function DetailDialogContent({
                     {payCfg.label} — ${order.amountPaidUSD.toFixed(2)} / ${orderTotals.totalUSD.toFixed(2)} USD
                   </span>
                 </div>
-                <div className="flex items-end gap-3">
-                  <div className="flex-1 space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Monto</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      value={paymentAmount}
-                      onChange={(e) => setPaymentAmount(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                    />
+                {canEdit && (
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Monto</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                      />
+                    </div>
+                    <div className="w-24 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Moneda</Label>
+                      <Select value={paymentCurrency} onValueChange={(v) => v && setPaymentCurrency(v as "USD" | "ARS")}>
+                        <SelectTrigger className="bg-muted border-border text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card text-foreground">
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="ARS">ARS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      type="button"
+                      disabled={savingPay || !paymentAmount || Number(paymentAmount) <= 0}
+                      onClick={handleSavePayment}
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    >
+                      {savingPay ? "Guardando..." : "Registrar pago"}
+                    </Button>
                   </div>
-                  <div className="w-24 space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Moneda</Label>
-                    <Select value={paymentCurrency} onValueChange={(v) => v && setPaymentCurrency(v as "USD" | "ARS")}>
-                      <SelectTrigger className="bg-muted border-border text-foreground">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card text-foreground">
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="ARS">ARS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    type="button"
-                    disabled={savingPay || !paymentAmount || Number(paymentAmount) <= 0}
-                    onClick={handleSavePayment}
-                    size="sm"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    {savingPay ? "Guardando..." : "Registrar pago"}
-                  </Button>
-                </div>
+                )}
               </div>
 
               {order.payments && order.payments.length > 0 && (
@@ -709,17 +713,19 @@ function DetailDialogContent({
                 ) : (
                   <p className="text-muted-foreground text-center py-8">Sin notas</p>
                 )}
-                <div className="border-t border-border pt-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Agregar nota</h3>
-                  <Textarea
-                    placeholder="Escribir nota interna..."
-                    className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                    rows={3}
-                  />
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="sm">
-                    Guardar nota
-                  </Button>
-                </div>
+                {canEdit && (
+                  <div className="border-t border-border pt-4">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">Agregar nota</h3>
+                    <Textarea
+                      placeholder="Escribir nota interna..."
+                      className="w-full px-4 py-2.5 bg-muted border border-border/60 rounded-xl text-[16px] lg:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                      rows={3}
+                    />
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="sm">
+                      Guardar nota
+                    </Button>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -730,6 +736,7 @@ function DetailDialogContent({
 }
 
 export default function PedidosPage() {
+  const canEdit = useCanEdit()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
@@ -1274,12 +1281,16 @@ export default function PedidosPage() {
         </div>
         <div className="flex items-center gap-2">
           <PapeleraModal model="pedidos" sectionLabel="Pedidos" onRestore={fetchOrders} />
-          <Button variant="outline" onClick={() => setReaderOpen(true)} className="text-muted-foreground hover:text-foreground">
-            <ClipboardPaste className="w-4 h-4 mr-2" /> Pegar pedido de WhatsApp
-          </Button>
-          <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
-          </Button>
+          {canEdit && (
+            <>
+              <Button variant="outline" onClick={() => setReaderOpen(true)} className="text-muted-foreground hover:text-foreground">
+                <ClipboardPaste className="w-4 h-4 mr-2" /> Pegar pedido de WhatsApp
+              </Button>
+              <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Plus className="w-4 h-4 mr-2" /> Nuevo pedido
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -1325,9 +1336,11 @@ export default function PedidosPage() {
           )}
 
           {/* Delete order */}
-          <Button variant="outline" onClick={() => setGroupDeleteOpen(true)} className="text-red-400 hover:text-red-500 hover:border-red-400/50">
-            <Trash2 className="w-4 h-4 mr-2" /> Eliminar pedido
-          </Button>
+          {canEdit && (
+            <Button variant="outline" onClick={() => setGroupDeleteOpen(true)} className="text-red-400 hover:text-red-500 hover:border-red-400/50">
+              <Trash2 className="w-4 h-4 mr-2" /> Eliminar pedido
+            </Button>
+          )}
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-x-auto">
@@ -1416,9 +1429,11 @@ export default function PedidosPage() {
                       {getItemStatusBadge(item.shippingStatus)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setDeleteItemTarget({ item, order }) }} className="text-muted-foreground hover:text-red-400">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {canEdit && (
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setDeleteItemTarget({ item, order }) }} className="text-muted-foreground hover:text-red-400">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 )
