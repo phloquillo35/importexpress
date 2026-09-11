@@ -575,13 +575,13 @@ function DetailDialogContent({
             </div>
           </div>
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-3 bg-muted">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-3 bg-muted shrink-0">
               <TabsTrigger value="items">Items</TabsTrigger>
               <TabsTrigger value="payments">Pagos</TabsTrigger>
               <TabsTrigger value="notes">Notas</TabsTrigger>
             </TabsList>
-            <TabsContent value="items" className="flex-1 overflow-y-auto p-4 space-y-4">
+            <TabsContent value="items" className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><p className="text-muted-foreground">Teléfono</p><p className="text-foreground">{order.clientPhone || "—"}</p></div>
                 <div><p className="text-muted-foreground">Email</p><p className="text-foreground">{order.clientEmail || "—"}</p></div>
@@ -633,7 +633,7 @@ function DetailDialogContent({
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="payments" className="flex-1 overflow-y-auto p-4 space-y-4">
+            <TabsContent value="payments" className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
               <div className="border-t border-border pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-foreground">Estado de pago</h3>
@@ -699,7 +699,7 @@ function DetailDialogContent({
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="notes" className="flex-1 overflow-y-auto p-4 space-y-4">
+            <TabsContent value="notes" className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
               <div className="space-y-3">
                 {order.notes ? (
                   <div className="border-t border-border pt-3">
