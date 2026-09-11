@@ -32,10 +32,6 @@ export default function ConfiguracionPage() {
     whatsapp_brian: "",
     whatsapp_brian_name: "",
     instagram: "",
-    smtp_host: "",
-    smtp_port: "587",
-    smtp_user: "",
-    smtp_pass: "",
     smtp_from: "",
   })
   const [loading, setLoading] = useState(true)
@@ -60,10 +56,6 @@ export default function ConfiguracionPage() {
           whatsapp_brian: data.whatsapp_brian || "",
           whatsapp_brian_name: data.whatsapp_brian_name || "",
           instagram: data.instagram || "",
-          smtp_host: data.smtp_host || "",
-          smtp_port: data.smtp_port || "587",
-          smtp_user: data.smtp_user || "",
-          smtp_pass: data.smtp_pass || "",
           smtp_from: data.smtp_from || "",
         })
       })
@@ -233,58 +225,9 @@ export default function ConfiguracionPage() {
             <h2 className="text-lg font-semibold text-foreground font-heading">Email — Reportes</h2>
           </div>
           <p className="text-sm text-muted-foreground -mt-2">
-            En producción los emails salen por Brevo (ya configurado en el servidor) — de acá solo importa el
-            &quot;Email remitente&quot;. El Servidor SMTP/Usuario/Contraseña son solo un respaldo para cuando se corre
-            el proyecto en una compu local.
+            Los reportes salen por Brevo (ya configurado en el servidor). Solo hace falta indicar acá el email que
+            quede verificado como remitente en la cuenta de Brevo.
           </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="smtp_host" className="text-muted-foreground">Servidor SMTP</Label>
-              <Input
-                id="smtp_host"
-                value={form.smtp_host}
-                onChange={(e) => setForm({ ...form, smtp_host: e.target.value })}
-                className="bg-muted border-border text-foreground"
-                placeholder="smtp.gmail.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp_port" className="text-muted-foreground">Puerto</Label>
-              <Input
-                id="smtp_port"
-                type="number"
-                value={form.smtp_port}
-                onChange={(e) => setForm({ ...form, smtp_port: e.target.value })}
-                className="bg-muted border-border text-foreground"
-                placeholder="587"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="smtp_user" className="text-muted-foreground">Usuario</Label>
-              <Input
-                id="smtp_user"
-                value={form.smtp_user}
-                onChange={(e) => setForm({ ...form, smtp_user: e.target.value })}
-                className="bg-muted border-border text-foreground"
-                placeholder="tu-email@gmail.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp_pass" className="text-muted-foreground">Contraseña</Label>
-              <Input
-                id="smtp_pass"
-                type="password"
-                value={form.smtp_pass}
-                onChange={(e) => setForm({ ...form, smtp_pass: e.target.value })}
-                className="bg-muted border-border text-foreground"
-                placeholder="Contraseña de aplicación"
-              />
-            </div>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="smtp_from" className="text-muted-foreground">Email remitente</Label>
