@@ -230,9 +230,13 @@ export default function ConfiguracionPage() {
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div className="flex items-center gap-3 mb-2">
             <Mail className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold text-foreground font-heading">Email (SMTP) — Reportes</h2>
+            <h2 className="text-lg font-semibold text-foreground font-heading">Email — Reportes</h2>
           </div>
-          <p className="text-sm text-muted-foreground -mt-2">Configuración necesaria para enviar reportes por email desde Admin → Reportes</p>
+          <p className="text-sm text-muted-foreground -mt-2">
+            En producción los emails salen por Brevo (ya configurado en el servidor) — de acá solo importa el
+            &quot;Email remitente&quot;. El Servidor SMTP/Usuario/Contraseña son solo un respaldo para cuando se corre
+            el proyecto en una compu local.
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -289,8 +293,11 @@ export default function ConfiguracionPage() {
               value={form.smtp_from}
               onChange={(e) => setForm({ ...form, smtp_from: e.target.value })}
               className="bg-muted border-border text-foreground"
-              placeholder="tu-email@gmail.com (si no se completa, usa el usuario)"
+              placeholder="reportes@tudominio.com"
             />
+            <p className="text-xs text-muted-foreground">
+              Tiene que estar verificado como remitente en la cuenta de Brevo (Senders &amp; IP → Senders), si no los emails no salen.
+            </p>
           </div>
         </div>
 

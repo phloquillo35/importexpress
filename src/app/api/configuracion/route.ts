@@ -36,7 +36,7 @@ export async function GET() {
       result[key] = found?.value || DEFAULTS[key] || ""
     }
 
-    return Response.json(result)
+    return Response.json({ ...result, hasBrevo: Boolean(process.env.BREVO_API_KEY) })
   } catch (error) {
     console.error("Error fetching settings:", error)
     return Response.json({ error: "Error al cargar configuración" }, { status: 500 })

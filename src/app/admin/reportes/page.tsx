@@ -34,7 +34,7 @@ export default function ReportesPage() {
   useEffect(() => {
     fetch("/api/configuracion")
       .then((r) => r.json())
-      .then((data) => setSmtpConfigurado(Boolean(data.smtp_host)))
+      .then((data) => setSmtpConfigurado(data.hasBrevo ? Boolean(data.smtp_from) : Boolean(data.smtp_host)))
       .catch(() => setSmtpConfigurado(true))
   }, [])
 
@@ -223,9 +223,9 @@ export default function ReportesPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
             <div className="text-sm text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Configuración de email requerida</p>
+              <p className="font-medium text-foreground mb-1">Falta el email remitente</p>
               <p>
-                Para que funcione el envío de reportes, primero configurá los datos SMTP en
+                Para que funcione el envío de reportes, completá el &quot;Email remitente&quot; (verificado en Brevo) en
                 {" "}<a href="/admin/configuracion" className="text-primary underline hover:text-primary/80 inline-flex items-center gap-1">
                   <Settings className="w-3.5 h-3.5" /> Admin → Configuración
                 </a>.

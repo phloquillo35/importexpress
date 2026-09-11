@@ -30,9 +30,23 @@ type SendEmailParams = {
   html?: string
 }
 
+async function getBrevoSender(): Promise<{ email: string; name: string }> {
+  const settings = await prisma.setting.findMany({
+    where: { key: { in: ["smtp_from", "business_name"] } },
+  })
+  const get = (key: string) => settings.find((s) => s.key === key)?.value || ""
+  return {
+    // Configurable desde Admin → Configuración → "Email remitente"; tiene que
+    // estar verificado como remitente en la cuenta de Brevo o la API rechaza el envío.
+    email: get("smtp_from") || "nicolasmoya113@gmail.com",
+    name: get("business_name") || "Lo Pedís, Lo Tenes",
+  }
+}
+
 async function sendViaBrevoApi({ to, subject, text, html }: SendEmailParams): Promise<boolean> {
   const apiKey = process.env.BREVO_API_KEY
   if (!apiKey) return false
+  const sender = await getBrevoSender()
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
@@ -41,7 +55,7 @@ async function sendViaBrevoApi({ to, subject, text, html }: SendEmailParams): Pr
       Accept: "application/json",
     },
     body: JSON.stringify({
-      sender: { email: "nicolasmoya113@gmail.com", name: "Lo Pedís, Lo Tenes" },
+      sender,
       to: [{ email: to }],
       subject,
       textContent: text,
