@@ -53,7 +53,9 @@ export async function PUT(
     if (body.totalCostUSD !== undefined) data.totalCostUSD = parseFloat(body.totalCostUSD)
     if (body.products) data.products = body.products
 
-    if ((body.status === "received" || body.status === "arrived") && existing.status !== "received" && existing.status !== "arrived") {
+    // stockApplied evita duplicar el stock si el estado se alterna
+    // (recibido -> pendiente -> recibido de nuevo) — solo se suma una vez en la vida del registro.
+    if ((body.status === "received" || body.status === "arrived") && !existing.stockApplied) {
       const currentProducts = typeof existing.products === "string"
         ? JSON.parse(existing.products)
         : existing.products
@@ -69,6 +71,7 @@ export async function PUT(
             )
         )
       }
+      data.stockApplied = true
     }
 
     const updated = await prisma.bulk.update({

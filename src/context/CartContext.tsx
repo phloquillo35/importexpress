@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 
 export interface CartItem {
   slug: string
@@ -31,17 +31,28 @@ const CartContext = createContext<CartContextType | null>(null)
 const STORAGE_KEY = "lopedis_cart"
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
-  })
+  // Se arranca vacío (igual en servidor y cliente) para no generar un mismatch
+  // de hidratación en Next.js; el carrito guardado se carga después del montaje.
+  const [items, setItems] = useState<CartItem[]>([])
+  const hydrated = useRef(false)
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) setItems(JSON.parse(stored))
+    } catch {
+      // localStorage bloqueado/no disponible — seguimos con el carrito vacío
+    }
+    hydrated.current = true
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated.current) return
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    } catch {
+      // Modo privado / storage lleno — no bloqueamos la UI por esto
+    }
   }, [items])
 
   const addItem = useCallback((newItem: Omit<CartItem, "quantity">) => {

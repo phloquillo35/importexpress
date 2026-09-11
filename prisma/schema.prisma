@@ -94,6 +94,10 @@ model Product {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?
+
+  @@index([deletedAt, isAvailable, categoryId])
+  @@index([isFeatured])
+  @@index([createdAt])
 }
 
 model Order {
@@ -167,6 +171,8 @@ model Bulk {
   trackingCode  String?
   totalCostUSD  Float       @default(0)
   totalCostARS  Float?
+  lastShippingPerItem Float?
+  stockApplied  Boolean     @default(false)
   date          DateTime    @default(now())
   status        String      @default("pending")
   notes         String?

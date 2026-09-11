@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
+import Image from "next/image"
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react"
 
 interface AngleMeta {
@@ -111,7 +112,7 @@ export function AngleCarousel({
       .map((i) => displayImages[i])
       .filter(Boolean)
     const preloaded = neighbors.map((src) => {
-      const img = new Image()
+      const img = new window.Image()
       img.src = src
       return img
     })
@@ -151,12 +152,13 @@ export function AngleCarousel({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <img
+        <Image
           src={currentImage}
           alt={`${productName} — ${currentLabel ?? `vista ${activeIndex + 1}`}`}
-          loading="eager"
-          decoding="async"
-          className={`w-full h-full object-contain p-4 sm:p-8 transition-all duration-300 ${
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className={`object-contain p-4 sm:p-8 transition-all duration-300 ${
             isZoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"
           }`}
           onClick={() => setIsZoomed((z) => !z)}

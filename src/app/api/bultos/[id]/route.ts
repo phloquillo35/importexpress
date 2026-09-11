@@ -121,7 +121,10 @@ export async function PUT(
         const itemCount = await tx.orderItem.count({ where: { bulkId: id } })
         if (itemCount > 0) {
           const shippingPerItem = numericCost / itemCount
-          const oldCost = existing.totalCostARS ? Number(existing.totalCostARS) : 0
+          // Se descuenta exactamente lo que se aplicó la última vez (guardado en
+          // lastShippingPerItem), no oldCost/itemCount — itemCount pudo cambiar
+          // entre ediciones y esa división ya no representaría lo realmente sumado.
+          const previouslyAppliedPerItem = existing.lastShippingPerItem ?? 0
 
           const items = await tx.orderItem.findMany({
             where: { bulkId: id, productId: { not: null } },
@@ -131,14 +134,14 @@ export async function PUT(
           for (const item of items) {
             if (!item.productId || !item.product) continue
             const currentShipping = item.product.shippingCost || 0
-            const newShipping = oldCost > 0
-              ? currentShipping - (oldCost / itemCount) + shippingPerItem
-              : currentShipping + shippingPerItem
+            const newShipping = currentShipping - previouslyAppliedPerItem + shippingPerItem
             await tx.product.update({
               where: { id: item.productId },
               data: { shippingCost: Math.max(0, newShipping) },
             })
           }
+
+          data.lastShippingPerItem = shippingPerItem
         }
       }
 

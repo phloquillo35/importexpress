@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@/generated/client"
 import { NextRequest } from "next/server"
 import { genId } from "@/lib/utils"
 import { requireAuth, requireRole } from "@/lib/auth"
@@ -193,16 +194,21 @@ export async function POST(request: Request) {
 
     const order = await prisma.$transaction(async (tx) => {
       // Lock product rows and validate stock atomically (SELECT FOR UPDATE)
+      const uniqueProductIds = [...new Set(stockProductIds)] as string[]
       const lockedProducts = await tx.$queryRaw<{ id: string; stock: number }[]>`
-        SELECT id, stock FROM "Product"
-        WHERE id IN ${stockProductIds}
+        SELECT id, stock FROM "product"
+        WHERE id IN (${Prisma.join(uniqueProductIds)})
         FOR UPDATE
       `
       const lockedMap = new Map(lockedProducts.map((p) => [p.id, p.stock]))
-      for (const item of items) {
-        const available = lockedMap.get(item.productId) ?? 0
-        if (available < item.quantity) {
-          throw new Error(`Stock insuficiente para producto ${item.productId}: disponible ${available}, requerido ${item.quantity}`)
+      const requestedByProduct = new Map<string, number>()
+      for (const item of items as { productId: string; quantity: number }[]) {
+        requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) ?? 0) + item.quantity)
+      }
+      for (const [productId, requested] of requestedByProduct) {
+        const available = lockedMap.get(productId) ?? 0
+        if (available < requested) {
+          throw new Error(`Stock insuficiente para producto ${productId}: disponible ${available}, requerido ${requested}`)
         }
       }
 

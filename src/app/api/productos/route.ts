@@ -131,14 +131,32 @@ export async function GET(request: NextRequest) {
     // Use offset if provided, otherwise calculate from page
     const skip = offset > 0 ? offset : (safePage - 1) * limit
 
+    // El admin necesita la fila completa (costos, specs, etc.) para su tabla de
+    // gestión; el catálogo público solo consume estos campos — evita mandar
+    // specs/angleMeta/costos al navegador de cada visitante.
+    const categorySelect = { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } }
+    const publicSelect = {
+      id: true, slug: true, name: true, priceUSD: true, priceARS: true, finalPriceARS: true,
+      images: true, stock: true, isAvailable: true, hasFinancing: true, freeShipping: true,
+      category: categorySelect,
+    }
+
     const [products, totalAll] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } } },
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-      }),
+      admin
+        ? prisma.product.findMany({
+            where,
+            include: { category: categorySelect },
+            skip,
+            take: limit,
+            orderBy: { createdAt: "desc" },
+          })
+        : prisma.product.findMany({
+            where,
+            select: publicSelect,
+            skip,
+            take: limit,
+            orderBy: { createdAt: "desc" },
+          }),
       prisma.product.count({ where: { deletedAt: null, ...(!admin ? { isAvailable: true } : {}) } }),
     ])
 

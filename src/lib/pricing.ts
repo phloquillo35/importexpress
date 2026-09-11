@@ -20,6 +20,11 @@ export interface PricingResult {
 }
 
 export function calculateFinalPrice(input: PricingInput): PricingResult {
+  // Tasas inválidas (0, negativas, o no numéricas) nunca deben dividir —
+  // eso produciría Infinity/NaN que después se guardaría en la DB.
+  const exchangeRate = input.exchangeRate > 0 ? input.exchangeRate : 1
+  const usdtRate = input.usdtRate > 0 ? input.usdtRate : 1
+
   let baseUSDT = input.costUSDT
   let yoniUSDT = 0
 
@@ -29,12 +34,12 @@ export function calculateFinalPrice(input: PricingInput): PricingResult {
     } else if (input.yoniType === "fixed_usdt") {
       yoniUSDT = input.yoniValue
     } else {
-      yoniUSDT = input.yoniValue / input.usdtRate
+      yoniUSDT = input.yoniValue / usdtRate
     }
     baseUSDT += yoniUSDT
   }
 
-  const baseCostARS = baseUSDT * input.usdtRate
+  const baseCostARS = baseUSDT * usdtRate
 
   const subtotalARS = baseCostARS + input.shippingCost
 
@@ -42,20 +47,20 @@ export function calculateFinalPrice(input: PricingInput): PricingResult {
   if (input.profitType === "percentage") {
     profitARS = subtotalARS * (input.profitValue / 100)
   } else if (input.profitType === "fixed_usdt") {
-    profitARS = input.profitValue * input.usdtRate
+    profitARS = input.profitValue * usdtRate
   } else {
     profitARS = input.profitValue
   }
 
   const finalPriceARS = Math.round(subtotalARS + profitARS)
-  const finalPriceUSD = Math.round((finalPriceARS / input.exchangeRate) * 100) / 100
+  const finalPriceUSD = Math.round((finalPriceARS / exchangeRate) * 100) / 100
 
   return {
     finalPriceUSD,
     finalPriceARS,
     subtotalARS,
     profitARS,
-    profitUSDT: Math.round((profitARS / input.usdtRate) * 100) / 100,
+    profitUSDT: Math.round((profitARS / usdtRate) * 100) / 100,
     yoniUSDT: Math.round(yoniUSDT * 100) / 100,
   }
 }

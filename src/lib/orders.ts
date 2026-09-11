@@ -14,7 +14,7 @@ export async function recalculatePaymentStatus(orderId: string) {
   if (!order) return
 
   const agg = await prisma.transaction.aggregate({
-    where: { orderId },
+    where: { orderId, deletedAt: null, type: "income" },
     _sum: { amountUSD: true },
   })
   const totalPaid = agg._sum.amountUSD ?? 0

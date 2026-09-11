@@ -45,11 +45,6 @@ export async function POST(request: Request) {
       return Response.json({ error: "productId y quantity son requeridos" }, { status: 400 })
     }
 
-    const product = await prisma.product.findUnique({ where: { id: productId } })
-    if (!product) {
-      return Response.json({ error: "Producto no encontrado" }, { status: 404 })
-    }
-
     const qty = parseInt(quantity)
     if (isNaN(qty)) {
       return Response.json({ error: "quantity debe ser un número" }, { status: 400 })
@@ -58,22 +53,35 @@ export async function POST(request: Request) {
     const allowedFields = ["stock", "minStock"]
     const targetField = allowedFields.includes(field) ? field : "stock"
 
-    let newValue: number
-    if (operation === "set") {
-      newValue = Math.max(0, qty)
-    } else {
-      const current = targetField === "stock" ? product.stock : product.minStock
-      newValue = Math.max(0, current + qty)
-    }
+    // Lectura+escritura bajo lock de fila (igual que la creación de pedidos) para
+    // que dos ajustes simultáneos no se pisen y se pierda uno de los dos.
+    const updated = await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<{ id: string; stock: number; minStock: number }[]>`
+        SELECT id, stock, "minStock" FROM "product" WHERE id = ${productId} FOR UPDATE
+      `
+      const locked = rows[0]
+      if (!locked) throw new Error("NOT_FOUND")
 
-    const updated = await prisma.product.update({
-      where: { id: productId },
-      data: { [targetField]: newValue },
-      select: { id: true, name: true, stock: true, minStock: true },
+      let newValue: number
+      if (operation === "set") {
+        newValue = Math.max(0, qty)
+      } else {
+        const current = targetField === "stock" ? locked.stock : locked.minStock
+        newValue = Math.max(0, current + qty)
+      }
+
+      return tx.product.update({
+        where: { id: productId },
+        data: { [targetField]: newValue },
+        select: { id: true, name: true, stock: true, minStock: true },
+      })
     })
 
     return Response.json(updated)
   } catch (error) {
+    if (error instanceof Error && error.message === "NOT_FOUND") {
+      return Response.json({ error: "Producto no encontrado" }, { status: 404 })
+    }
     console.error("Error adjusting stock:", error)
     return Response.json({ error: "Error al ajustar stock" }, { status: 500 })
   }

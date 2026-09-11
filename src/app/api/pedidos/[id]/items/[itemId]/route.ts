@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
 import { requireRole } from "@/lib/auth"
-import { computeOrderTotalARS } from "@/lib/pricing"
+import { getItemEffectivePricing } from "@/lib/pricing"
 import { computeOrderStatus, recalculatePaymentStatus } from "@/lib/orders"
 
 export async function DELETE(
@@ -40,11 +40,19 @@ export async function DELETE(
       await tx.orderItem.delete({ where: { id: itemId } })
 
       const remainingItems = await tx.orderItem.findMany({ where: { orderId: id } })
-      const totalUSD = remainingItems.reduce((sum, i) => sum + i.priceUSD * i.quantity, 0)
-      const totalARS = computeOrderTotalARS(
-        { exchangeRate: order.exchangeRate, usdtRate: order.usdtRate, items: remainingItems },
-        { exchangeRate: order.exchangeRate || 1350, usdtRate: order.usdtRate || 1400 }
-      )
+      const orderExchangeRate = order.exchangeRate || 1350
+      const orderUsdtRate = order.usdtRate || 1400
+      let totalUSD = 0
+      let totalARS = 0
+      for (const it of remainingItems) {
+        // Misma función que usa el ajuste manual de precios (finances) — respeta
+        // cualquier override ya aplicado en vez de recalcular desde priceUSD crudo.
+        const eff = getItemEffectivePricing(it, orderExchangeRate, orderUsdtRate)
+        totalUSD += eff.finalPriceUSD
+        totalARS += eff.finalPriceARS
+      }
+      totalUSD = Math.round(totalUSD * 100) / 100
+      totalARS = Math.round(totalARS)
 
       await tx.order.update({
         where: { id },

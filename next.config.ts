@@ -27,6 +27,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "vxttpffxhyrdeawjypks.supabase.co", pathname: "/storage/v1/object/public/**" },
+    ],
+    formats: ["image/webp"],
+  },
   turbopack: {
     ignoreIssue: [
       {

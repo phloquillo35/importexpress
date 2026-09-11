@@ -78,7 +78,18 @@ export async function DELETE(
       return Response.json({ error: "El elemento no está eliminado. Eliminálo desde la sección normal primero." }, { status: 409 })
     }
 
-    await db.delete({ where: { id } })
+    // Un pedido siempre tiene al menos un OrderItem (y puede tener transacciones
+    // de pago ligadas) — sin borrar eso primero, el DELETE del pedido siempre
+    // falla por la foreign key. Se limpia en la misma transacción.
+    if (model === "pedidos") {
+      await prisma.$transaction([
+        prisma.transaction.deleteMany({ where: { orderId: id } }),
+        prisma.orderItem.deleteMany({ where: { orderId: id } }),
+        prisma.order.delete({ where: { id } }),
+      ])
+    } else {
+      await db.delete({ where: { id } })
+    }
 
     if (model === "categorias") revalidateTag("categorias", "max")
 

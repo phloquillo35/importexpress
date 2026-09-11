@@ -27,6 +27,8 @@ export async function PUT(
     if (data.date) data.date = new Date(data.date as string)
 
     const updated = await prisma.transaction.update({ where: { id }, data })
+    const affectedOrderId = updated.orderId ?? existing.orderId
+    if (affectedOrderId) await recalculatePaymentStatus(affectedOrderId)
     return Response.json(updated)
   } catch (error) {
     console.error("Error updating transaction:", error)

@@ -29,9 +29,9 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
   const [cartOpen, setCartOpen] = useState(false)
   const [whatsAppOpen, setWhatsAppOpen] = useState(false)
   const [search, setSearch] = useState("")
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < 768 : false
-  )
+  // Arranca en false en servidor y cliente (evita mismatch de hidratación);
+  // se corrige apenas monta, en el mismo efecto que ya escucha resize.
+  const [isMobile, setIsMobile] = useState(false)
   const { count } = useCart()
   const { theme, setTheme } = useTheme()
 
@@ -44,6 +44,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
+    handleResize()
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])

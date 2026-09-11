@@ -37,7 +37,8 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
   const searchParams = useSearchParams()
   const router = useRouter()
   const sub = searchParams.get("sub") || ""
-  const currentPage = parseInt(searchParams.get("page") || "1")
+  const rawPage = parseInt(searchParams.get("page") || "1", 10)
+  const currentPage = Number.isFinite(rawPage) && rawPage >= 1 ? rawPage : 1
   const [category, setCategory] = useState<Category | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [total, setTotal] = useState(0)
@@ -53,6 +54,7 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
   const colorVariants = useMemo(() => getProductColorVariants(products), [products])
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
       setLoading(true)
       setError(false)
@@ -62,6 +64,7 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
         const res = await fetch(`/api/productos?categoria=${apiSlug}&page=${currentPage}&limit=20`)
         if (!res.ok) throw new Error("Error al cargar productos")
         const data = await res.json()
+        if (cancelled) return
 
         const found = Array.isArray(initialCategories) ? initialCategories.find((c: Category) => c.slug === slug) : null
 
@@ -76,13 +79,15 @@ export function CategoryContent({ initialCategories = [] }: { initialCategories?
         setTotalPages(data.totalPages || 0)
         setPageInput(String(data.page || currentPage))
       } catch (e) {
+        if (cancelled) return
         console.error(e)
         setError(true)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     load()
+    return () => { cancelled = true }
   }, [slug, sub, currentPage])
 
   function updateParams(updates: Record<string, string | undefined>) {

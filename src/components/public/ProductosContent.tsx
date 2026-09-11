@@ -49,9 +49,11 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
   })
 
   const paramsKey = searchParams.toString()
-  const currentPage = parseInt(searchParams.get("page") || "1")
+  const rawPage = parseInt(searchParams.get("page") || "1", 10)
+  const currentPage = Number.isFinite(rawPage) && rawPage >= 1 ? rawPage : 1
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
       setLoading(true)
       setError(false)
@@ -60,7 +62,8 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
         const apiParams = new URLSearchParams()
         const s = sp.get("search") || ""
         const c = sp.get("categoria") || ""
-        const p = parseInt(sp.get("page") || "1")
+        const rawP = parseInt(sp.get("page") || "1", 10)
+        const p = Number.isFinite(rawP) && rawP >= 1 ? rawP : 1
         if (s) apiParams.set("search", s)
         if (c) apiParams.set("categoria", c)
         apiParams.set("page", String(p))
@@ -68,17 +71,20 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
         const res = await fetch(`/api/productos?${apiParams}`)
         if (!res.ok) throw new Error("Error al cargar productos")
         const data = await res.json()
+        if (cancelled) return
         setProducts(data.products || [])
         setTotal(data.total || 0)
         setTotalPages(data.totalPages || 0)
       } catch (e) {
+        if (cancelled) return
         console.error(e)
         setError(true)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     load()
+    return () => { cancelled = true }
   }, [paramsKey])
 
   function updateParams(updates: Record<string, string | undefined>) {

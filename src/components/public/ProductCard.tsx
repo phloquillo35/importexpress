@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState, useMemo } from "react"
+import Image from "next/image"
+import { useEffect, useState, useMemo, memo } from "react"
 import { Package, ShoppingBag } from "lucide-react"
 import { fetchExchangeRate } from "@/lib/client-exchange-rate"
 import { useCart } from "@/context/CartContext"
@@ -46,7 +47,7 @@ function getCardImage(images: unknown, colorName?: string | null): string | null
   return (first as { url: string }).url || null
 }
 
-export function ProductCard({ product, colorName }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product, colorName }: ProductCardProps) {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
   const { addItem } = useCart()
 
@@ -81,13 +82,14 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
   return (
     <div className="group block bg-card rounded-2xl border border-border/60 overflow-hidden hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer">
       <Link href={href} className="block" data-testid="product-link">
-        <div className="aspect-[5/4] sm:aspect-[4/3] bg-muted flex items-center justify-center p-1 sm:p-8">
+        <div className="relative aspect-[5/4] sm:aspect-[4/3] bg-muted flex items-center justify-center p-1 sm:p-8">
           {cardImage ? (
-            <img
+            <Image
               src={cardImage}
               alt={product.name}
-              loading="lazy"
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-contain group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <Package data-testid="product-placeholder" className="w-16 h-16 text-muted-foreground" />
@@ -167,4 +169,4 @@ export function ProductCard({ product, colorName }: ProductCardProps) {
       </div>
     </div>
   )
-}
+})

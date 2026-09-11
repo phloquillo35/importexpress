@@ -50,9 +50,16 @@ export async function PUT(request: Request) {
 
     const body = await request.json()
 
-    const updated: Record<string, string> = {}
-
     const rateKeys = ["exchange_rate", "usdt_rate"]
+    for (const key of rateKeys) {
+      if (body[key] === undefined) continue
+      const numeric = parseFloat(body[key])
+      if (!Number.isFinite(numeric) || numeric <= 0) {
+        return Response.json({ error: `${key} debe ser un número mayor a 0` }, { status: 400 })
+      }
+    }
+
+    const updated: Record<string, string> = {}
     const before = await prisma.setting.findMany({
       where: { key: { in: rateKeys } },
     })
@@ -80,26 +87,30 @@ export async function PUT(request: Request) {
         const exchangeRate = parseFloat(settings.find(s => s.key === "exchange_rate")?.value || DEFAULTS.exchange_rate)
         const usdtRate = parseFloat(settings.find(s => s.key === "usdt_rate")?.value || DEFAULTS.usdt_rate)
 
-        const products = await prisma.product.findMany()
-        await Promise.all(
-          products.map((p) => {
-            const result = calculateFinalPrice({
-              costUSDT: p.costUSDT ?? 0,
-              yoniEnabled: p.yoniEnabled,
-              yoniType: p.yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
-              yoniValue: p.yoniValue,
-              shippingCost: p.shippingCost,
-              profitType: p.profitType as "percentage" | "fixed_usdt" | "fixed_ars",
-              profitValue: p.profitValue,
-              exchangeRate,
-              usdtRate,
-            })
-            return prisma.product.update({
-              where: { id: p.id },
-              data: { finalPriceUSD: result.finalPriceUSD, finalPriceARS: result.finalPriceARS, subtotalARS: result.subtotalARS, profitARS: result.profitARS },
-            })
-          }),
-        )
+        const products = await prisma.product.findMany({ where: { deletedAt: null } })
+        const BATCH_SIZE = 50
+        for (let i = 0; i < products.length; i += BATCH_SIZE) {
+          const batch = products.slice(i, i + BATCH_SIZE)
+          await Promise.all(
+            batch.map((p) => {
+              const result = calculateFinalPrice({
+                costUSDT: p.costUSDT ?? 0,
+                yoniEnabled: p.yoniEnabled,
+                yoniType: p.yoniType as "percentage" | "fixed_usdt" | "fixed_ars",
+                yoniValue: p.yoniValue,
+                shippingCost: p.shippingCost,
+                profitType: p.profitType as "percentage" | "fixed_usdt" | "fixed_ars",
+                profitValue: p.profitValue,
+                exchangeRate,
+                usdtRate,
+              })
+              return prisma.product.update({
+                where: { id: p.id },
+                data: { finalPriceUSD: result.finalPriceUSD, finalPriceARS: result.finalPriceARS, subtotalARS: result.subtotalARS, profitARS: result.profitARS },
+              })
+            }),
+          )
+        }
       }
     }
 
