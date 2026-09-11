@@ -4,12 +4,6 @@ import { uploadToSupabase } from "@/lib/supabase-storage"
 
 const MAX_SIZE = 10 * 1024 * 1024
 const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-const EXTENSION_BY_MIME: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +28,7 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    const url = await uploadToSupabase(buffer, file.type, EXTENSION_BY_MIME[file.type])
+    const url = await uploadToSupabase(buffer, file.type)
 
     return Response.json({ url })
   } catch (error) {

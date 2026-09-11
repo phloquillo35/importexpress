@@ -1,6 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import sharp from "sharp"
 
 export const PRODUCTS_BUCKET = "products"
+const ONE_YEAR_SECONDS = "31536000"
+const MAX_DIMENSION = 1600
 
 let cachedClient: SupabaseClient | null = null
 
@@ -20,13 +23,30 @@ function getSupabaseAdmin(): SupabaseClient {
   return cachedClient
 }
 
-export async function uploadToSupabase(buffer: Buffer, contentType: string, extension: string) {
+/**
+ * Comprime y convierte a WebP antes de subir (los archivos de la cámara del
+ * cliente venían como PNG/JPEG de varios MB sin optimizar, lo que hacía la
+ * web notablemente lenta) y marca la subida como cacheable por un año — el
+ * nombre de archivo es un UUID nuevo en cada subida, nunca se reutiliza.
+ */
+export async function uploadToSupabase(buffer: Buffer, contentType: string) {
   const supabaseAdmin = getSupabaseAdmin()
-  const path = `${crypto.randomUUID()}.${extension}`
+
+  const isRasterImage = ["image/png", "image/jpeg", "image/webp"].includes(contentType)
+  const optimized = isRasterImage
+    ? await sharp(buffer)
+        .rotate()
+        .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer()
+    : buffer
+  const finalContentType = isRasterImage ? "image/webp" : contentType
+  const finalExtension = isRasterImage ? "webp" : contentType.split("/")[1] || "bin"
+  const path = `${crypto.randomUUID()}.${finalExtension}`
 
   const { error } = await supabaseAdmin.storage
     .from(PRODUCTS_BUCKET)
-    .upload(path, buffer, { contentType, upsert: false })
+    .upload(path, optimized, { contentType: finalContentType, upsert: false, cacheControl: ONE_YEAR_SECONDS })
 
   if (error) throw error
 

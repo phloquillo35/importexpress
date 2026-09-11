@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react"
 
 interface AngleMeta {
@@ -102,6 +102,39 @@ export function AngleCarousel({
   const currentLabel = labels?.[activeIndex] ?? null
   const canNavigate = displayCategory !== "C3" && angleIndices.length > 1
 
+  // Precarga la imagen anterior y la siguiente para que el swipe/flechas se
+  // sientan instantáneos en vez de esperar la descarga al cambiar de vista.
+  useEffect(() => {
+    const neighbors = [activeIndex - 1, activeIndex + 1]
+      .map((i) => angleIndices[i])
+      .filter((i): i is number => i !== undefined)
+      .map((i) => displayImages[i])
+      .filter(Boolean)
+    const preloaded = neighbors.map((src) => {
+      const img = new Image()
+      img.src = src
+      return img
+    })
+    return () => {
+      preloaded.forEach((img) => { img.src = "" })
+    }
+  }, [activeIndex, angleIndices, displayImages])
+
+  const touchStartX = useRef<number | null>(null)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null || !canNavigate) return
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current
+    const SWIPE_THRESHOLD = 40
+    if (deltaX > SWIPE_THRESHOLD) goPrev()
+    else if (deltaX < -SWIPE_THRESHOLD) goNext()
+    touchStartX.current = null
+  }
+
   if (!currentImage) {
     return (
       <div className="aspect-square bg-muted rounded-2xl flex items-center justify-center">
@@ -113,18 +146,25 @@ export function AngleCarousel({
   return (
     <div className="space-y-3">
       {/* Main image container */}
-      <div className="relative aspect-square bg-muted rounded-2xl overflow-hidden group">
+      <div
+        className="relative aspect-square bg-muted rounded-2xl overflow-hidden group touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <img
           src={currentImage}
           alt={`${productName} — ${currentLabel ?? `vista ${activeIndex + 1}`}`}
-          loading="lazy"
+          loading="eager"
+          decoding="async"
           className={`w-full h-full object-contain p-4 sm:p-8 transition-all duration-300 ${
             isZoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"
           }`}
           onClick={() => setIsZoomed((z) => !z)}
         />
 
-        {/* Navigation arrows — only when there are multiple distinct angles */}
+        {/* Navigation arrows — only when there are multiple distinct angles.
+            Siempre visibles en touch (mobile no tiene hover); en desktop
+            aparecen solo al pasar el mouse. */}
         {canNavigate && (
           <>
             <button
@@ -134,7 +174,7 @@ export function AngleCarousel({
               }}
               disabled={activeIndex === 0}
               aria-label="Ver ángulo anterior"
-              className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center shadow-md transition-all opacity-0 group-hover:opacity-100"
+              className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center shadow-md transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <ChevronLeft className="w-5 h-5 text-foreground" />
             </button>
@@ -145,7 +185,7 @@ export function AngleCarousel({
               }}
               disabled={activeIndex === angleIndices.length - 1}
               aria-label="Ver siguiente ángulo"
-              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center shadow-md transition-all opacity-0 group-hover:opacity-100"
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center shadow-md transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <ChevronRight className="w-5 h-5 text-foreground" />
             </button>
