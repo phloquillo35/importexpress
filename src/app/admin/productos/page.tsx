@@ -333,14 +333,28 @@ export default function AdminProductosPage() {
     }
   }
 
+  function getPricing(product: Product) {
+    return calculateFinalPrice({
+      costUSDT: product.costUSDT || 0,
+      yoniEnabled: product.yoniEnabled,
+      yoniType: (product.yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+      yoniValue: product.yoniValue || 0,
+      shippingCost: product.shippingCost || 0,
+      profitType: (product.profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
+      profitValue: product.profitValue || 0,
+      exchangeRate,
+      usdtRate,
+    })
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Productos</h1>
           <p className="text-muted-foreground text-sm mt-1">{total} productos registrados</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <Button
             variant="outline"
             onClick={handleExportCsv}
@@ -464,7 +478,82 @@ export default function AdminProductosPage() {
         </p>
       </form>
 
-      <div className="bg-card border border-border rounded-xl shadow-sm">
+      {/* Mobile: lista de tarjetas — la tabla de 13 columnas es inutilizable en una pantalla chica */}
+      <div className="sm:hidden space-y-2">
+        {loading ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">Cargando...</div>
+        ) : products.length === 0 ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">
+            <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>No hay productos</p>
+          </div>
+        ) : (
+          products.map((product) => {
+            const pricing = getPricing(product)
+            return (
+              <div
+                key={product.id}
+                className="bg-card border border-border rounded-xl p-3.5 space-y-2.5 active:bg-muted/40 transition-colors"
+                onClick={() => setViewProduct(product)}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground text-sm leading-snug line-clamp-2">{product.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {product.category?.parent?.name || product.category?.name || "Sin categoría"}
+                    </p>
+                  </div>
+                  {product.isAvailable ? (
+                    <Badge className="bg-[#22C55E]/10 text-[#22C55E] border-0 shrink-0">Sí</Badge>
+                  ) : (
+                    <Badge className="bg-red-500/10 text-red-400 border-0 shrink-0">No</Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-lg font-semibold text-[#22C55E]">${pricing.finalPriceARS.toLocaleString("es-AR")}</span>
+                  <span className={`text-xs ${product.stock <= product.minStock ? "text-red-400 font-medium" : "text-muted-foreground"}`}>
+                    Stock: {product.stock}
+                  </span>
+                </div>
+
+                {canEdit && (
+                  <div className="flex items-center gap-2 pt-1 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/admin/productos/${product.slug}/editar`)}
+                      className="flex-1 text-muted-foreground"
+                    >
+                      <Pencil className="w-3.5 h-3.5 mr-1.5" /> Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleToggleAvailability(product)}
+                      className={product.isAvailable ? "text-muted-foreground hover:text-red-400" : "text-muted-foreground hover:text-[#22C55E]"}
+                      title={product.isAvailable ? "Ocultar de la web" : "Mostrar en la web"}
+                    >
+                      {product.isAvailable ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDelete(product)}
+                      className="text-muted-foreground hover:text-red-400"
+                      title="Eliminar producto"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      <div className="hidden sm:block bg-card border border-border rounded-xl shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -499,17 +588,7 @@ export default function AdminProductosPage() {
               </TableRow>
             ) : (
               products.map((product) => {
-                const pricing = calculateFinalPrice({
-                  costUSDT: product.costUSDT || 0,
-                  yoniEnabled: product.yoniEnabled,
-                  yoniType: (product.yoniType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
-                  yoniValue: product.yoniValue || 0,
-                  shippingCost: product.shippingCost || 0,
-                  profitType: (product.profitType as "percentage" | "fixed_usdt" | "fixed_ars") || "percentage",
-                  profitValue: product.profitValue || 0,
-                  exchangeRate,
-                  usdtRate,
-                })
+                const pricing = getPricing(product)
 return (
                 <TableRow
                   id={`product-${product.id}`}

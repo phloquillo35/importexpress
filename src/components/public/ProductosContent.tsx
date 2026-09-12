@@ -165,7 +165,7 @@ export function ProductosContent({ initialCategories = [] }: { initialCategories
           </button>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           <div className={`${showFilters ? "block" : "hidden"} lg:block w-full lg:w-56 flex-shrink-0 lg:sticky lg:top-24`}>
             <HeroSidebar
               initialCategories={categories}

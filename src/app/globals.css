@@ -128,10 +128,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
   html {
     @apply font-sans antialiased;
     overscroll-behavior-y: none;
+    overflow-x: hidden;
   }
 }
 

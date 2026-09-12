@@ -63,22 +63,25 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           ) : (
             <>
               {items.map((item) => (
-                <div key={`${item.slug}__${item.color ?? ""}`} className="flex items-center gap-3 p-3 bg-muted rounded-xl">
-                  <div className="w-14 h-14 rounded-lg bg-card flex items-center justify-center overflow-hidden shrink-0">
-                    {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
-                    ) : (
-                      <ShoppingBag data-testid="product-placeholder" className="w-6 h-6 text-muted-foreground" />
-                    )}
+                <div key={`${item.slug}__${item.color ?? ""}`} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-muted rounded-xl">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-14 h-14 rounded-lg bg-card flex items-center justify-center overflow-hidden shrink-0">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+                      ) : (
+                        <ShoppingBag data-testid="product-placeholder" className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-snug sm:truncate">{item.name}</p>
+                      {item.color && <p className="text-xs text-muted-foreground">Color: {item.color}</p>}
+                      <p className="text-xs text-muted-foreground">${item.price.toLocaleString("es-AR")} ARS c/u</p>
+                      <p className="text-sm font-bold text-primary">
+                        ${(item.price * item.quantity).toLocaleString("es-AR")} ARS
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">${item.price.toLocaleString("es-AR")} ARS c/u</p>
-                    <p className="text-sm font-bold text-primary">
-                      ${(item.price * item.quantity).toLocaleString("es-AR")} ARS
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 self-end sm:self-auto">
                     <button
                       onClick={() => updateQuantity(item.slug, item.quantity - 1, item.color)}
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-colors"
