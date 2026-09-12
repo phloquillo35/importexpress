@@ -594,9 +594,9 @@ function DetailDialogContent({
               <div className="border border-border rounded-lg divide-y divide-border">
                 {allPricing.map(({ item: i, pricing: p }) => (
                   <div key={i.id} className="p-3 space-y-1.5">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex flex-wrap justify-between gap-x-2 text-sm">
                       <span className="font-medium text-foreground">{i.productName ?? i.product?.name ?? "Producto eliminado"} × {i.quantity}</span>
-                      <span className="text-foreground">{formatUSD(i.priceUSD * i.quantity)}</span>
+                      <span className="text-foreground shrink-0">{formatUSD(i.priceUSD * i.quantity)}</span>
                     </div>
                     {i.bulk && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1274,12 +1274,12 @@ export default function PedidosPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Pedidos</h1>
           <p className="text-muted-foreground text-sm mt-1">{total} pedidos — página {page} de {totalPages || 1}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <PapeleraModal model="pedidos" sectionLabel="Pedidos" onRestore={fetchOrders} />
           {canEdit && (
             <>
@@ -1343,7 +1343,62 @@ export default function PedidosPage() {
           )}
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+      {/* Mobile: tarjetas — la tabla de 15 columnas no se puede usar en una pantalla chica */}
+      <div className="sm:hidden space-y-2">
+        {loading ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">Cargando...</div>
+        ) : flatItems.length === 0 ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">
+            <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>Sin pedidos</p>
+          </div>
+        ) : (
+          flatItems.map(({ item, order }) => {
+            const pricing = computeItemPricing(item, order.exchangeRate || exchangeRate, order.usdtRate || usdtRate)
+            const payCfg = paymentConfig[order.paymentStatus] || paymentConfig.debe
+            return (
+              <div
+                key={item.id}
+                className="bg-card border border-border rounded-xl p-3.5 space-y-2.5 active:bg-muted/40 transition-colors"
+                onClick={() => handleProductDetail(item, order)}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground font-mono">#{order.internalNumber}</p>
+                    <p className={`font-medium text-sm ${payCfg.className}`}>{order.clientName} {order.clientSurname}</p>
+                    <p className="text-xs text-muted-foreground">{order.clientPhone || order.clientContact}</p>
+                  </div>
+                  {getItemStatusBadge(item.shippingStatus)}
+                </div>
+
+                <div className="text-sm text-foreground">
+                  {(item.productName ?? item.product?.name ?? "Producto eliminado").split(" / ")[0]}
+                  <span className="text-muted-foreground"> ×{item.quantity}</span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm border-t border-border/60 pt-2">
+                  <span className="text-lg font-semibold text-[#22C55E]">${pricing.finalPriceARS.toLocaleString("es-AR")}</span>
+                  <span className="text-xs text-muted-foreground">${pricing.finalPriceUSD.toFixed(2)} USD</span>
+                </div>
+
+                {item.trackingCode && (
+                  <p className="text-xs text-blue-400">📍 {item.trackingCode}</p>
+                )}
+
+                {canEdit && (
+                  <div className="flex justify-end pt-1 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm" onClick={() => setDeleteItemTarget({ item, order })} className="text-muted-foreground hover:text-red-400">
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Eliminar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      <div className="hidden sm:block bg-card border border-border rounded-xl overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
