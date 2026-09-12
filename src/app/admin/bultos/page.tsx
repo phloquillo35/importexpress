@@ -319,12 +319,12 @@ export default function BultosPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Bultos</h1>
           <p className="text-muted-foreground text-sm mt-1">{bulks.length} bultos</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <PapeleraModal model="bultos" sectionLabel="Bultos" onRestore={() => setRefreshKey(k => k + 1)} />
           {canEdit && (
             <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -348,7 +348,60 @@ export default function BultosPage() {
         </Select>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+      {/* Mobile: tarjetas */}
+      <div className="sm:hidden space-y-2">
+        {loading ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">Cargando...</div>
+        ) : bulks.length === 0 ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">
+            <Ship className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>Sin bultos</p>
+          </div>
+        ) : (
+          bulks.map((b) => (
+            <div
+              key={b.id}
+              className="bg-card border border-border rounded-xl p-3.5 space-y-2.5 active:bg-muted/40 transition-colors"
+              onClick={() => openView(b)}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground font-mono">#{b.internalNumber}</p>
+                  <p className="font-medium text-sm text-foreground capitalize">
+                    {b.type === "grande" ? "Grande" : "Chico"} — {courierLabel[b.courier] || b.courier}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{formatDate(b.date)}</p>
+                </div>
+                <StatusBadge status={b.status} />
+              </div>
+              <div className="flex items-center justify-between text-sm border-t border-border/60 pt-2">
+                <span className="text-muted-foreground text-xs">{b.orderItems?.length || 0} productos</span>
+                <span className="font-semibold text-foreground">
+                  {b.totalCostARS ? `$${b.totalCostARS.toLocaleString("es-AR")} ARS` : "—"}
+                </span>
+              </div>
+              {b.trackingCode && <p className="text-xs text-blue-400">📍 {b.trackingCode}</p>}
+              <div className="flex items-center gap-2 pt-1 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
+                <Button variant="outline" size="sm" onClick={() => openView(b)} className="flex-1 text-muted-foreground">
+                  <Eye className="w-3.5 h-3.5 mr-1.5" /> Ver
+                </Button>
+                {canEdit && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => openEdit(b)} className="flex-1 text-muted-foreground">
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => { setDeleteTarget(b); setDeleteDialogOpen(true) }} className="text-muted-foreground hover:text-red-400">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden sm:block bg-card border border-border rounded-xl overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
