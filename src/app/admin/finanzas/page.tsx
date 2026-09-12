@@ -211,12 +211,12 @@ export default function FinanzasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Finanzas</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestión de ingresos y egresos</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <PapeleraModal model="transacciones" sectionLabel="Finanzas" onRestore={fetchTransactions} />
           {canEdit && (
             <Button onClick={() => setDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -277,6 +277,47 @@ export default function FinanzasPage() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Mobile: tarjetas */}
+        <div className="sm:hidden space-y-2 p-3">
+          {loading ? (
+            <div className="text-center text-muted-foreground py-12">Cargando...</div>
+          ) : transactions.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">
+              <DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>Sin transacciones</p>
+            </div>
+          ) : (
+            transactions.map((t) => (
+              <div key={t.id} id={`transaction-${t.id}`} className="bg-muted/40 border border-border/60 rounded-xl p-3.5 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground">{t.concept}</p>
+                    {t.order && (
+                      <p className="text-xs text-muted-foreground">#{t.order.internalNumber} {t.order.clientName} {t.order.clientSurname}</p>
+                    )}
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${t.type === "income" ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-red-500/10 text-red-400"}`}>
+                    {t.type === "income" ? "Ingreso" : "Egreso"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm border-t border-border/60 pt-2">
+                  <span className="font-semibold text-foreground">{formatUSD(t.amountUSD)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(t.date)}</span>
+                </div>
+                {canEdit && (
+                  <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(t)} className="text-muted-foreground hover:text-red-400">
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Eliminar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden sm:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -326,6 +367,7 @@ export default function FinanzasPage() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
