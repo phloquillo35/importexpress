@@ -102,12 +102,12 @@ export default function TiendasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Tiendas</h1>
           <p className="text-muted-foreground text-sm mt-1">{stores.length} tiendas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <PapeleraModal model="tiendas" sectionLabel="Tiendas" onRestore={() => setRefreshKey(k => k + 1)} />
           {canEdit && (
             <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -117,7 +117,40 @@ export default function TiendasPage() {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+      {/* Mobile: tarjetas */}
+      <div className="sm:hidden space-y-2">
+        {loading ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">Cargando...</div>
+        ) : stores.length === 0 ? (
+          <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">
+            <Store className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>Sin tiendas</p>
+          </div>
+        ) : (
+          stores.map((s) => (
+            <div key={s.id} className="bg-card border border-border rounded-xl p-3.5 space-y-2">
+              <p className="font-medium text-foreground">{s.name}</p>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                <p>Contacto: {s.contact || "—"}</p>
+                <p>Web: {s.website || "—"}</p>
+                <p>Creada: {formatDate(s.createdAt)}</p>
+              </div>
+              {canEdit && (
+                <div className="flex items-center gap-2 pt-1 border-t border-border/60">
+                  <Button variant="outline" size="sm" onClick={() => openEdit(s)} className="flex-1 text-muted-foreground">
+                    <Pencil className="w-3.5 h-3.5 mr-1.5" /> Editar
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => handleDelete(s)} className="text-muted-foreground hover:text-red-400">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden sm:block bg-card border border-border rounded-xl overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
