@@ -159,7 +159,7 @@ export default function AdminStockPage() {
       </div>
 
       <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -172,7 +172,58 @@ export default function AdminStockPage() {
             <PapeleraModal model="products" sectionLabel="Stock" onRestore={() => setRefreshKey(k => k + 1)} />
           </div>
 
-          <div className="bg-card border border-border rounded-xl overflow-x-auto">
+          {/* Mobile: tarjetas */}
+          <div className="sm:hidden space-y-2">
+            {loading ? (
+              <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">Cargando...</div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center text-muted-foreground py-12 bg-card border border-border rounded-xl">
+                <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>{search ? "Sin resultados" : "No hay productos"}</p>
+              </div>
+            ) : (
+              filtered.map((product) => (
+                <div
+                  key={product.id}
+                  id={`stock-${product.id}`}
+                  className="bg-card border border-border rounded-xl p-3.5 space-y-2.5 active:bg-muted/40 transition-colors"
+                  onClick={() => setViewProduct(product)}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground text-sm leading-snug line-clamp-2">{product.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{product.category?.name || "Sin categoría"}</p>
+                    </div>
+                    <span className={cn(
+                      "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium shrink-0",
+                      getStockBg(product),
+                      getStockColor(product)
+                    )}>
+                      Stock: {product.stock}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm border-t border-border/60 pt-2">
+                    <span className="font-semibold text-foreground">{formatUSD(product.priceUSD)}</span>
+                    <span className="text-xs text-muted-foreground">Mínimo: {product.minStock}</span>
+                  </div>
+                  {canEdit && (
+                    <div className="pt-1 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openAdjust(product)}
+                        className="w-full text-muted-foreground"
+                      >
+                        Ajustar stock
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden sm:block bg-card border border-border rounded-xl overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
