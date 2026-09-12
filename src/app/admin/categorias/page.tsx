@@ -231,12 +231,12 @@ export default function AdminCategoriasPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-heading">Categorías</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestioná las categorías de productos</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <PapeleraModal model="categorias" sectionLabel="Categorías" onRestore={loadCategories} />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           {canEdit && (
@@ -381,12 +381,12 @@ export default function AdminCategoriasPage() {
         <Table>
           <TableHeader>
             <TableRow className="border-border bg-muted/40 hover:bg-transparent transition-colors">
-              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Nombre</TableHead>
-              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Slug</TableHead>
-              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Descripción</TableHead>
-              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Subcategorías</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold max-w-[140px] sm:max-w-none">Nombre</TableHead>
+              <TableHead className="hidden md:table-cell text-xs uppercase tracking-wide text-muted-foreground font-semibold">Slug</TableHead>
+              <TableHead className="hidden lg:table-cell text-xs uppercase tracking-wide text-muted-foreground font-semibold">Descripción</TableHead>
+              <TableHead className="hidden md:table-cell text-xs uppercase tracking-wide text-muted-foreground font-semibold">Subcategorías</TableHead>
               <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold text-center">Productos</TableHead>
-              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Creada</TableHead>
+              <TableHead className="hidden sm:table-cell text-xs uppercase tracking-wide text-muted-foreground font-semibold">Creada</TableHead>
               <TableHead className="text-xs uppercase tracking-wide text-muted-foreground font-semibold text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -417,21 +417,21 @@ export default function AdminCategoriasPage() {
                     // (si no, un click normal después de pasar el mouse siempre cerraba la fila).
                     if (!wasHoverExpanded) toggleParent(cat.id)
                   }} onMouseEnter={() => { if (!hasChildren || isTouchDevice()) return; if (hoverTimerRef.current?.id === cat.id) clearHoverTimer(); if (!expandedParents.has(cat.id)) { hoverExpandedRef.current.add(cat.id); toggleParent(cat.id) } }} onMouseLeave={() => { if (hasChildren && !isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
-                    <TableCell className="font-semibold text-foreground py-3">
-                      <span className="flex items-center gap-2">
+                    <TableCell className="font-semibold text-foreground py-3 max-w-[140px] sm:max-w-none">
+                      <span className="flex items-center gap-2 min-w-0">
                         {hasChildren ? (
                           isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                         ) : (
                           <span className="w-4 shrink-0" />
                         )}
-                        {cat.name}
+                        <span className="truncate">{cat.name}</span>
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground py-3">{cat.slug}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate py-3">
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3">{cat.slug}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-w-[200px] truncate py-3">
                       {cat.description || "—"}
                     </TableCell>
-                    <TableCell className="py-3">
+                    <TableCell className="hidden md:table-cell py-3">
                       {cat.children.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {cat.children.map((child) => (
@@ -445,7 +445,7 @@ export default function AdminCategoriasPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-center text-foreground font-medium py-3">{cat._count.products}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground py-3">
+                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground py-3">
                       {formatDate(cat.createdAt)}
                     </TableCell>
                     <TableCell className="text-right py-3" onClick={e => e.stopPropagation()}>
@@ -466,21 +466,21 @@ export default function AdminCategoriasPage() {
                       const fullChild = categories.find((c: Category) => c.id === child.id)
                       return (
                         <TableRow key={child.id} className="border-border/60 hover:bg-muted/40 cursor-pointer bg-muted/20 transition-colors animate-in fade-in slide-in-from-top-1 duration-150" onClick={() => fullChild && (canEdit ? openEdit(fullChild) : openView(fullChild))} onMouseEnter={() => { if (hoverTimerRef.current?.id === cat.id) clearHoverTimer() }} onMouseLeave={() => { if (!isTouchDevice() && hoverExpandedRef.current.has(cat.id)) scheduleHoverCollapse(cat.id) }}>
-                          <TableCell className="font-medium text-foreground/90 py-3">
-                            <span className="inline-flex items-center gap-2 border-l-2 border-border/40 pl-2 ml-6 animate-in fade-in slide-in-from-top-1 duration-150">
+                          <TableCell className="font-medium text-foreground/90 py-3 max-w-[140px] sm:max-w-none">
+                            <span className="flex items-center gap-2 border-l-2 border-border/40 pl-2 ml-4 sm:ml-6 min-w-0 animate-in fade-in slide-in-from-top-1 duration-150">
                               <span className="w-1 h-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
-                              {child.name}
+                              <span className="truncate">{child.name}</span>
                             </span>
                           </TableCell>
-                          <TableCell className="text-sm text-muted-foreground py-3">{child.slug}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate py-3">—</TableCell>
-                          <TableCell className="py-3">
+                          <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3">{child.slug}</TableCell>
+                          <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-w-[200px] truncate py-3">—</TableCell>
+                          <TableCell className="hidden md:table-cell py-3">
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                               ← {cat.name}
                             </span>
                           </TableCell>
                           <TableCell className="text-center text-foreground font-medium py-3">{child._count?.products || 0}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground py-3">—</TableCell>
+                          <TableCell className="hidden sm:table-cell text-sm text-muted-foreground py-3">—</TableCell>
                           <TableCell className="text-right py-3" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
                               <Button variant="ghost" size="icon" onClick={() => fullChild && openView(fullChild)} className="text-muted-foreground hover:text-blue-400"><Eye className="w-4 h-4" /></Button>
