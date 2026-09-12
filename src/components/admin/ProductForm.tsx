@@ -574,9 +574,9 @@ export function ProductForm({ defaultValues, productSlug }: ProductFormProps) {
       </div>
 
       <div className="bg-card border border-border rounded-xl p-6 space-y-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-lg font-semibold text-foreground font-heading">Especificaciones</h2>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center flex-wrap gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" {...register("freeShipping")} defaultChecked={defaultValues?.freeShipping ?? false} className="w-4 h-4 rounded border-zinc-600 bg-muted text-[#22C55E] focus:ring-[#22C55E]" />
               <span className="text-sm text-muted-foreground">Envío gratis</span>
