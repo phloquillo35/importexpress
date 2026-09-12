@@ -70,7 +70,7 @@ export function HeroSection({ initialCategories, initialHero }: { initialCategor
           <div className="row-span-2 h-full min-h-0">
             <HeroSidebar overlayDropdown showVerTodas initialCategories={initialCategories} />
           </div>
-          <div className="row-span-2 aspect-square">
+          <div className="row-span-2 h-full min-h-0">
             <HeroCarousel slides={carousel} />
           </div>
           <div>
