@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
-import { calculateFinalPrice } from "@/lib/pricing"
+import { getItemEffectivePricing } from "@/lib/pricing"
 import { requireAuth, requireRole } from "@/lib/auth"
 import { updateBulkSchema } from "@/lib/validators"
 import { sendEmail } from "@/lib/email"
-import { STATUS_PRIORITY, computeOrderStatus } from "@/lib/orders"
+import { computeOrderStatus } from "@/lib/orders"
 
 export async function GET(
   request: NextRequest,
@@ -118,27 +118,42 @@ export async function PUT(
 
       if (hasCostChange) {
         const numericCost = parseFloat(body.totalCostARS)
-        const itemCount = await tx.orderItem.count({ where: { bulkId: id } })
-        if (itemCount > 0) {
-          const shippingPerItem = numericCost / itemCount
-          // Se descuenta exactamente lo que se aplicó la última vez (guardado en
-          // lastShippingPerItem), no oldCost/itemCount — itemCount pudo cambiar
-          // entre ediciones y esa división ya no representaría lo realmente sumado.
-          const previouslyAppliedPerItem = existing.lastShippingPerItem ?? 0
-
-          const items = await tx.orderItem.findMany({
-            where: { bulkId: id, productId: { not: null } },
-            include: { product: true },
-          })
+        // El costo de envío del bulto se reparte entre sus ítems y se guarda en
+        // OrderItem.shippingCost (el snapshot propio del pedido) — nunca en
+        // Product.shippingCost, que es la plantilla de precio del catálogo y no
+        // tiene relación con lo que efectivamente costó ESTE envío. Tocar el
+        // producto hacía que el cambio no se reflejara en el pedido y además
+        // corrompía el precio de catálogo para pedidos futuros no relacionados.
+        const items = await tx.orderItem.findMany({ where: { bulkId: id } })
+        if (items.length > 0) {
+          const shippingPerItem = numericCost / items.length
+          const affectedOrderIds = new Set<string>()
 
           for (const item of items) {
-            if (!item.productId || !item.product) continue
-            const currentShipping = item.product.shippingCost || 0
-            const newShipping = currentShipping - previouslyAppliedPerItem + shippingPerItem
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { shippingCost: Math.max(0, newShipping) },
+            const perUnit = item.quantity > 0 ? shippingPerItem / item.quantity : shippingPerItem
+            await tx.orderItem.update({
+              where: { id: item.id },
+              data: { shippingCost: Math.max(0, perUnit) },
             })
+            affectedOrderIds.add(item.orderId)
+          }
+
+          for (const orderId of affectedOrderIds) {
+            const order = await tx.order.findUnique({ where: { id: orderId }, select: { exchangeRate: true, usdtRate: true, amountPaidUSD: true } })
+            if (!order) continue
+            const orderItems = await tx.orderItem.findMany({ where: { orderId } })
+            let totalUSD = 0
+            let totalARS = 0
+            for (const it of orderItems) {
+              const eff = getItemEffectivePricing(it, order.exchangeRate || 1350, order.usdtRate || 1400)
+              totalUSD += eff.finalPriceUSD
+              totalARS += eff.finalPriceARS
+            }
+            totalUSD = Math.round(totalUSD * 100) / 100
+            totalARS = Math.round(totalARS)
+            const paidUSD = order.amountPaidUSD || 0
+            const paymentStatus = paidUSD <= 0 ? "debe" : paidUSD < totalUSD ? "seña" : "pagado"
+            await tx.order.update({ where: { id: orderId }, data: { totalUSD, totalARS, paymentStatus } })
           }
 
           data.lastShippingPerItem = shippingPerItem
