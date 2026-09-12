@@ -120,12 +120,22 @@ function FlyerSlot({ banner, className }: { banner: HeroBanner | undefined; clas
       href={banner.link || "#"}
       target="_blank"
       rel="noopener noreferrer"
-      className={`rounded-2xl overflow-hidden bg-card group ${banner.link ? "cursor-pointer" : ""} ${className}`}
+      className={`relative rounded-2xl overflow-hidden bg-card group ${banner.link ? "cursor-pointer" : ""} ${className}`}
     >
+      {/* Fondo desenfocado a pantalla completa para que un banner con proporción
+          distinta a la del slot (ej. una imagen ancha en un hueco cuadrado) nunca
+          pierda texto por el recorte de object-cover, ni deje franjas planas feas. */}
       <img
         src={banner.image}
         alt=""
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+        draggable={false}
+      />
+      <img
+        src={banner.image}
+        alt=""
+        className="relative w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
         draggable={false}
       />
     </Wrapper>
