@@ -224,7 +224,7 @@ export async function POST(request: Request) {
         description: data.description || null,
         specs: data.specs || null,
         images: data.images || undefined,
-        priceUSD: data.priceUSD ?? costUSDT,
+        priceUSD: data.priceUSD ?? pricing.finalPriceUSD,
         priceARS: pricing.finalPriceARS,
         costUSD: data.costUSD ?? null,
         costUSDT: costUSDT || null,
