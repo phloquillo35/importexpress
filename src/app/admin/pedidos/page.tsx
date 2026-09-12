@@ -1057,6 +1057,40 @@ export default function PedidosPage() {
   const flatItems = useMemo(() => {
     const items: { item: OrderItem; order: Order }[] = []
     for (const order of orders) {
+      if (order.items.length === 0) {
+        // Un pedido sin ítems (p. ej. porque se borraron todos individualmente)
+        // no debe desaparecer de la tabla — se muestra como fila placeholder
+        // usando los totales del pedido, igual que ya aparece en "Eliminar pedido".
+        items.push({
+          item: {
+            id: `empty-${order.id}`,
+            quantity: 0,
+            priceUSD: order.totalUSD,
+            trackingCode: null,
+            shippingStatus: order.status,
+            bulkType: null,
+            costUSDT: 0,
+            yoniEnabled: false,
+            yoniType: "percentage",
+            yoniValue: 0,
+            shippingCost: 0,
+            profitType: "percentage",
+            profitValue: 0,
+            productName: "Sin productos",
+            productSlug: null,
+            color: null,
+            storage: null,
+            subtotalARS: order.totalARS ?? 0,
+            profitARS: 0,
+            finalPriceARS: order.totalARS ?? 0,
+            finalPriceUSD: order.totalUSD,
+            logisticaUSDT: 0,
+            bulk: null,
+          },
+          order,
+        })
+        continue
+      }
       for (const item of order.items) {
         items.push({ item, order })
       }
@@ -1173,6 +1207,19 @@ export default function PedidosPage() {
     setSaving(true)
     try {
       const { order, item } = deleteItemTarget
+      if (item.id.startsWith("empty-")) {
+        // Fila placeholder de un pedido sin ítems reales — no hay OrderItem que
+        // borrar, así que la acción "eliminar" borra el pedido completo.
+        const res = await fetch(`/api/pedidos/${order.id}`, { method: "DELETE" })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.error || "Error al eliminar pedido")
+        }
+        toast.success("Pedido eliminado")
+        setDeleteItemTarget(null)
+        fetchOrders()
+        return
+      }
       const res = await fetch(`/api/pedidos/${order.id}/items/${item.id}`, { method: "DELETE" })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -1886,10 +1933,14 @@ export default function PedidosPage() {
 
       <Dialog open={deleteItemTarget !== null} onOpenChange={(o) => { if (!o) setDeleteItemTarget(null) }}>
         <DialogContent className="bg-card text-foreground max-w-sm">
-          <DialogHeader><DialogTitle>¿Eliminar producto del pedido?</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{deleteItemTarget?.item.id.startsWith("empty-") ? "¿Eliminar pedido?" : "¿Eliminar producto del pedido?"}</DialogTitle>
+          </DialogHeader>
           {deleteItemTarget && (
             <p className="text-sm text-muted-foreground">
-              Se eliminará {deleteItemTarget.item.productName ?? deleteItemTarget.item.product?.name ?? "Producto"} ×{deleteItemTarget.item.quantity} del pedido #{deleteItemTarget.order.internalNumber}. El stock se restaura automáticamente.
+              {deleteItemTarget.item.id.startsWith("empty-")
+                ? `Este pedido #${deleteItemTarget.order.internalNumber} no tiene productos cargados. Se eliminará el pedido completo.`
+                : `Se eliminará ${deleteItemTarget.item.productName ?? deleteItemTarget.item.product?.name ?? "Producto"} ×${deleteItemTarget.item.quantity} del pedido #${deleteItemTarget.order.internalNumber}. El stock se restaura automáticamente.`}
             </p>
           )}
           <div className="flex justify-end gap-3 pt-2">
