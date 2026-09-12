@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAuth } from "@/lib/auth"
+import { requireRole } from "@/lib/auth"
 import { parseCsv, validateRow, type ImportResult, type ImportResultRow, type ValidationError } from "@/lib/csv"
+import { calculateFinalPrice, type PricingInput } from "@/lib/pricing"
 
 interface ImportRequestBody {
   csv: string
@@ -14,7 +15,7 @@ function slugExists(slug: string, existingSlugs: Set<string>): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await requireAuth()
+    const authResult = await requireRole("admin")
     if (authResult instanceof Response) return authResult
 
     const body: ImportRequestBody = await request.json()
@@ -70,9 +71,20 @@ export async function POST(request: NextRequest) {
     const slugs = validRows.map((r) => r.row.slug)
     const existingProducts = await prisma.product.findMany({
       where: { slug: { in: slugs } },
-      select: { slug: true },
+      select: {
+        slug: true, costUSDT: true, yoniEnabled: true, yoniType: true, yoniValue: true,
+        shippingCost: true, profitType: true, profitValue: true,
+      },
     })
     const existingSlugs = new Set(existingProducts.map((p) => p.slug))
+    const existingBySlug = new Map(existingProducts.map((p) => [p.slug, p]))
+
+    const [exchangeRateSetting, usdtRateSetting] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: "exchange_rate" } }),
+      prisma.setting.findUnique({ where: { key: "usdt_rate" } }),
+    ])
+    const exchangeRate = parseFloat(exchangeRateSetting?.value || "1350")
+    const usdtRate = parseFloat(usdtRateSetting?.value || "1400")
 
     // Get category map for name→id resolution
     const categories = await prisma.category.findMany({
@@ -121,7 +133,31 @@ export async function POST(request: NextRequest) {
           ? categoryNameToId.get(row.categoryName.toLowerCase()) ?? null
           : undefined
 
+        // El precio final (finalPriceUSD/ARS, subtotal, ganancia) nunca viene del CSV
+        // directamente — se recalcula siempre con el mismo motor que usa el form manual,
+        // combinando lo que trae la fila con lo que el producto ya tenía (para updates
+        // parciales que no repiten todas las columnas de costo).
+        const existingPricing = existingBySlug.get(row.slug)
+        const pricingInput: PricingInput = {
+          costUSDT: row.costUSDT ?? existingPricing?.costUSDT ?? 0,
+          yoniEnabled: row.yoniEnabled ?? existingPricing?.yoniEnabled ?? false,
+          yoniType: (row.yoniType ?? existingPricing?.yoniType ?? "percentage") as PricingInput["yoniType"],
+          yoniValue: row.yoniValue ?? existingPricing?.yoniValue ?? 0,
+          shippingCost: row.shippingCost ?? existingPricing?.shippingCost ?? 0,
+          profitType: (row.profitType ?? existingPricing?.profitType ?? "percentage") as PricingInput["profitType"],
+          profitValue: row.profitValue ?? existingPricing?.profitValue ?? 0,
+          exchangeRate,
+          usdtRate,
+        }
+        const pricing = calculateFinalPrice(pricingInput)
+
         const data: Record<string, unknown> = {
+          finalPriceUSD: pricing.finalPriceUSD,
+          finalPriceARS: pricing.finalPriceARS,
+          subtotalARS: pricing.subtotalARS,
+          profitARS: pricing.profitARS,
+          priceARS: pricing.finalPriceARS,
+          priceUSD: pricing.finalPriceUSD,
           name: row.name,
           ...(row.description !== undefined && { description: row.description }),
           ...(row.priceUSD !== undefined && { priceUSD: row.priceUSD }),
@@ -164,7 +200,7 @@ export async function POST(request: NextRequest) {
               id: crypto.randomUUID(),
               slug: row.slug,
               name: row.name,
-              priceUSD: row.priceUSD ?? 0,
+              priceUSD: pricing.finalPriceUSD,
               ...data,
             },
           })
