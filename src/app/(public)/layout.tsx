@@ -101,7 +101,14 @@ function Footer({ config }: { config: Record<string, string> }) {
                 WhatsApp: {whatsappBrianName} — +{whatsappBrian.replace(/^549/, "54 9 ")}
               </Link>
               <p>Instagram: {instagram}</p>
-              <p>Tucumán, Argentina</p>
+              <Link
+                href="https://www.google.com/maps/search/?api=1&query=General+Paz+265,+San+Miguel+de+Tucum%C3%A1n,+Argentina"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:text-primary transition-colors"
+              >
+                General Paz 265, San Miguel de Tucumán, Argentina
+              </Link>
             </div>
           </div>
         </div>
