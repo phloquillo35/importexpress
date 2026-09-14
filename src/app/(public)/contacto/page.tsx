@@ -106,12 +106,14 @@ export default function ContactoPage() {
             <MapPin className="w-6 h-6 text-primary" />
           </div>
           <h3 className="text-lg font-semibold text-foreground font-heading mb-2">Ubicación</h3>
-          <p className="text-foreground/70 dark:text-muted-foreground">
-            Tucumán, Argentina
-          </p>
-          <p className="text-foreground/70 dark:text-muted-foreground text-sm mt-2">
-            Importamos desde Ciudad del Este, Paraguay con envíos a todo el país
-          </p>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=General+Paz+265,+San+Miguel+de+Tucum%C3%A1n,+Argentina"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground/70 dark:text-muted-foreground hover:text-primary transition-colors"
+          >
+            General Paz 265, San Miguel de Tucumán, Argentina
+          </a>
         </div>
       </div>
     </div>
