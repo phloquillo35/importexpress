@@ -45,8 +45,8 @@ export function HeroCarousel({ slides, interval = 3000 }: HeroCarouselProps) {
   return (
     <div
       className="relative w-full h-full overflow-hidden rounded-2xl group touch-manipulation"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onPointerEnter={(e) => { if (e.pointerType === "mouse") setPaused(true) }}
+      onPointerLeave={(e) => { if (e.pointerType === "mouse") setPaused(false) }}
       onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
       onTouchEnd={(e) => {
         const diff = touchStartX.current - e.changedTouches[0].clientX
