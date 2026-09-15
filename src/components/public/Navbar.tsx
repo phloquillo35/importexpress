@@ -11,6 +11,7 @@ import { lockScroll, unlockScroll } from "@/lib/utils"
 import { CartDrawer } from "./CartDrawer"
 import { HeroSidebar } from "./HeroSidebar"
 import { WhatsAppAgentSelector } from "./WhatsAppAgentSelector"
+import { ShareButton } from "./ShareButton"
 
 interface Category {
   id: string
@@ -122,6 +123,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
               >
                 {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
+              <ShareButton variant="icon" />
               <button
                 onClick={() => setCartOpen(true)}
                 className="relative flex items-center justify-center min-w-11 min-h-11 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -172,6 +174,7 @@ export function Navbar({ initialCategories }: { initialCategories?: Category[] }
                 {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 {theme === "dark" ? "Modo claro" : "Modo oscuro"}
               </button>
+              <ShareButton variant="full" />
             </div>
 
             <div className="border-t border-border/50 px-4 py-3 space-y-1">
