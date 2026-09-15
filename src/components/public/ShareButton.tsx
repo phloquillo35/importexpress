@@ -18,11 +18,9 @@ export function ShareButton({ variant = "icon", title, className = "", menuAlign
   const [open, setOpen] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
-  const [mounted, setMounted] = useState(false)
+  const [mounted] = useState(() => typeof document !== "undefined")
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     if (!open) return
