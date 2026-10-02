@@ -69,13 +69,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Se arma el esquema desde schema.prisma y no con `prisma migrate deploy`: el historial de migraciones
-      # no se puede reproducir sobre una base vacía (las primeras crean "Product", "Order"... con mayúscula
-      # y el esquema mapea a "product", "order"... en minúscula, así que 20260904000000 falla). La base de
-      # producción ya está migrada y no se toca. Para volver a probar migraciones, hace falta una migración
-      # base (baseline) que parta del esquema actual.
+      # El esquema se arma con las migraciones reales (`migrate deploy`), igual que en producción.
+      # La migración base (20261002000000_baseline) es idempotente: crea todo en una base vacía y no
+      # toca nada en la de producción, que ya tiene ese esquema.
       - name: Create schema
-        run: npx prisma db push
+        run: npx prisma migrate deploy
+
+      # Falla si schema.prisma cambió y falta la migración correspondiente.
+      - name: Check schema drift
+        run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
 
       - name: Seed CI data
         run: npx tsx prisma/seed-ci.ts
