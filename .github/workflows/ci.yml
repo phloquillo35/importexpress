@@ -40,6 +40,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/railway
       NEXTAUTH_URL: http://localhost:3000
+      # Las pruebas salen todas de la misma IP y agotarían el límite de 60 pedidos por minuto (429).
+      DISABLE_RATE_LIMIT: "true"
     services:
       postgres:
         image: postgres:16
@@ -67,8 +69,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply migrations
-        run: npx prisma migrate deploy
+      # Se arma el esquema desde schema.prisma y no con `prisma migrate deploy`: el historial de migraciones
+      # no se puede reproducir sobre una base vacía (las primeras crean "Product", "Order"... con mayúscula
+      # y el esquema mapea a "product", "order"... en minúscula, así que 20260904000000 falla). La base de
+      # producción ya está migrada y no se toca. Para volver a probar migraciones, hace falta una migración
+      # base (baseline) que parta del esquema actual.
+      - name: Create schema
+        run: npx prisma db push
 
       - name: Seed CI data
         run: npx tsx prisma/seed-ci.ts

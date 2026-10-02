@@ -20,6 +20,14 @@ interface RateLimiterOptions {
   max?: number
 }
 
+/**
+ * Solo para el E2E del CI: todas las pruebas salen de la misma IP y agotan el límite (429).
+ * Apagado por defecto; en producción no se define.
+ */
+function rateLimitDisabled(): boolean {
+  return process.env.DISABLE_RATE_LIMIT === "true"
+}
+
 export function createRateLimiter(options: RateLimiterOptions = {}) {
   const windowMs = options.windowMs ?? 60_000
   const max = options.max ?? 60
@@ -40,6 +48,7 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
   }
 
   function check(request: Request): boolean {
+    if (rateLimitDisabled()) return true
     const ip = getClientIp(request)
     const now = Date.now()
     const entry = hits.get(ip)
@@ -76,6 +85,7 @@ setInterval(() => {
 }, 5 * 60_000).unref()
 
 export function rateLimit(ip: string): { success: boolean } {
+  if (rateLimitDisabled()) return { success: true }
   const now = Date.now()
   const entry = authHits.get(ip)
 
