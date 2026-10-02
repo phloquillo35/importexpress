@@ -818,6 +818,8 @@ export default function PedidosPage() {
   }, [page, statusFilter, searchFilter])
 
   useEffect(() => {
+    // Carga de datos al montar o al cambiar filtros: el setState ocurre dentro de fetchOrders (asíncrono).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrders()
   }, [fetchOrders])
 
